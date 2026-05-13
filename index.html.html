@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeSchool AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g:#16a974;--gl:#e8f8f1;--gd:#0d7a54;--gm:#7dd5b0;
+  --am:#c47f0a;--al:#fef3dc;
+  --rd:#b53030;--rl:#fdeaea;
+  --bg:#f6f5f0;--s0:#ffffff;--s1:#f0efe9;--s2:#e8e7e0;
+  --b0:rgba(0,0,0,.07);--b1:rgba(0,0,0,.13);--b2:rgba(0,0,0,.22);
+  --t0:#111110;--t1:#5a5a54;--t2:#9a9992;
+  --r4:4px;--r8:8px;--r12:12px;--r16:16px;--r20:20px;--rpill:999px;
+  --font:'Plus Jakarta Sans',system-ui,sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.07);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.05),0 2px 8px rgba(0,0,0,.06);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0e0e0d;--s0:#1a1a18;--s1:#242422;--s2:#2e2e2c;
+    --b0:rgba(255,255,255,.06);--b1:rgba(255,255,255,.11);--b2:rgba(255,255,255,.18);
+    --t0:#f2f2ec;--t1:#9a9992;--t2:#666660;
+    --gl:#0a2e1e;--al:#2e1f04;--rl:#2a1212;
+    --shadow:0 1px 3px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.3);
+    --shadow-sm:0 1px 2px rgba(0,0,0,.2),0 2px 8px rgba(0,0,0,.2);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--t0);font-size:15px;line-height:1.55;min-height:100vh}
+input,textarea,button{font-family:var(--font)}
+
+/* ────────────────────────────────────────────
+   AUTH
+──────────────────────────────────────────── */
+.auth-page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;background:var(--bg)}
+.auth-brand{text-align:center;margin-bottom:2.5rem}
+.auth-brand .wordmark{font-size:30px;font-weight:700;letter-spacing:-0.7px;color:var(--t0)}
+.auth-brand .wordmark em{font-style:normal;color:var(--g)}
+.auth-brand p{font-size:14px;color:var(--t1);margin-top:5px}
+.auth-box{background:var(--s0);border:1px solid var(--b0);border-radius:var(--r20);padding:2rem;width:100%;max-width:420px;box-shadow:var(--shadow)}
+.tab-row{display:flex;background:var(--s1);border-radius:var(--r8);padding:3px;margin-bottom:1.75rem;gap:3px}
+.tab-pill{flex:1;padding:7px;text-align:center;font-size:13px;font-weight:600;color:var(--t1);cursor:pointer;border-radius:6px;transition:all .18s}
+.tab-pill.on{background:var(--s0);color:var(--t0);box-shadow:var(--shadow-sm)}
+.field{margin-bottom:1.1rem}
+.field label{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--t1);text-transform:uppercase;margin-bottom:6px}
+.field input{width:100%;padding:10px 13px;border:1px solid var(--b1);border-radius:var(--r8);background:var(--s0);color:var(--t0);font-size:14px;transition:border-color .15s,box-shadow .15s}
+.field input:focus{outline:none;border-color:var(--g);box-shadow:0 0 0 3px rgba(22,169,116,.12)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 18px;border-radius:var(--r8);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;border:1px solid transparent;font-family:var(--font);white-space:nowrap}
+.btn-green{background:var(--g);color:#fff;border-color:var(--g);width:100%}
+.btn-green:hover:not(:disabled){background:var(--gd)}
+.btn-green:disabled{opacity:.45;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--t1);border-color:var(--b1)}
+.btn-ghost:hover{background:var(--s1);color:var(--t0)}
+.btn-sm{padding:6px 13px;font-size:13px}
+.btn-danger{background:transparent;color:var(--rd);border-color:var(--rl)}
+.btn-danger:hover{background:var(--rl)}
+.msg{padding:10px 13px;border-radius:var(--r8);font-size:13px;margin-bottom:1.1rem;font-weight:500}
+.msg-err{background:var(--rl);color:var(--rd)}
+.msg-ok{background:var(--gl);color:var(--gd)}
+.auth-footer{text-align:center;margin-top:1.25rem;font-size:13px;color:var(--t1)}
+.auth-footer a{color:var(--g);cursor:pointer;font-weight:600;text-decoration:none}
+.offline-note{margin-top:1rem;font-size:12px;color:var(--t2);text-align:center;display:flex;align-items:center;justify-content:center;gap:5px}
+.offline-dot{width:6px;height:6px;border-radius:50%;background:var(--gm)}
+
+/* ────────────────────────────────────────────
+   SHELL
+──────────────────────────────────────────── */
+.shell{display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--s0);border-bottom:1px solid var(--b0);height:58px;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-logo{font-size:17px;font-weight:700;letter-spacing:-0.3px;color:var(--t0)}
+.topbar-logo em{font-style:normal;color:var(--g)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.child-chip{display:flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border:1px solid var(--b0);border-radius:var(--rpill);background:var(--s1);cursor:pointer;transition:all .15s;font-size:13px;color:var(--t1);font-weight:500}
+.child-chip:hover{border-color:var(--b1);background:var(--s2)}
+.av{width:28px;height:28px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gd);flex-shrink:0;letter-spacing:.03em}
+.main-area{flex:1;max-width:800px;margin:0 auto;width:100%;padding:1.75rem 1.25rem 2rem}
+.page-title{font-size:20px;font-weight:700;letter-spacing:-0.3px;margin-bottom:1.5rem}
+
+/* ────────────────────────────────────────────
+   BOTTOM NAV
+──────────────────────────────────────────── */
+.bnav{background:var(--s0);border-top:1px solid var(--b0);display:flex;position:sticky;bottom:0;z-index:50}
+.nitem{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 4px 7px;cursor:pointer;color:var(--t2);font-size:10px;font-weight:600;gap:3px;transition:color .15s;border:none;background:none;letter-spacing:.03em}
+.nitem.on{color:var(--g)}
+.nitem svg{width:22px;height:22px;stroke:currentColor}
+
+/* ────────────────────────────────────────────
+   ONBOARDING
+──────────────────────────────────────────── */
+.ob-wrap{max-width:480px;margin:2rem auto 0}
+.ob-card{background:var(--s0);border:1px solid var(--b0);border-radius:var(--r20);padding:2rem;box-shadow:var(--shadow)}
+.ob-card h2{font-size:20px;font-weight:700;margin-bottom:6px;letter-spacing:-0.3px}
+.ob-card .sub{font-size:14px;color:var(--t1);margin-bottom:1.5rem;line-height:1.6}
+.age-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:1rem}
+@media(max-width:440px){.age-grid{grid-template-columns:repeat(4,1fr)}}
+.age-btn{padding:11px 4px;border:1.5px solid var(--b0);border-radius:var(--r8);background:var(--s0);font-size:13px;font-weight:600;color:var(--t1);cursor:pointer;text-align:center;transition:all .15s;line-height:1.2}
+.age-btn:hover{border-color:var(--g);color:var(--g)}
+.age-btn.sel{border-color:var(--g);background:var(--gl);color:var(--gd)}
+.age-btn small{display:block;font-size:9px;margin-top:3px;font-weight:500;opacity:.8}
+.ks-tag{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--gd);background:var(--gl);border-radius:var(--rpill);padding:4px 10px;margin-bottom:1rem}
+
+/* ────────────────────────────────────────────
+   DASHBOARD
+──────────────────────────────────────────── */
+.dash-greeting{margin-bottom:1.5rem}
+.dash-greeting h2{font-size:22px;font-weight:700;letter-spacing:-0.4px}
+.dash-greeting p{font-size:14px;color:var(--t1);margin-top:3px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
+@media(max-width:500px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-tile{background:var(--s0);border:1px solid var(--b0);border-radius:var(--r12);padding:14px 16px;box-shadow:var(--shadow-sm)}
+.stat-tile .n{font-size:24px;font-weight:700;letter-spacing:-0.5px;color:var(--t0)}
+.stat-tile .l{font-size:11px;font-weight:600;color:var(--t2);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.streak-bar{display:flex;align-items:center;gap:5px;margin-bottom:1.5rem}
+.sdot{width:12px;height:12px;border-radius:3px;background:var(--s2)}
+.sdot.on{background:var(--g)}
+.streak-lbl{font-size:12px;font-weight:500;color:var(--t2);margin-left:5px}
+.subj-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);margin-bottom:10px}
+.subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px;margin-bottom:1.5rem}
+.subj-card{background:var(--s0);border:1px solid var(--b0);border-radius:var(--r16);padding:1.1rem 1rem 1rem;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;box-shadow:var(--shadow-sm)}
+.subj-card:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.1);border-color:var(--b1)}
+.subj-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.subj-card.maths::before{background:#378ADD}
+.subj-card.english::before{background:#D4537E}
+.subj-card.science::before{background:#16a974}
+.subj-card.history::before{background:#c47f0a}
+.subj-card.geography::before{background:#6B5AE0}
+.subj-card .s-ico{font-size:26px;margin-bottom:8px;display:block}
+.subj-card .s-name{font-size:14px;font-weight:700;letter-spacing:-0.2px}
+.subj-card .s-prg{font-size:12px;color:var(--t1);margin-top:3px;font-weight:500}
+.done-check{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700}
+
+/* ────────────────────────────────────────────
+   LESSON
+──────────────────────────────────────────── */
+.lesson-nav{display:flex;align-items:center;gap:12px;margin-bottom:1.25rem}
+.back-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--r8);font-size:13px;font-weight:600;color:var(--t1);cursor:pointer;background:var(--s0);border:1px solid var(--b0);transition:all .15s}
+.back-btn:hover{background:var(--s1);color:var(--t0)}
+.lesson-meta h2{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.lesson-meta p{font-size:12px;color:var(--t2);margin-top:2px;font-weight:500}
+.part-pills{display:flex;gap:8px;margin-bottom:1.25rem}
+.ppill{flex:1;padding:9px 12px;border:1.5px solid var(--b0);border-radius:var(--r8);background:var(--s0);font-size:13px;font-weight:600;color:var(--t1);cursor:pointer;text-align:center;transition:all .15s}
+.ppill:hover:not(:disabled){border-color:var(--b1)}
+.ppill.on{border-color:var(--g);color:var(--gd);background:var(--gl)}
+.ppill.done{border-color:var(--gm);color:var(--gd)}
+.ppill:disabled{opacity:.4;cursor:not-allowed}
+.lcard{background:var(--s0);border:1px solid var(--b0);border-radius:var(--r16);padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow-sm)}
+.lcard h3{font-size:17px;font-weight:700;letter-spacing:-0.3px;margin-bottom:12px}
+.lbody{font-size:14px;line-height:1.85;color:var(--t1);white-space:pre-wrap;margin-bottom:1.25rem}
+.yt-banner{display:flex;align-items:center;gap:12px;padding:12px 15px;background:var(--s1);border:1px solid var(--b0);border-radius:var(--r12);margin-bottom:1.25rem;text-decoration:none;color:var(--t0);transition:all .15s}
+.yt-banner:hover{border-color:#ff4444;background:rgba(255,68,68,.04)}
+.yt-logo{width:40px;height:40px;border-radius:8px;background:#FF0000;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.yt-logo svg{width:20px;height:20px;fill:#fff}
+.yt-info .yt-hint{font-size:11px;color:var(--t2);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.yt-info .yt-q{font-size:13px;font-weight:600;margin-top:2px}
+.q-list{display:flex;flex-direction:column;gap:1rem;margin-bottom:1.25rem}
+.q-item label{display:block;font-size:13px;font-weight:600;color:var(--t0);margin-bottom:7px}
+.q-item textarea{width:100%;min-height:76px;padding:10px 12px;border:1.5px solid var(--b1);border-radius:var(--r8);background:var(--s0);color:var(--t0);font-size:13px;resize:vertical;line-height:1.6;transition:border-color .15s,box-shadow .15s}
+.q-item textarea:focus{outline:none;border-color:var(--g);box-shadow:0 0 0 3px rgba(22,169,116,.1)}
+.q-item .ans-box{padding:9px 12px;background:var(--s1);border:1px solid var(--b0);border-radius:var(--r8);font-size:13px;color:var(--t1);line-height:1.6;min-height:36px;white-space:pre-wrap}
+.submit-row{display:flex;justify-content:flex-end;padding-top:.25rem}
+.btn-submit{background:var(--g);color:#fff;border-color:var(--g);padding:11px 28px;font-size:14px;border-radius:var(--r8)}
+.btn-submit:hover{background:var(--gd)}
+.spin-state{display:flex;align-items:center;gap:12px;padding:1.5rem 0;font-size:14px;color:var(--t1);font-weight:500}
+.spin{width:20px;height:20px;border:2.5px solid var(--b1);border-top-color:var(--g);border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+.done-banner{background:var(--gl);border:1px solid var(--gm);border-radius:var(--r12);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;font-size:14px;font-weight:600;color:var(--gd)}
+.score-badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:var(--rpill);font-size:12px;font-weight:700}
+.sc-hi{background:var(--gl);color:var(--gd)}
+.sc-mi{background:var(--al);color:var(--am)}
+.sc-lo{background:var(--rl);color:var(--rd)}
+.fb-card{background:var(--s1);border-radius:var(--r12);padding:1.25rem;font-size:14px;line-height:1.85;color:var(--t1);white-space:pre-wrap}
+.fb-head{font-size:14px;font-weight:700;color:var(--t0);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.retry-card{display:flex;flex-direction:column;align-items:center;gap:12px;padding:2rem;text-align:center}
+.retry-card p{font-size:14px;color:var(--t1)}
+
+/* ────────────────────────────────────────────
+   HISTORY
+──────────────────────────────────────────── */
+.hist-group{margin-bottom:1.5rem}
+.hist-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);margin-bottom:8px}
+.hist-list{list-style:none;background:var(--s0);border:1px solid var(--b0);border-radius:var(--r16);overflow:hidden;box-shadow:var(--shadow-sm)}
+.hist-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--b0);cursor:pointer;transition:background .15s}
+.hist-item:last-child{border-bottom:none}
+.hist-item:hover{background:var(--s1)}
+.hist-item:hover .hi-title{color:var(--g)}
+.hi-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.hi-info{flex:1}
+.hi-title{font-size:13px;font-weight:600;transition:color .15s}
+.hi-meta{font-size:12px;color:var(--t2);margin-top:1px}
+.empty-state{text-align:center;padding:3.5rem 1rem;color:var(--t1)}
+.empty-state .e-ico{font-size:44px;margin-bottom:12px}
+.empty-state h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.empty-state p{font-size:14px;color:var(--t2)}
+
+/* ────────────────────────────────────────────
+   SETTINGS
+──────────────────────────────────────────── */
+.set-section{background:var(--s0);border:1px solid var(--b0);border-radius:var(--r16);padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow-sm)}
+.set-section h3{font-size:15px;font-weight:700;margin-bottom:1rem;letter-spacing:-0.2px}
+.child-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--b0)}
+.child-row:last-of-type{border-bottom:none}
+.acct-email{font-size:14px;color:var(--t1);margin-bottom:1rem;padding:8px 0;border-bottom:1px solid var(--b0)}
+
+/* ────────────────────────────────────────────
+   MODAL
+──────────────────────────────────────────── */
+.modal-veil{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0}
+@media(min-width:480px){.modal-veil{align-items:center;padding:1rem}}
+.modal-box{background:var(--s0);border-radius:var(--r20) var(--r20) 0 0;padding:1.5rem;width:100%;max-width:400px}
+@media(min-width:480px){.modal-box{border-radius:var(--r20)}}
+.modal-box h3{font-size:16px;font-weight:700;margin-bottom:1rem;letter-spacing:-0.2px}
+.modal-list{list-style:none;margin-bottom:1rem}
+.modal-list li{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r8);cursor:pointer;transition:background .15s}
+.modal-list li:hover{background:var(--s1)}
+.modal-list li.on{background:var(--gl)}
+
+/* ────────────────────────────────────────────
+   UTILS
+──────────────────────────────────────────── */
+.divider{height:1px;background:var(--b0);margin:1rem 0}
+
+/* XP/GAMIFICATION */
+@keyframes xp-pop{0%{transform:scale(.6) translateY(0);opacity:0}60%{transform:scale(1.15) translateY(-18px);opacity:1}100%{transform:scale(1) translateY(-32px);opacity:0}}
+@keyframes badge-in{0%{transform:scale(0) rotate(-15deg);opacity:0}70%{transform:scale(1.15) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes lvl-glow{0%,100%{box-shadow:0 0 0 0 rgba(22,169,116,.4)}50%{box-shadow:0 0 0 12px rgba(22,169,116,0)}}
+@keyframes slide-up{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes confetti-fall{0%{transform:translateY(-10px) rotate(0);opacity:1}100%{transform:translateY(60px) rotate(360deg);opacity:0}}
+.xp-float{position:fixed;pointer-events:none;font-size:15px;font-weight:700;color:var(--g);z-index:999;animation:xp-pop .9s ease-out forwards}
+.rank-bar-wrap{background:var(--s1);border-radius:var(--rpill);height:8px;overflow:hidden;margin:4px 0}
+.rank-bar-fill{height:100%;border-radius:var(--rpill);background:linear-gradient(90deg,var(--g),#4adba2);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.rank-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--rpill);letter-spacing:.02em}
+.xp-card{background:var(--s0);border:1px solid var(--b0);border-radius:var(--r16);padding:1.1rem 1.25rem;margin-bottom:1rem;box-shadow:var(--shadow-sm)}
+.xp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.xp-name{font-size:13px;font-weight:700;color:var(--t0)}
+.xp-pts{font-size:13px;font-weight:600;color:var(--g)}
+.xp-next{font-size:11px;color:var(--t2);margin-top:4px}
+.streak-hero{display:flex;align-items:center;gap:10px;background:var(--s0);border:1px solid var(--b0);border-radius:var(--r16);padding:1rem 1.25rem;margin-bottom:1rem;box-shadow:var(--shadow-sm)}
+.streak-flame{font-size:28px;line-height:1}
+.streak-info .s-num{font-size:22px;font-weight:700;letter-spacing:-0.5px;color:var(--t0)}
+.streak-info .s-lbl{font-size:12px;color:var(--t2);font-weight:500}
+.streak-dots{display:flex;gap:5px;margin-left:auto}
+.badges-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px;margin-bottom:1rem}
+.badge-tile{background:var(--s0);border:1px solid var(--b0);border-radius:var(--r12);padding:.75rem .5rem;text-align:center;box-shadow:var(--shadow-sm);transition:transform .15s}
+.badge-tile:hover{transform:translateY(-2px)}
+.badge-tile.locked{opacity:.35;filter:grayscale(1)}
+.badge-tile .b-ico{font-size:24px;margin-bottom:5px;display:block}
+.badge-tile .b-name{font-size:10px;font-weight:600;color:var(--t1);line-height:1.3}
+.badge-tile .b-check{font-size:9px;color:var(--g);font-weight:700;margin-top:2px}
+.avatar-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1rem}
+.av-option{width:100%;aspect-ratio:1;border-radius:50%;border:2.5px solid var(--b0);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;background:var(--s1)}
+.av-option:hover{border-color:var(--g);transform:scale(1.08)}
+.av-option.sel{border-color:var(--g);background:var(--gl);box-shadow:0 0 0 3px rgba(22,169,116,.2)}
+.av-option.locked-av{opacity:.3;filter:grayscale(1);cursor:default}
+.coach-bubble{background:var(--gl);border:1px solid var(--gm);border-radius:var(--r16);border-bottom-left-radius:4px;padding:.9rem 1.1rem;margin-bottom:1rem;font-size:14px;color:var(--gd);line-height:1.6}
+.coach-bubble .cb-name{font-size:11px;font-weight:700;color:var(--gd);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.lvl-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem}
+.lvl-modal{background:var(--s0);border-radius:var(--r20);padding:2.5rem 2rem;text-align:center;max-width:360px;width:100%;position:relative;animation:slide-up .35s ease-out}
+.lvl-modal .lm-ico{font-size:56px;margin-bottom:.75rem;display:block;animation:lvl-glow 2s ease-in-out infinite}
+.lvl-modal h2{font-size:22px;font-weight:700;letter-spacing:-.3px;margin-bottom:6px}
+.lvl-modal p{font-size:14px;color:var(--t1);margin-bottom:1.5rem}
+.confetti-wrap{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:var(--r20)}
+.confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:confetti-fall .8s ease-in forwards}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+
+/* ── CONFIG ─────────────────────────────────────────────────────────────────── */
+var SB   = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
+var SBKEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZ3JnY2Joa3BpaHhxc2prbWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzYwOTQsImV4cCI6MjA5NDE1MjA5NH0.cGDgY80q6YL6pycCipe2kce-GHtkdIsF7sGFjmpNnng';
+var AIURL= 'https://api.anthropic.com/v1/messages';
+
+/* ── ROBUST JSON EXTRACTOR ──────────────────────────────────────────────────── */
+/* Handles: fenced blocks, truncated output, curly-quote contamination,
+   newlines inside string values, unescaped apostrophes in text fields */
+function extractJSON(raw) {
+  if (!raw) throw new Error('Empty response');
+
+  // 1. Strip markdown fences
+  var s = raw.replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'').trim();
+
+  // 2. Find outermost { ... }
+  var start = s.indexOf('{');
+  var end   = s.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('No JSON object found');
+  s = s.slice(start, end + 1);
+
+  // 3. Try plain parse first
+  try { return JSON.parse(s); } catch(e1) {}
+
+  // 4. Sanitise common AI output quirks then retry
+  var fixed = s
+    // replace curly quotes
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2018\u2019]/g, "'")
+    // strip literal newlines inside string values (replace with \n)
+    .replace(/"((?:[^"\\]|\\.)*)"/g, function(match) {
+      return match.replace(/\n/g, '\\n').replace(/\r/g, '');
+    });
+
+  try { return JSON.parse(fixed); } catch(e2) {}
+
+  // 5. Key-by-key extraction as last resort
+  var result = {};
+  var titleM    = raw.match(/"title"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  var contentM  = raw.match(/"content"\s*:\s*"([\s\S]*?)(?=",\s*"(?:questions|youtube)|"\s*\})/);
+  var ytM       = raw.match(/"youtube_query"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  var scoreM    = raw.match(/"score"\s*:\s*(\d+)/);
+  var maxM      = raw.match(/"max_score"\s*:\s*(\d+)/);
+  var feedbackM = raw.match(/"feedback"\s*:\s*"([\s\S]*?)(?="\s*\}|",\s*")/);
+
+  if (titleM)    result.title    = titleM[1];
+  if (contentM)  result.content  = contentM[1].replace(/\\n/g,'\n');
+  if (ytM)       result.youtube_query = ytM[1];
+  if (scoreM)    result.score    = parseInt(scoreM[1], 10);
+  if (maxM)      result.max_score= parseInt(maxM[1], 10);
+  if (feedbackM) result.feedback = feedbackM[1].replace(/\\n/g,'\n');
+
+  // Extract questions array
+  var qBlock = raw.match(/"questions"\s*:\s*\[([\s\S]*?)\]/);
+  if (qBlock) {
+    var qs = [];
+    var qRe = /"((?:[^"\\]|\\.)*)"/g, m;
+    while ((m = qRe.exec(qBlock[1])) !== null) qs.push(m[1]);
+    result.questions = qs;
+  }
+
+  if (Object.keys(result).length === 0) throw new Error('Could not extract JSON fields');
+  return result;
+}
+
+/* ── IN-MEMORY / LOCALSTORAGE DATA LAYER ───────────────────────────────────── */
+var MEM = { users:{}, children:[], lessons:[], submissions:[], markings:[] };
+var DB_MODE = 'local';
+
+function memSave() { try { localStorage.setItem('hs_db', JSON.stringify(MEM)); } catch(e) {} }
+function memLoad() { try { var d=localStorage.getItem('hs_db'); if(d) Object.assign(MEM, JSON.parse(d)); } catch(e) {} }
+function uid()     { return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+
+var LDB = {
+  signup: function(email, pw, name) {
+    var k = email.toLowerCase().trim();
+    if (MEM.users[k]) throw new Error('An account with this email already exists.');
+    var u = { id:uid(), email:k, name:name, password:pw };
+    MEM.users[k] = u; memSave(); return u;
+  },
+  login: function(email, pw) {
+    var u = MEM.users[email.toLowerCase().trim()];
+    if (!u) throw new Error('No account found for that email address.');
+    if (u.password !== pw) throw new Error('Incorrect password.');
+    return u;
+  },
+  children:     function(uid)      { return MEM.children.filter(function(c){return c.user_id===uid;}); },
+  addChild:     function(o)        { var r=Object.assign({id:uid()},o); MEM.children.push(r); memSave(); return r; },
+  lessons:      function(cid,date) { return MEM.lessons.filter(function(l){return l.child_id===cid&&(!date||l.lesson_date===date);}); },
+  addLesson:    function(o)        { var r=Object.assign({id:uid()},o); MEM.lessons.push(r); memSave(); return r; },
+  addSub:       function(o)        { var r=Object.assign({id:uid()},o); MEM.submissions.push(r); memSave(); return r; },
+  getSub:       function(lid)      { for(var i=MEM.submissions.length-1;i>=0;i--){if(MEM.submissions[i].lesson_id===lid)return MEM.submissions[i];} return null; },
+  addMark:      function(o)        { var r=Object.assign({id:uid()},o); MEM.markings.push(r); memSave(); return r; },
+  getMark:      function(lid)      { for(var i=MEM.markings.length-1;i>=0;i--){if(MEM.markings[i].lesson_id===lid)return MEM.markings[i];} return null; }
+};
+
+/* ── SUPABASE HELPERS ───────────────────────────────────────────────────────── */
+function sbH(tok) {
+  var auth = (!tok||tok.startsWith('db_')||tok.startsWith('local_')) ? SBKEY : tok;
+  return { 'Content-Type':'application/json', 'apikey':SBKEY, 'Authorization':'Bearer '+auth };
+}
+async function sbReq(url, opts) {
+  var r = await fetch(url, opts);
+  if (!r.ok) { var e=await r.json().catch(function(){return{};}); throw new Error(e.error_description||e.message||'Request failed ('+r.status+')'); }
+  return r;
+}
+async function sbAuth(path, body) {
+  var res = await fetch(SB+'/auth/v1'+path, { method:'POST', headers:{'Content-Type':'application/json','apikey':SBKEY}, body:JSON.stringify(body) });
+  var d = await res.json();
+  console.log('[sbAuth]', path, res.status, JSON.stringify(d).slice(0,300));
+  if (!res.ok) {
+    var msg = d.error_description || d.msg || d.message || d.error || 'Auth failed ('+res.status+')';
+    // Supabase returns this when SMTP not configured but signup otherwise fine
+    // In that case the user IS created — try to continue
+    if (res.status === 500 && msg.toLowerCase().indexOf('email') !== -1) return d;
+    throw new Error(msg);
+  }
+  return d;
+}
+async function sbGet(tbl, q, tok) {
+  var qs=Object.entries(q).map(function(e){return e[0]+'='+encodeURIComponent(e[1]);}).join('&');
+  var r=await sbReq(SB+'/rest/v1/'+tbl+(qs?'?'+qs:''),{headers:sbH(tok)});
+  return r.json();
+}
+async function sbPost(tbl, body, tok) {
+  var r=await sbReq(SB+'/rest/v1/'+tbl,{method:'POST',headers:Object.assign({},sbH(tok),{'Prefer':'return=representation'}),body:JSON.stringify(body)});
+  var d=await r.json(); return Array.isArray(d)?d[0]:d;
+}
+
+function isNetworkErr(e) { return e && (e.message||'').match(/fetch|network|failed to fetch|load failed/i); }
+function sbLog(label, e) { console.warn('[Supabase '+label+']', e && (e.message||e)); }
+
+async function rpc(fn, params) {
+  var res = await fetch(SB+'/rest/v1/rpc/'+fn, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','apikey':SBKEY,'Authorization':'Bearer '+SBKEY},
+    body: JSON.stringify(params)
+  });
+  var d = await res.json();
+  console.log('[rpc]', fn, res.status, JSON.stringify(d).slice(0,200));
+  if (!res.ok) throw new Error((d&&d.message)||('RPC '+fn+' failed ('+res.status+')'));
+  return d;
+}
+
+
+/* ── UNIFIED API ────────────────────────────────────────────────────────────── */
+async function apiLogin(email, pw) {
+  try {
+    // First verify credentials via DB function
+    var res = await fetch(SB+'/rest/v1/rpc/login_user', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','apikey':SBKEY,'Authorization':'Bearer '+SBKEY},
+      body: JSON.stringify({p_email:email, p_password:pw})
+    });
+    var d = await res.json();
+    console.log('[apiLogin rpc]', res.status, JSON.stringify(d).slice(0,200));
+    if (d.error) throw new Error(d.error);
+    if (!res.ok) throw new Error('Login failed ('+res.status+')');
+    // Now get a real Supabase session token
+    var tr = await fetch(SB+'/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','apikey':SBKEY},
+      body: JSON.stringify({email:email, password:pw})
+    });
+    var td = await tr.json();
+    console.log('[apiLogin token]', tr.status, JSON.stringify(td).slice(0,200));
+    var tok = td.access_token || (td.session && td.session.access_token);
+    if (!tok) {
+      // Auth endpoint blocked — use DB-only mode with user ID as token
+      DB_MODE = 'live';
+      var dbUser = {id:d.user_id, email:d.email, user_metadata:{full_name:d.full_name}};
+      console.log('[apiLogin] db_ mode user:', JSON.stringify(dbUser));
+      return {user:dbUser, token:'db_'+d.user_id};
+    }
+    DB_MODE = 'live';
+    return {user:td.user||(td.session&&td.session.user)||{id:d.user_id,email:d.email}, token:tok};
+  } catch(e) {
+    if (isNetworkErr(e)) return {user:LDB.login(email,pw), token:'local_'+LDB.login(email,pw).id};
+    throw e;
+  }
+}
+async function apiSignup(email, pw, name) {
+  try {
+    // Use DB function to bypass Supabase Auth signup restrictions
+    var res = await fetch(SB+'/rest/v1/rpc/create_user', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','apikey':SBKEY,'Authorization':'Bearer '+SBKEY},
+      body: JSON.stringify({p_email:email, p_password:pw, p_name:name})
+    });
+    var d = await res.json();
+    console.log('[apiSignup]', res.status, JSON.stringify(d).slice(0,200));
+    if (d.error) throw new Error(d.error);
+    if (!res.ok) throw new Error('Signup failed ('+res.status+')');
+    DB_MODE = 'live';
+    // Now log in to get a session token
+    return await apiLogin(email, pw);
+  } catch(e) {
+    console.error('[apiSignup] error:', e.message);
+    if (isNetworkErr(e)) { var u=LDB.signup(email,pw,name); return {user:u,token:'local_'+u.id}; }
+    throw e;
+  }
+}
+async function apiChildren(uid, tok) {
+  if (DB_MODE==='live') try {
+    var d = await rpc('get_children',{p_user_id:uid});
+    return d || [];
+  } catch(e){ sbLog('apiChildren',e); }
+  return LDB.children(uid);
+}
+async function apiAddChild(o, tok) {
+  if (DB_MODE==='live') try {
+    var d = await rpc('insert_child',{p_user_id:o.user_id,p_name:o.name,p_age:o.age,p_key_stage:o.key_stage});
+    return d;
+  } catch(e){ sbLog('apiAddChild',e); return LDB.addChild(o); }
+  return LDB.addChild(o);
+}
+async function apiLessons(cid, date, tok) {
+  if (DB_MODE==='live') try {
+    var d = await rpc('get_lessons',{p_child_id:cid,p_date:date});
+    return d || [];
+  } catch(e){ sbLog('apiLessons',e); }
+  return LDB.lessons(cid, date);
+}
+async function apiAddLesson(o, tok) {
+  if (DB_MODE==='live') try {
+    var d = await rpc('insert_lesson',{p_child_id:o.child_id,p_lesson_date:o.lesson_date,p_subject:o.subject,p_part:o.part,p_title:o.title,p_content:o.content,p_questions:JSON.stringify(o.questions||[]),p_book_title:o.book_title||null,p_youtube_query:o.youtube_query||null});
+    return d;
+  } catch(e){ sbLog('apiAddLesson',e); return LDB.addLesson(o); }
+  return LDB.addLesson(o);
+}
+async function apiAddSub(o, tok) {
+  if (DB_MODE==='live') try {
+    var d = await rpc('insert_submission',{p_lesson_id:o.lesson_id,p_answers:JSON.stringify(o.answers||{})});
+    return d;
+  } catch(e){ sbLog('apiAddSub',e); return LDB.addSub(o); }
+  return LDB.addSub(o);
+}
+async function apiGetSub(lid, tok) {
+  if (DB_MODE==='live') try {
+    var d = await rpc('get_submission',{p_lesson_id:lid});
+    return d || null;
+  } catch(e){ sbLog('apiGetSub',e); }
+  return LDB.getSub(lid);
+}
+async function apiAddMark(o, tok) {
+  if (DB_MODE==='live') try {
+    var d = await rpc('insert_marking',{p_submission_id:o.submission_id,p_lesson_id:o.lesson_id,p_score:o.score,p_max_score:o.max_score,p_feedback:o.feedback});
+    return d;
+  } catch(e){ sbLog('apiAddMark',e); return LDB.addMark(o); }
+  return LDB.addMark(o);
+}
+async function apiGetMark(lid, tok) {
+  if (DB_MODE==='live') try {
+    var d = await rpc('get_marking',{p_lesson_id:lid});
+    return d || null;
+  } catch(e){ sbLog('apiGetMark',e); }
+  return LDB.getMark(lid);
+}
+
+/* ── CURRICULUM ─────────────────────────────────────────────────────────────── */
+var BOOKS = {
+  KS1:['The Tiger Who Came to Tea by Judith Kerr','The Gruffalo by Julia Donaldson','Winnie-the-Pooh by A.A. Milne','The Very Hungry Caterpillar by Eric Carle','Fantastic Mr Fox by Roald Dahl','Charlie and the Chocolate Factory by Roald Dahl','The BFG by Roald Dahl','James and the Giant Peach by Roald Dahl','Horrid Henry by Francesca Simon','The Enormous Crocodile by Roald Dahl'],
+  KS2:["Harry Potter and the Philosopher's Stone by J.K. Rowling",'The Explorer by Katherine Rundell','Matilda by Roald Dahl','The Lion, the Witch and the Wardrobe by C.S. Lewis','Wonder by R.J. Palacio','The Boy in the Striped Pyjamas by John Boyne','Goodnight Mister Tom by Michelle Magorian','Holes by Louis Sachar','Coraline by Neil Gaiman','The Witches by Roald Dahl','Northern Lights by Philip Pullman','Treasure Island by Robert Louis Stevenson','The Jungle Book by Rudyard Kipling','The Secret Garden by Frances Hodgson Burnett','Emil and the Detectives by Erich Kastner','Swallows and Amazons by Arthur Ransome','Tom Gates: A Tiny Bit Lucky by Liz Pichon','Diary of a Wimpy Kid by Jeff Kinney','The Demon Headmaster by Gillian Cross','The Sheep-Pig by Dick King-Smith'],
+  KS3:['The Hunger Games by Suzanne Collins','Percy Jackson and the Lightning Thief by Rick Riordan','The Maze Runner by James Dashner',"Ender's Game by Orson Scott Card",'The Curious Incident of the Dog in the Night-Time by Mark Haddon','Skellig by David Almond','Private Peaceful by Michael Morpurgo','Of Mice and Men by John Steinbeck','Animal Farm by George Orwell','Lord of the Flies by William Golding','To Kill a Mockingbird by Harper Lee','Roll of Thunder Hear My Cry by Mildred D. Taylor','Noughts and Crosses by Malorie Blackman','His Dark Materials: The Subtle Knife by Philip Pullman','Divergent by Veronica Roth'],
+  KS4:['1984 by George Orwell','Brave New World by Aldous Huxley','The Great Gatsby by F. Scott Fitzgerald','Pride and Prejudice by Jane Austen','Jane Eyre by Charlotte Bronte','Wuthering Heights by Emily Bronte','Great Expectations by Charles Dickens','Frankenstein by Mary Shelley','The Picture of Dorian Gray by Oscar Wilde','Macbeth by William Shakespeare']
+};
+var SUBJECTS=[
+  {id:'maths',    label:'Maths',    icon:'🔢',color:'#378ADD'},
+  {id:'english',  label:'English',  icon:'📖',color:'#D4537E'},
+  {id:'science',  label:'Science',  icon:'🔬',color:'#16a974'},
+  {id:'history',  label:'History',  icon:'🏛️', color:'#c47f0a'},
+  {id:'geography',label:'Geography',icon:'🌍',color:'#6B5AE0'}
+];
+var KS_MAP ={5:'KS1',6:'KS1',7:'KS2',8:'KS2',9:'KS2',10:'KS2',11:'KS2',12:'KS3',13:'KS3',14:'KS3',15:'KS4',16:'KS4'};
+var KS_YEAR={KS1:'Years 1–2',KS2:'Years 3–6',KS3:'Years 7–9',KS4:'Years 10–11'};
+
+/* ── STATE ──────────────────────────────────────────────────────────────────── */
+var S={
+  user:null,token:null,
+  children:[],activeChild:null,
+  page:'dashboard',subject:null,part:'L1',
+  todayLessons:{},history:[],
+  authMode:'login',authErr:'',authOk:'',
+  showModal:false,showLvlModal:false,lvlModalData:null,
+  obName:'',obAge:null,
+  newChildName:'',newChildAge:null,
+  drafts:{},
+  xp:0,streak:0,lastActiveDate:'',
+  earnedBadges:[],avatar:0,newBadges:[]
+};
+
+/* XP ENGINE */
+var RANKS=[
+  {name:'Newcomer',   min:0,    color:'#9a9992',bg:'#f0efe9'},
+  {name:'Learner',    min:100,  color:'#378ADD',bg:'#E6F1FB'},
+  {name:'Explorer',   min:300,  color:'#16a974',bg:'#e8f8f1'},
+  {name:'Achiever',   min:600,  color:'#c47f0a',bg:'#fef3dc'},
+  {name:'Scholar',    min:1000, color:'#D4537E',bg:'#fbeaf0'},
+  {name:'Expert',     min:1600, color:'#6B5AE0',bg:'#EEEDFE'},
+  {name:'Champion',   min:2400, color:'#E8593C',bg:'#FAECE7'},
+  {name:'Mastermind', min:3500, color:'#c47f0a',bg:'#fef3dc'},
+  {name:'Legend',     min:5000, color:'#D4537E',bg:'#fbeaf0'},
+  {name:'Genius',     min:7500, color:'#6B5AE0',bg:'#EEEDFE'}
+];
+var BADGES=[
+  {id:'first_lesson', name:'First step',    ico:'\U0001F331',desc:'Complete your first lesson',         check:function(s){return s.history.length>=1;}},
+  {id:'streak_3',     name:'3-day streak',  ico:'\U0001F525',desc:'Learn 3 days in a row',              check:function(s){return s.streak>=3;}},
+  {id:'streak_7',     name:'Week warrior',  ico:'\u26A1',    desc:'Learn 7 days in a row',              check:function(s){return s.streak>=7;}},
+  {id:'perfect',      name:'Perfect score', ico:'\u2B50',    desc:'Score 100% on any lesson',           check:function(s){return s.history.some(function(h){return h.marking&&h.marking.score===h.marking.max_score&&h.marking.max_score>0;});}},
+  {id:'maths_5',      name:'Maths master',  ico:'\U0001F522',desc:'Complete 5 maths lessons',           check:function(s){return s.history.filter(function(h){return h.lesson.subject==='maths';}).length>=5;}},
+  {id:'english_5',    name:'Bookworm',      ico:'\U0001F4DA',desc:'Complete 5 English lessons',         check:function(s){return s.history.filter(function(h){return h.lesson.subject==='english';}).length>=5;}},
+  {id:'science_5',    name:'Scientist',     ico:'\U0001F52C',desc:'Complete 5 science lessons',         check:function(s){return s.history.filter(function(h){return h.lesson.subject==='science';}).length>=5;}},
+  {id:'history_5',    name:'Historian',     ico:'\U0001F3DB',desc:'Complete 5 history lessons',         check:function(s){return s.history.filter(function(h){return h.lesson.subject==='history';}).length>=5;}},
+  {id:'geo_5',        name:'Explorer',      ico:'\U0001F30D',desc:'Complete 5 geography lessons',       check:function(s){return s.history.filter(function(h){return h.lesson.subject==='geography';}).length>=5;}},
+  {id:'all_subjects', name:'All-rounder',   ico:'\U0001F3AF',desc:'Complete all 5 subjects in one day', check:function(s){var td=today();var subs={};s.history.forEach(function(h){if(h.lesson.lesson_date===td)subs[h.lesson.subject]=1;});return Object.keys(subs).length>=5;}},
+  {id:'ten_lessons',  name:'10 lessons',    ico:'\U0001F3C5',desc:'Complete 10 lessons total',          check:function(s){return s.history.length>=10;}},
+  {id:'fifty_lessons',name:'50 lessons',    ico:'\U0001F3C6',desc:'Complete 50 lessons total',          check:function(s){return s.history.length>=50;}},
+  {id:'high_scorer',  name:'High flyer',    ico:'\U0001F680',desc:'Average 80%+ across 10 lessons',     check:function(s){if(s.history.length<10)return false;var last=s.history.slice(-10);var sc=last.reduce(function(a,h){return a+(h.marking?h.marking.score:0);},0);var mx=last.reduce(function(a,h){return a+(h.marking?h.marking.max_score:0);},0);return mx>0&&sc/mx>=.8;}},
+  {id:'week_complete',name:'Full week',     ico:'\U0001F4C5',desc:'Learn every day for a week',          check:function(s){return s.streak>=7;}},
+  {id:'xp_1000',      name:'XP champion',  ico:'\U0001F48E',desc:'Earn 1000 XP',                       check:function(s){return s.xp>=1000;}}
+];
+var AVATARS=['🦁','🐯','🦊','🐺','🦅','🐉','🦋','⭐','⚡','🔥'];
+var AVATAR_UNLOCK=[0,0,100,200,300,600,1000,1600,2400,3500];
+var COACH_NAMES=['Prof. Nova','Coach Maya','Dr. Spark','Tutor Rex','Ms. Bright'];
+function getRank(xp){var r=RANKS[0];for(var i=0;i<RANKS.length;i++){if(xp>=RANKS[i].min)r=RANKS[i];}return r;}
+function getNextRank(xp){for(var i=0;i<RANKS.length;i++){if(xp<RANKS[i].min)return RANKS[i];}return null;}
+function xpForLesson(score,maxScore,isFirst){var pct=maxScore>0?score/maxScore:0;return 20+Math.round(pct*30)+(isFirst?10:0);}
+function coachPraise(score,maxScore){
+  var pct=maxScore>0?Math.round(score/maxScore*100):0;
+  var name=COACH_NAMES[(S.activeChild?S.activeChild.name.length:0)%COACH_NAMES.length];
+  var lines;
+  if(pct===100)lines=['Absolutely flawless! A perfect score. You should be incredibly proud of that.','100%! That is exceptional work. You have completely mastered this topic.'];
+  else if(pct>=80)lines=['Brilliant work! You really know your stuff. Keep that momentum going!','Fantastic result. Your hard work is clearly paying off. Well done!'];
+  else if(pct>=60)lines=['Good work! Solid understanding here. A little more practice and you will nail it.','Nice effort! You are on the right track. Keep pushing and the marks will follow.'];
+  else lines=['A good attempt! Every lesson is a stepping stone. Review the feedback and you will improve.','Keep going! Learning takes practice and you are doing exactly that.'];
+  return {name:name,msg:lines[Math.floor(Math.random()*lines.length)]};}
+function saveGameState(){try{var gs={xp:S.xp,streak:S.streak,lastActiveDate:S.lastActiveDate,earnedBadges:S.earnedBadges,avatar:S.avatar};localStorage.setItem('hs_game_'+(S.activeChild?S.activeChild.id:'x'),JSON.stringify(gs));}catch(e){}}
+function loadGameState(){try{var d=localStorage.getItem('hs_game_'+(S.activeChild?S.activeChild.id:'x'));if(d){var g=JSON.parse(d);S.xp=g.xp||0;S.streak=g.streak||0;S.lastActiveDate=g.lastActiveDate||'';S.earnedBadges=g.earnedBadges||[];S.avatar=g.avatar||0;}else{S.xp=0;S.streak=0;S.lastActiveDate='';S.earnedBadges=[];S.avatar=0;}}catch(e){S.xp=0;S.streak=0;S.lastActiveDate='';S.earnedBadges=[];S.avatar=0;}}
+function updateStreak(){var td=today();if(S.lastActiveDate===td)return;var y=new Date();y.setDate(y.getDate()-1);var yd=y.toISOString().slice(0,10);S.streak=S.lastActiveDate===yd?S.streak+1:1;S.lastActiveDate=td;}
+function awardXP(amt){var or2=getRank(S.xp);S.xp+=amt;var nr=getRank(S.xp);saveGameState();return{amount:amt,leveled:nr.name!==or2.name,newRank:nr};}
+function checkBadges(){var n=[];BADGES.forEach(function(b){if(S.earnedBadges.indexOf(b.id)===-1&&b.check(S)){S.earnedBadges.push(b.id);n.push(b);}});if(n.length)saveGameState();return n;}
+function floatXP(amt,el){try{var r=el?el.getBoundingClientRect():{top:200,left:window.innerWidth/2,width:0};var d=document.createElement('div');d.className='xp-float';d.textContent='+'+amt+' XP';d.style.left=(r.left+r.width/2-20)+'px';d.style.top=(r.top+window.scrollY-10)+'px';document.body.appendChild(d);setTimeout(function(){d.remove();},1000);}catch(e){}}
+function showLevelUpModal(rank,badges){S.showLvlModal=true;S.lvlModalData={rank:rank,badges:badges};render();}
+function closeLvlModal(){S.showLvlModal=false;S.lvlModalData=null;render();}
+function setAvatar(i){S.avatar=i;saveGameState();render();}
+
+
+/* ── UTILS ──────────────────────────────────────────────────────────────────── */
+function today()   { return new Date().toISOString().slice(0,10); }
+function pickBook(ks) { var p=BOOKS[ks]||BOOKS.KS2; return p[Math.floor(Date.now()/86400000)%p.length]; }
+function scCls(p)  { return p>=70?'sc-hi':p>=50?'sc-mi':'sc-lo'; }
+function subClr(id){ var s=SUBJECTS.find(function(x){return x.id===id;}); return s?s.color:'#888'; }
+function fmtDate(d){ return new Date(d+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); }
+function ytUrl(q)  { return 'https://www.youtube.com/results?search_query='+encodeURIComponent(q); }
+function esc(s)    { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function ini(n)    { return String(n||'?').slice(0,2).toUpperCase(); }
+function persist(k,v){ try{ v?localStorage.setItem(k,v):localStorage.removeItem(k); }catch(e){} }
+function recall(k) { try{ return localStorage.getItem(k)||''; }catch(e){return '';} }
+function val(id)   { var e=document.getElementById(id); return e?e.value.trim():''; }
+
+var YT_SVG='<svg viewBox="0 0 24 24"><path d="M21.8 8s-.2-1.4-.8-2c-.8-.8-1.6-.8-2-.9C16.2 5 12 5 12 5s-4.2 0-7 .1c-.4.1-1.2.1-2 .9-.6.6-.8 2-.8 2S2 9.6 2 11.2v1.5c0 1.6.2 3.2.2 3.2s.2 1.4.8 2c.8.8 1.8.8 2.3.9C6.8 19 12 19 12 19s4.2 0 7-.1c.4-.1 1.2-.1 2-.9.6-.6.8-2 .8-2s.2-1.6.2-3.2v-1.5C22 9.6 21.8 8 21.8 8zM9.7 14.5V9.1l5.6 2.7-5.6 2.7z"/></svg>';
+
+/* ── RENDER ─────────────────────────────────────────────────────────────────── */
+function render(){ document.getElementById('app').innerHTML=buildApp(); }
+
+function buildApp(){
+  if(!S.user)        return buildAuth();
+  if(!S.activeChild) return buildShell(buildOnboard());
+  var inner;
+  if(S.page==='lesson')   inner=buildLesson();
+  else if(S.page==='history')  inner=buildHistory();
+  else if(S.page==='rewards')  inner=buildRewards();
+  else if(S.page==='settings') inner=buildSettings();
+  else inner=buildDash();
+  var shell=buildShell(inner);
+  if(S.showLvlModal&&S.lvlModalData) shell+=buildLvlModal(S.lvlModalData);
+  return shell;
+}
+
+async function checkSbConn(){
+  var dot=document.getElementById('sb-dot'), lbl=document.getElementById('sb-lbl');
+  if(!dot||!lbl)return;
+  try{
+    var r=await fetch(SB+'/auth/v1/health',{headers:{'apikey':SBKEY}});
+    if(r.ok){
+      dot.style.background='var(--g)'; lbl.textContent='Supabase connected — data will sync';
+    } else {
+      var t=await r.text();
+      dot.style.background='var(--am)'; lbl.textContent='Supabase error '+r.status+': '+t.slice(0,80);
+    }
+  }catch(e){
+    dot.style.background='var(--rd)'; lbl.textContent='Cannot reach Supabase: '+e.message;
+    console.error('[SB conn test]',e);
+  }
+}
+
+/* ── AUTH ───────────────────────────────────────────────────────────────────── */
+function buildAuth(){
+  var lg=S.authMode==='login';
+  var h='<div class="auth-page">';
+  h+='<div class="auth-brand"><div class="wordmark">Home<em>School</em> AI</div><p>A personalised AI teacher for every child</p></div>';
+  h+='<div class="auth-box">';
+  h+='<div class="tab-row"><div class="tab-pill '+(lg?'on':'')+'" onclick="setMode(\'login\')">Sign in</div><div class="tab-pill '+(!lg?'on':'')+'" onclick="setMode(\'signup\')">Create account</div></div>';
+  if(S.authErr) h+='<div class="msg msg-err">'+esc(S.authErr)+'</div>';
+  if(S.authOk)  h+='<div class="msg msg-ok">'+esc(S.authOk)+'</div>';
+  if(!lg) h+='<div class="field"><label>Your name</label><input id="a-name" type="text" placeholder="e.g. Sarah Johnson"></div>';
+  h+='<div class="field"><label>Email</label><input id="a-email" type="email" placeholder="you@example.com"></div>';
+  h+='<div class="field"><label>Password</label><input id="a-pass" type="password" placeholder="'+(lg?'Your password':'At least 6 characters')+'"></div>';
+  h+='<button class="btn btn-green" id="a-btn" onclick="doAuth()">'+(lg?'Sign in':'Create account')+'</button>';
+  if(lg) h+='<div class="auth-footer">No account? <a onclick="setMode(\'signup\')">Sign up free</a></div>';
+  h+='<div class="offline-note" id="sb-status"><div class="offline-dot" id="sb-dot"></div><span id="sb-lbl">Checking Supabase…</span></div>';
+  setTimeout(checkSbConn, 400);
+  h+='</div></div>';
+  return h;
+}
+
+function setMode(m){ S.authMode=m; S.authErr=''; S.authOk=''; render(); }
+
+async function ensureProfile(user, tok) {
+  if (DB_MODE !== 'live' || !user || !user.id) return;
+  try {
+    var name = (user.user_metadata && user.user_metadata.full_name) || user.email || '';
+    await rpc('ensure_profile', {p_user_id: user.id, p_email: user.email||'', p_name: name});
+  } catch(e) { console.warn('[ensureProfile]', e && e.message); }
+}
+
+async function doAuth(){
+  var email=val('a-email'), pw=val('a-pass'), name=val('a-name');
+  var btn=document.getElementById('a-btn');
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  S.authErr=''; S.authOk='';
+  try{
+    if(S.authMode==='login'){
+      var r=await apiLogin(email,pw);
+      S.user=r.user; S.token=r.token; persist('hs_tok',r.token);
+      await ensureProfile(r.user, r.token);
+      await loadChildren();
+    } else {
+      if(pw.length<6) throw new Error('Password must be at least 6 characters.');
+      var r2=await apiSignup(email,pw,name);
+      if(r2.needsConfirm){ S.authOk='Account created! Check your email for a confirmation link, then sign in. (To skip this, disable email confirmation in your Supabase dashboard under Authentication → Providers → Email.)'; S.authMode='login'; }
+      else { S.user=r2.user; S.token=r2.token; persist('hs_tok',r2.token); await ensureProfile(r2.user, r2.token); await loadChildren(); }
+    }
+  }catch(e){ S.authErr=e.message||'Something went wrong. Please try again.'; }
+  render();
+}
+
+/* ── SHELL ──────────────────────────────────────────────────────────────────── */
+function buildShell(content){
+  var c=S.activeChild, ks=c?KS_MAP[c.age]:'';
+  var h='<div class="shell">';
+  h+='<div class="topbar"><div class="topbar-logo">Home<em>School</em> AI</div><div class="topbar-right">';
+  if(c){var rk=getRank(S.xp);h+='<div class="child-chip" onclick="toggleModal()"><div class="av" style="font-size:15px;background:'+rk.bg+'">'+AVATARS[S.avatar]+'</div>'+esc(c.name)+' \u00b7 <span class="rank-badge" style="background:'+rk.bg+';color:'+rk.color+'">'+rk.name+'</span></div>';}
+  h+='<button class="btn btn-ghost btn-sm" onclick="doSignOut()">Sign out</button>';
+  h+='</div></div><div class="main-area">'+content+'</div>';
+  if(c) h+=buildNav();
+  h+='</div>';
+  if(S.showModal) h+=buildModal();
+  return h;
+}
+
+function buildNav(){
+  var rank=getRank(S.xp);
+  var next=getNextRank(S.xp);
+  var pct=next?Math.round((S.xp-rank.min)/(next.min-rank.min)*100):100;
+  var defs=[
+    {id:'dashboard',lbl:'Today',   p:'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9.75L12 3l9 6.75V19.5a1.5 1.5 0 01-1.5 1.5h-5.25v-4.5h-4.5V21H4.5A1.5 1.5 0 013 19.5V9.75z"/>'},
+    {id:'rewards',  lbl:'Rewards', p:'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>'},
+    {id:'history',  lbl:'History', p:'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"/>'},
+    {id:'settings', lbl:'Settings',p:'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281a7.5 7.5 0 011.5.866l1.198-.497a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827a7.535 7.535 0 010 1.729l1.003.827c.43.355.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.198-.497a7.5 7.5 0 01-1.5.866l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.02-.397-1.11-.94l-.213-1.281a7.5 7.5 0 01-1.5-.866l-1.198.497a1.125 1.125 0 01-1.37-.49l-1.296-2.248a1.125 1.125 0 01.26-1.431l1.004-.827a7.535 7.535 0 010-1.729L3.42 10.9a1.125 1.125 0 01-.26-1.43L4.456 7.22a1.125 1.125 0 011.37-.491l1.198.497a7.5 7.5 0 011.5-.866l.213-1.281z"/><circle cx="12" cy="12" r="3" stroke-width="1.5" stroke-linecap="round"/>'}
+  ];
+  var tabs=defs.map(function(d){
+    return '<button class="nitem '+(S.page===d.id?'on':'')+'" onclick=\"navTo(\\\''+d.id+'\\\')">'+
+      '<svg viewBox="0 0 24 24" fill="none">'+d.p+'</svg>'+d.lbl+'</button>';
+  }).join('');
+  var xpBar='<div style="padding:4px 12px 0;background:var(--s0);border-top:1px solid var(--b0)">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'+
+    '<span style="font-size:10px;font-weight:700;color:'+rank.color+'">'+AVATARS[S.avatar]+' '+rank.name+'</span>'+
+    '<span style="font-size:10px;color:var(--t2)">'+S.xp+' XP'+(next?' / '+next.min:'')+
+    '</span></div><div class="rank-bar-wrap"><div class="rank-bar-fill" style="width:'+pct+'%"></div></div></div>';
+  return '<div class="bnav" style="flex-direction:column">'+xpBar+'<div style="display:flex">'+tabs+'</div></div>';
+}
+
+/* ── ONBOARD ────────────────────────────────────────────────────────────────── */
+function buildOnboard(){
+  var ages=[5,6,7,8,9,10,11,12,13,14,15,16];
+  var h='<div class="ob-wrap"><div class="ob-card">';
+  h+='<h2>👋 Welcome to HomeSchool AI</h2>';
+  h+='<p class="sub">Set up your child\'s profile to get started. Lessons are automatically aligned to the UK National Curriculum for their age.</p>';
+  h+='<div class="field"><label>Child\'s name</label><input id="ob-nm" type="text" placeholder="e.g. Oliver" value="'+esc(S.obName)+'" oninput="S.obName=this.value"></div>';
+  h+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);margin-bottom:8px">Select age</div>';
+  h+='<div class="age-grid">';
+  ages.forEach(function(a){ h+='<div class="age-btn '+(S.obAge===a?'sel':'')+'" onclick="S.obAge='+a+';render()">'+a+'<small>'+KS_MAP[a]+'</small></div>'; });
+  h+='</div>';
+  if(S.obAge) h+='<div style="margin-bottom:1rem"><span class="ks-tag">\u2713 '+KS_YEAR[KS_MAP[S.obAge]]+' \u2014 '+KS_MAP[S.obAge]+'</span></div>';
+  h+='<button class="btn btn-green" onclick="addFirstChild()" '+(!S.obName.trim()||!S.obAge?'disabled':'')+'>Start learning \u2192</button>';
+  h+='</div></div>';
+  return h;
+}
+
+/* ── DASHBOARD ──────────────────────────────────────────────────────────────── */
+function buildDash(){
+  var c=S.activeChild, ks=KS_MAP[c.age], tl=S.todayLessons;
+  var done=0,sc=0,mx=0;
+  SUBJECTS.forEach(function(s){['L1','L2'].forEach(function(p){var e=tl[s.id+'_'+p];if(e&&e.marking){done++;sc+=e.marking.score;mx+=e.marking.max_score;}});});
+  var avg=mx>0?Math.round(sc/mx*100):0;
+  var dates={};
+  S.history.forEach(function(h){dates[h.lesson.lesson_date]=true;});
+
+  var streakH='<div class="streak-bar">';
+  var act7=0;
+  for(var i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);var dk=d.toISOString().slice(0,10);var on=!!dates[dk];if(on)act7++;streakH+='<div class="sdot'+(on?' on':'')+'"></div>';}
+  streakH+='<span class="streak-lbl">'+act7+' of last 7 days</span></div>';
+
+  var cards=SUBJECTS.map(function(s){
+    var l1=tl[s.id+'_L1'],l2=tl[s.id+'_L2'];
+    var d1=!!(l1&&l1.marking),d2=!!(l2&&l2.marking);
+    var prg=d1&&d2?'Both lessons complete \u2713':d1?'L1 done \u2014 ready for L2':'Start today\'s lesson';
+    return '<div class="subj-card '+s.id+'" onclick="openSubject(\''+s.id+'\')">'+
+      (d1&&d2?'<div class="done-check">\u2713</div>':'')+
+      '<span class="s-ico">'+s.icon+'</span>'+
+      '<div class="s-name">'+s.label+'</div>'+
+      '<div class="s-prg">'+prg+'</div>'+
+    '</div>';
+  }).join('');
+
+  var hr=new Date().getHours();
+  var greet=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+
+  var rank=getRank(S.xp),next2=getNextRank(S.xp);
+  var xpPct=next2?Math.round((S.xp-rank.min)/(next2.min-rank.min)*100):100;
+  var praise=done>0?coachPraise(sc,mx):null;
+  var coachH=praise?'<div class="coach-bubble"><div class="cb-name">'+esc(praise.name)+'</div>'+esc(praise.msg)+'</div>':'';
+  var xpH='<div class="xp-card">'+
+    '<div class="xp-top"><span class="xp-name">'+AVATARS[S.avatar]+' '+esc(c.name)+'</span><span class="xp-pts">'+S.xp+' XP</span></div>'+
+    '<div class="rank-bar-wrap"><div class="rank-bar-fill" style="width:'+xpPct+'%"></div></div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">'+
+    '<span class="rank-badge" style="background:'+rank.bg+';color:'+rank.color+'">'+rank.name+'</span>'+
+    (next2?'<span class="xp-next">'+(next2.min-S.xp)+' XP to '+next2.name+'</span>':'<span style="font-size:11px;color:var(--g);font-weight:700">MAX RANK</span>')+
+    '</div></div>';
+  var flameIco=S.streak>=3?'\ud83d\udd25':S.streak>=1?'\u2728':'\ud83d\udca4';
+  var streakHero='<div class="streak-hero"><div class="streak-flame">'+flameIco+'</div>'+
+    '<div class="streak-info"><div class="s-num">'+S.streak+'</div><div class="s-lbl">day streak</div></div>'+
+    '<div style="display:flex;gap:5px;margin-left:auto">'+streakH.replace('<div class="streak-bar">','').replace(/\/div>$/,'').replace(/<span[^>]*>.*?<\/span>/g,'')+'</div></div>';
+  return '<div class="dash-greeting"><h2>'+greet+', '+esc(c.name)+'! \ud83d\udc4b</h2>'+
+    '<p>'+new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+' \u00b7 '+KS_YEAR[ks]+' \u00b7 '+ks+'</p></div>'+
+    xpH+streakHero+coachH+
+    '<div class="stats-grid">'+
+    '<div class="stat-tile"><div class="n">'+done+'</div><div class="l">Today</div></div>'+
+    '<div class="stat-tile"><div class="n">'+(mx>0?avg+'%':'\u2014')+'</div><div class="l">Avg score</div></div>'+
+    '<div class="stat-tile"><div class="n">'+S.history.length+'</div><div class="l">All lessons</div></div>'+
+    '<div class="stat-tile"><div class="n">'+Object.keys(dates).length+'</div><div class="l">Days active</div></div>'+
+    '</div>'+
+    '<div class="subj-label">Today\'s subjects</div>'+
+    '<div class="subj-grid">'+cards+'</div>';
+}
+
+/* ── LESSON ─────────────────────────────────────────────────────────────────── */
+function buildLesson(){
+  var subj=SUBJECTS.find(function(x){return x.id===S.subject;});
+  var c=S.activeChild, ks=KS_MAP[c.age];
+  var l1done=!!(S.todayLessons[S.subject+'_L1']&&S.todayLessons[S.subject+'_L1'].marking);
+  var entry=S.todayLessons[S.subject+'_'+S.part]||{};
+
+  var ptabs=['L1','L2'].map(function(p,i){
+    var pd=!!(S.todayLessons[S.subject+'_'+p]&&S.todayLessons[S.subject+'_'+p].marking);
+    var dis=(p==='L2'&&!l1done)?'disabled':'';
+    return '<button class="ppill '+(S.part===p?'on':'')+(pd?' done':'')+'" '+dis+' onclick="setPart(\''+p+'\')">'+(pd?'\u2713 ':'')+
+      'Lesson '+(i+1)+(p==='L2'&&!l1done?' (finish L1 first)':'')+'</button>';
+  }).join('');
+
+  var body;
+  if(entry.marking)     body=buildMarked(entry);
+  else if(entry.lesson) body=buildActive(entry.lesson);
+  else { body='<div class="lcard"><div class="spin-state"><div class="spin"></div>Generating your '+subj.label+' lesson\u2026</div></div>'; setTimeout(generateLesson,80); }
+
+  return '<div class="lesson-nav"><button class="back-btn" onclick="navTo(\'dashboard\')">\u2190 Back</button>'+
+    '<div class="lesson-meta"><h2>'+subj.icon+' '+subj.label+'</h2><p>'+ks+' \u00b7 Age '+c.age+'</p></div></div>'+
+    '<div class="part-pills">'+ptabs+'</div><div id="lbody">'+body+'</div>';
+}
+
+function buildActive(lesson){
+  var qs=(lesson.questions||[]).map(function(q,i){
+    return '<div class="q-item"><label>Q'+(i+1)+'. '+esc(q)+'</label>'+
+      '<textarea id="ans_'+i+'" oninput="S.drafts['+i+']=this.value">'+esc(S.drafts[i]||'')+'</textarea></div>';
+  }).join('');
+  return '<div class="lcard"><h3>'+esc(lesson.title)+'</h3>'+
+    '<div class="lbody">'+esc(lesson.content)+'</div>'+
+    '<a class="yt-banner" href="'+ytUrl(lesson.youtube_query||lesson.title)+'" target="_blank" rel="noopener">'+
+      '<div class="yt-logo">'+YT_SVG+'</div>'+
+      '<div class="yt-info"><div class="yt-hint">Watch on YouTube</div><div class="yt-q">'+esc(lesson.youtube_query||lesson.title)+'</div></div>'+
+    '</a>'+
+    (qs?'<div class="q-list">'+qs+'</div>':'')+
+    '<div class="submit-row"><button class="btn btn-submit" onclick="submitLesson()">Submit for marking \u2192</button></div>'+
+  '</div>';
+}
+
+function buildMarked(entry){
+  var l=entry.lesson, m=entry.marking, a=(entry.submission&&entry.submission.answers)||{};
+  var pct=Math.round(m.score/m.max_score*100);
+  var qs=(l.questions||[]).map(function(q,i){
+    return '<div class="q-item"><label>Q'+(i+1)+'. '+esc(q)+'</label><div class="ans-box">'+esc(a[i]||'(no answer given)')+'</div></div>';
+  }).join('');
+  return '<div class="done-banner">\u2713 Lesson complete! <span class="score-badge '+scCls(pct)+'">'+m.score+'/'+m.max_score+' \u00b7 '+pct+'%</span></div>'+
+  '<div class="lcard"><h3>'+esc(l.title)+'</h3><div class="lbody">'+esc(l.content)+'</div>'+
+  '<a class="yt-banner" href="'+ytUrl(l.youtube_query||l.title)+'" target="_blank" rel="noopener">'+
+    '<div class="yt-logo">'+YT_SVG+'</div>'+
+    '<div class="yt-info"><div class="yt-hint">Watch on YouTube</div><div class="yt-q">'+esc(l.youtube_query||l.title)+'</div></div>'+
+  '</a>'+(qs?'<div class="q-list">'+qs+'</div>':'')+
+  '</div><div class="lcard"><div class="fb-head">\ud83d\udcdd Teacher\'s Feedback</div><div class="fb-card">'+esc(m.feedback)+'</div></div>';
+}
+
+
+/* \u2500\u2500 REWARDS PAGE \u2500\u2500 */
+function buildRewards(){
+  var rank=getRank(S.xp),next=getNextRank(S.xp);
+  var xpPct=next?Math.round((S.xp-rank.min)/(next.min-rank.min)*100):100;
+  var h='<div class="page-title">Rewards</div>';
+  h+='<div class="xp-card"><div class="xp-top"><span class="xp-name">'+AVATARS[S.avatar]+' '+esc(S.activeChild.name)+'</span><span class="xp-pts">'+S.xp+' XP</span></div>'+
+    '<div class="rank-bar-wrap" style="height:10px"><div class="rank-bar-fill" style="width:'+xpPct+'%"></div></div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">'+
+    '<span class="rank-badge" style="background:'+rank.bg+';color:'+rank.color+';font-size:13px;padding:4px 12px">'+rank.name+'</span>'+
+    (next?'<span class="xp-next" style="font-size:12px">'+(next.min-S.xp)+' XP to <strong>'+next.name+'</strong></span>':'<span style="font-size:12px;color:var(--g);font-weight:700">MAX RANK!</span>')+
+    '</div></div>';
+  var fi=S.streak>=7?'\ud83d\udd25':S.streak>=3?'\u2728':S.streak>=1?'\u2b50':'\ud83d\udca4';
+  var sm=S.streak>=7?'\ud83c\udfc6 Week warrior!':S.streak>=3?'Keep it up!':'Learn daily to build a streak';
+  h+='<div class="streak-hero"><div class="streak-flame">'+fi+'</div>'+
+    '<div class="streak-info"><div class="s-num">'+S.streak+'</div><div class="s-lbl">day streak</div></div>'+
+    '<div style="margin-left:auto;text-align:right;font-size:12px;color:var(--t2)">'+sm+'</div></div>';
+  h+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);margin-bottom:10px">Choose your avatar</div>';
+  h+='<div class="avatar-grid">';
+  AVATARS.forEach(function(av,i){
+    var ok=S.xp>=AVATAR_UNLOCK[i];
+    h+='<div class="av-option'+(S.avatar===i?' sel':'')+(ok?'':' locked-av')+'" '+(ok?'onclick="setAvatar('+i+')"':'')+' title="'+(ok?'Select':'Unlock at '+AVATAR_UNLOCK[i]+' XP')+'">'+av+'</div>';
+  });
+  h+='</div>';
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t2)">Badges</div>'+
+    '<div style="font-size:12px;color:var(--t2)">'+S.earnedBadges.length+'/'+BADGES.length+' earned</div></div>';
+  h+='<div class="badges-grid">';
+  BADGES.forEach(function(b){
+    var has=S.earnedBadges.indexOf(b.id)!==-1;
+    h+='<div class="badge-tile'+(has?'':' locked')+'" title="'+esc(b.desc)+'">'+
+      '<span class="b-ico">'+b.ico+'</span>'+'<div class="b-name">'+esc(b.name)+'</div>'+(has?'<div class="b-check">\u2713 Earned</div>':'')+
+    '</div>';
+  });
+  h+='</div>';
+  h+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);margin-bottom:10px">Rank road map</div>';
+  h+='<div style="background:var(--s0);border:1px solid var(--b0);border-radius:var(--r16);overflow:hidden;box-shadow:var(--shadow-sm)">';
+  RANKS.forEach(function(r,i){
+    var cur=rank.name===r.name,ach=S.xp>=r.min;
+    h+='<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--b0);'+(cur?'background:var(--gl)':'')+'">'+
+      '<div style="width:28px;height:28px;border-radius:50%;background:'+(ach?r.color:'var(--s2)')+';display:flex;align-items:center;justify-content:center;font-size:12px;color:'+(ach?'#fff':'var(--t2)')+';font-weight:700;flex-shrink:0">'+(ach?'\u2713':(i+1))+'</div>'+
+      '<div style="flex:1"><div style="font-size:13px;font-weight:'+(cur?700:500)+';color:'+(cur?'var(--gd)':'var(--t0)')+'">'+r.name+'</div><div style="font-size:11px;color:var(--t2)">'+r.min+' XP</div></div>'+
+      (cur?'<span style="font-size:11px;font-weight:700;color:var(--g)">Current</span>':'')+
+    '</div>';
+  });
+  h+='</div>';
+  return h;
+}
+
+function buildLvlModal(data){
+  var cols=['#FFD700','#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7'];
+  var conf='';
+  for(var i=0;i<18;i++){conf+='<div class="confetti-piece" style="left:'+Math.round(Math.random()*100)+'%;background:'+cols[i%cols.length]+';animation-delay:'+(Math.round(Math.random()*600)/1000)+'s;animation-duration:'+(Math.round((600+Math.random()*400))/1000)+'s"></div>';}
+  var bh='';
+  if(data.badges&&data.badges.length){bh='<div style="margin-bottom:1rem"><div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px">New badges earned!</div>'+
+    '<div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">'+
+    data.badges.map(function(b){return '<div style="text-align:center;animation:badge-in .4s ease-out both"><div style="font-size:28px">'+b.ico+'</div><div style="font-size:11px;font-weight:600;color:var(--t1);margin-top:3px">'+esc(b.name)+'</div></div>';}).join('')+
+    '</div></div>';}
+  return '<div class="lvl-modal-bg" onclick="if(event.target===this)closeLvlModal()"><div class="lvl-modal">'+
+    '<div class="confetti-wrap">'+conf+'</div>'+
+    '<span class="lm-ico">\ud83c\udf89</span>'+
+    '<h2>Level up!</h2><p>You are now a <strong>'+esc(data.rank.name)+'</strong></p>'+
+    bh+'<button class="btn btn-green" onclick="closeLvlModal()">Keep learning!</button></div></div>';
+}
+
+
+/* ── HISTORY ────────────────────────────────────────────────────────────────── */
+function buildHistory(){
+  if(!S.history.length) return '<div class="empty-state"><div class="e-ico">\ud83d\udcda</div><h3>No lessons completed yet</h3><p>Complete your first lesson to see your progress here.</p></div>';
+  var byDate={};
+  S.history.forEach(function(h){var d=h.lesson.lesson_date;if(!byDate[d])byDate[d]=[];byDate[d].push(h);});
+  var h='<div class="page-title">Progress History</div>';
+  Object.keys(byDate).sort().reverse().forEach(function(d){
+    h+='<div class="hist-group"><div class="hist-label">'+(d===today()?'Today':fmtDate(d))+'</div><ul class="hist-list">';
+    byDate[d].forEach(function(en){
+      var l=en.lesson,m=en.marking,sub=SUBJECTS.find(function(s){return s.id===l.subject;});
+      var pct=m.max_score>0?Math.round(m.score/m.max_score*100):0;
+      h+='<li class="hist-item" onclick="reviewLesson(\''+l.subject+'\',\''+l.part+'\')">'+
+        '<div class="hi-dot" style="background:'+subClr(l.subject)+'"></div>'+
+        '<div class="hi-info"><div class="hi-title">'+(sub?sub.icon+' '+sub.label:l.subject)+' \u2014 '+l.part+'</div>'+
+        '<div class="hi-meta">'+esc(l.title)+'</div></div>'+
+        '<span class="score-badge '+scCls(pct)+'">'+m.score+'/'+m.max_score+'</span></li>';
+    });
+    h+='</ul></div>';
+  });
+  return h;
+}
+
+/* ── SETTINGS ───────────────────────────────────────────────────────────────── */
+function buildSettings(){
+  var rows=S.children.map(function(ch){
+    var active=S.activeChild&&S.activeChild.id===ch.id;
+    return '<div class="child-row"><div class="av">'+ini(ch.name)+'</div>'+
+      '<div style="flex:1"><strong>'+esc(ch.name)+'</strong> \u00b7 Age '+ch.age+' \u00b7 '+KS_MAP[ch.age]+'</div>'+
+      (active?'<span style="font-size:12px;font-weight:600;color:var(--g)">Active</span>':'<button class="btn btn-ghost btn-sm" onclick="switchChild(\''+ch.id+'\')">Switch</button>')+
+    '</div>';
+  }).join('');
+  var ag=[5,6,7,8,9,10,11,12,13,14,15,16].map(function(a){
+    return '<div class="age-btn '+(S.newChildAge===a?'sel':'')+'" onclick="S.newChildAge='+a+';render()">'+a+'<small>'+KS_MAP[a]+'</small></div>';
+  }).join('');
+  return '<div class="page-title">Settings</div>'+
+  '<div class="set-section"><h3>Children</h3>'+rows+
+  '<div class="divider"></div>'+
+  '<div style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Add another child</div>'+
+  '<div class="field"><input id="new-nm" type="text" placeholder="Child\'s name" value="'+esc(S.newChildName)+'" oninput="S.newChildName=this.value"></div>'+
+  '<div class="age-grid" style="margin-bottom:1rem">'+ag+'</div>'+
+  '<button class="btn btn-green" onclick="addChild()">Add child</button></div>'+
+  '<div class="set-section"><h3>Account</h3>'+
+  '<div class="acct-email">'+esc(S.user?(S.user.email||''):'')+'</div>'+
+  '<button class="btn btn-danger" onclick="doSignOut()">Sign out</button></div>';
+}
+
+/* ── MODAL ──────────────────────────────────────────────────────────────────── */
+function buildModal(){
+  var items=S.children.map(function(c){
+    var on=S.activeChild&&S.activeChild.id===c.id;
+    return '<li class="'+(on?'on':'')+'" onclick="switchChild(\''+c.id+'\')">'+
+      '<div class="av">'+ini(c.name)+'</div>'+
+      '<div><strong>'+esc(c.name)+'</strong><br><span style="font-size:12px;color:var(--t2)">Age '+c.age+' \u00b7 '+KS_MAP[c.age]+'</span></div>'+
+      (on?'<span style="margin-left:auto;color:var(--g);font-weight:700">\u2713</span>':'')+
+    '</li>';
+  }).join('');
+  return '<div class="modal-veil" onclick="if(event.target===this)toggleModal()">'+
+    '<div class="modal-box"><h3>Switch child profile</h3>'+
+    '<ul class="modal-list">'+items+'</ul>'+
+    '<button class="btn btn-ghost" style="width:100%" onclick="toggleModal()">Close</button>'+
+    '</div></div>';
+}
+
+/* ── DATA ───────────────────────────────────────────────────────────────────── */
+async function loadChildren(){
+  var rows=await apiChildren(S.user.id,S.token);
+  S.children=rows||[];
+  if(S.children.length>0){
+    S.activeChild=S.children[0];
+    loadGameState();
+    await Promise.all([loadTodayLessons(),loadHistory()]);
+  }
+}
+
+async function loadTodayLessons(){
+  if(!S.activeChild)return;
+  S.todayLessons={};
+  var ls=await apiLessons(S.activeChild.id,today(),S.token);
+  if(!ls||!ls.length)return;
+  for(var i=0;i<ls.length;i++){
+    var l=ls[i], key=l.subject+'_'+l.part, entry={lesson:l};
+    var sub=await apiGetSub(l.id,S.token);
+    if(sub){ entry.submission=sub; var mk=await apiGetMark(l.id,S.token); if(mk)entry.marking=mk; }
+    S.todayLessons[key]=entry;
+  }
+}
+
+async function loadHistory(){
+  if(!S.activeChild)return;
+  var ls=await (DB_MODE==='live'
+    ? rpc('get_all_lessons',{p_child_id:S.activeChild.id}).catch(function(e){sbLog('loadHistory',e);return LDB.lessons(S.activeChild.id,null);})
+    : Promise.resolve(LDB.lessons(S.activeChild.id,null)));
+  var hist=[];
+  for(var i=0;i<ls.length;i++){
+    var mk=await apiGetMark(ls[i].id,S.token);
+    if(mk) hist.push({lesson:ls[i],marking:mk});
+  }
+  S.history=hist;
+}
+
+async function addFirstChild(){
+  var name=(val('ob-nm')||S.obName).trim(), age=S.obAge;
+  if(!name||!age){alert('Please enter a name and select an age.');return;}
+  if(!S.user||!S.user.id){alert('Session error — please sign in again.');return;}
+  try{
+    console.log('[addFirstChild] S.user:', JSON.stringify(S.user), 'name:', name, 'age:', age);
+    var r=await apiAddChild({user_id:S.user.id,name:name,age:age,key_stage:KS_MAP[age]},S.token);
+    console.log('[addFirstChild] apiAddChild result:', JSON.stringify(r));
+    if(!r||!r.id){throw new Error('Child not saved — please try again.');}
+    S.children.push(r); S.activeChild=r; S.obName=''; S.obAge=null;
+    loadGameState();
+    await Promise.all([loadTodayLessons(),loadHistory()]);
+    S.page='dashboard'; render();
+  }catch(e){
+    console.error('addFirstChild:',e);
+    alert('Could not save child profile: '+(e.message||e));
+  }
+}
+
+async function addChild(){
+  var name=((val('new-nm')||S.newChildName)||'').trim(), age=S.newChildAge;
+  if(!name||!age){alert('Please enter a name and select an age.');return;}
+  var r=await apiAddChild({user_id:S.user.id,name:name,age:age,key_stage:KS_MAP[age]},S.token);
+  S.children.push(r); S.newChildName=''; S.newChildAge=null; render();
+}
+
+async function switchChild(id){
+  S.activeChild=S.children.find(function(c){return c.id===id;});
+  S.todayLessons={}; S.history=[]; S.showModal=false; S.page='dashboard';
+  loadGameState();
+  await Promise.all([loadTodayLessons(),loadHistory()]); render();
+}
+
+/* ── LESSON GENERATION ──────────────────────────────────────────────────────── */
+async function generateLesson(){
+  var c=S.activeChild, ks=KS_MAP[c.age], key=S.subject+'_'+S.part;
+  var pn=S.part==='L1'?1:2, isEng=S.subject==='english', book=isEng?pickBook(ks):'';
+
+  var safeBook=book.replace(/'/g,'').replace(/"/g,'');
+  var prompt='You are an experienced UK '+ks+' teacher generating a '+S.subject+' lesson for a '+c.age+'-year-old student.\n'+
+    'This is Lesson '+pn+' of 2.'+(pn===2?' Lesson 2 should build on Lesson 1 and be slightly more challenging.':'')+'\n'+
+    (isEng?'Base this English lesson around the book: '+safeBook+'. Cover comprehension, vocabulary, themes, or creative writing inspired by it.\n':'')+
+    'IMPORTANT: Respond ONLY with a single valid JSON object. No markdown fences, no explanation, no text before or after the JSON.\n'+
+    'CRITICAL: Do NOT use apostrophes or single quotes anywhere inside JSON string values. Reword contractions and possessives to avoid them (e.g. use "does not" instead of "doesn\'t", use "the author\'s style" as "the style of the author").\n'+
+    'Use only straight double-quotes for JSON structure. Never use curly/smart quotes.\n'+
+    '{"title":"lesson title here","content":"3-4 paragraphs of engaging age-appropriate UK curriculum content","questions":["question 1","question 2","question 3","question 4","question 5"],"youtube_query":"6 to 10 word YouTube search query"}';
+
+  var lesson=null;
+  try{
+    var res=await fetch(AIURL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+    var data=await res.json();
+    var txt=''; if(data.content)data.content.forEach(function(b){if(b.text)txt+=b.text;});
+    lesson=extractJSON(txt);
+    lesson.book_title=isEng?safeBook:null;
+  }catch(e){
+    console.error('generateLesson:',e);
+    lesson={title:'Generation failed',content:'Could not generate lesson. Please go back and try again.',questions:[],youtube_query:'',book_title:null};
+  }
+
+  var saved=null;
+  try{
+    saved=await apiAddLesson({child_id:c.id,lesson_date:today(),subject:S.subject,part:S.part,
+      title:lesson.title,content:lesson.content,questions:lesson.questions,
+      book_title:lesson.book_title,youtube_query:lesson.youtube_query},S.token);
+  }catch(e){ saved=Object.assign({id:uid()},lesson); }
+
+  S.todayLessons[key]={lesson:saved}; S.drafts={};
+  var el=document.getElementById('lbody');
+  if(el&&S.page==='lesson') el.innerHTML=buildActive(saved);
+}
+
+/* ── SUBMIT + MARK ──────────────────────────────────────────────────────────── */
+async function submitLesson(){
+  var key=S.subject+'_'+S.part, entry=S.todayLessons[key];
+  if(!entry||!entry.lesson)return;
+  var lesson=entry.lesson;
+
+  var answers={};
+  (lesson.questions||[]).forEach(function(_,i){var el=document.getElementById('ans_'+i);answers[i]=el?el.value:(S.drafts[i]||'');});
+
+  var el=document.getElementById('lbody');
+  if(el)el.innerHTML='<div class="lcard"><div class="spin-state"><div class="spin"></div>Marking your work\u2026</div></div>';
+
+  var sub=null;
+  try{ sub=await apiAddSub({lesson_id:lesson.id,answers:answers},S.token); }
+  catch(e){ sub={id:uid(),lesson_id:lesson.id,answers:answers}; }
+
+  var maxSc=(lesson.questions||[]).length*2;
+  var qa=(lesson.questions||[]).map(function(q,i){return 'Q'+(i+1)+': '+q+'\nAnswer: '+(answers[i]||'(no answer)');}).join('\n\n');
+
+  var safeTitle=(lesson.title||'').replace(/'/g,'').replace(/"/g,'');
+  var mPrompt='You are a '+KS_MAP[S.activeChild.age]+' teacher marking a '+S.activeChild.age+'-year-old student\'s '+S.subject+' work.\n'+
+    'Lesson: '+safeTitle+'\n\n'+qa+'\n\n'+
+    'IMPORTANT: Respond ONLY with a single valid JSON object. No markdown, no explanation.\n'+
+    'CRITICAL: Do NOT use apostrophes or single quotes anywhere inside JSON string values. Reword to avoid them.\n'+
+    'Use only straight double-quotes for JSON structure.\n'+
+    '{"score":integer_marks_awarded,"max_score":'+maxSc+',"feedback":"150-250 words of specific warm constructive teacher feedback"}';
+
+  var mark=null;
+  try{
+    var res=await fetch(AIURL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:mPrompt}]})});
+    var data=await res.json();
+    var txt=''; if(data.content)data.content.forEach(function(b){if(b.text)txt+=b.text;});
+    mark=extractJSON(txt);
+  }catch(e){
+    console.error('mark:',e);
+    var el2=document.getElementById('lbody');
+    if(el2)el2.innerHTML='<div class="lcard"><div class="retry-card"><p>Marking failed \u2014 please try again.</p><button class="btn btn-ghost" onclick="submitLesson()">Retry</button></div></div>';
+    return;
+  }
+
+  var savedMk=null;
+  try{ savedMk=await apiAddMark({submission_id:sub.id,lesson_id:lesson.id,score:mark.score,max_score:mark.max_score,feedback:mark.feedback},S.token); }
+  catch(e){ savedMk=Object.assign({id:uid()},mark); }
+
+  S.todayLessons[key].submission=sub;
+  S.todayLessons[key].marking=savedMk;
+  S.drafts={};
+  updateStreak();
+  var isFirst=Object.values(S.todayLessons).filter(function(e){return e&&e.marking;}).length<=1;
+  var xpAmt=xpForLesson(mark.score,mark.max_score,isFirst);
+  var xpRes=awardXP(xpAmt);
+  var newBadges=checkBadges();
+  await loadHistory();
+  var el3=document.getElementById('lbody');
+  if(el3&&S.page==='lesson') el3.innerHTML=buildMarked(S.todayLessons[key]);
+  floatXP(xpAmt,document.querySelector('.btn-submit')||el3);
+  if(xpRes.leveled||newBadges.length){setTimeout(function(){showLevelUpModal(xpRes.newRank,newBadges);},900);}
+}
+
+/* ── NAV ────────────────────────────────────────────────────────────────────── */
+function navTo(pg){S.page=pg;render();}
+function setPart(p){S.part=p;render();}
+function toggleModal(){S.showModal=!S.showModal;render();}
+function openSubject(sub){
+  S.subject=sub; S.page='lesson'; S.drafts={};
+  var l1=!!(S.todayLessons[sub+'_L1']&&S.todayLessons[sub+'_L1'].marking);
+  var l2=!!(S.todayLessons[sub+'_L2']&&S.todayLessons[sub+'_L2'].marking);
+  S.part=l1&&!l2?'L2':'L1'; render();
+}
+function reviewLesson(subj,part){S.subject=subj;S.part=part;S.page='lesson';render();}
+async function doSignOut(){
+  S.user=null;S.token=null;S.children=[];S.activeChild=null;
+  S.todayLessons={};S.history=[];S.page='dashboard';S.authMode='login';S.authErr='';S.authOk='';
+  persist('hs_tok',''); render();
+}
+
+/* ── BOOT ───────────────────────────────────────────────────────────────────── */
+(async function boot(){
+  memLoad(); render();
+  var tok=recall('hs_tok');
+  if(!tok)return;
+  if(tok.startsWith('local_')){
+    var uid2=tok.slice(6);
+    var found=Object.values(MEM.users).find(function(u){return u.id===uid2;});
+    if(found){S.user=found;S.token=tok;await loadChildren();render();}
+    return;
+  }
+  try{
+    if(tok.startsWith('db_')){
+      // DB-mode token — load user from profiles table
+      var uid2=tok.slice(3);
+      var pr=await fetch(SB+'/rest/v1/profiles?id=eq.'+uid2,{headers:sbH(tok)});
+      if(pr.ok){var pd=await pr.json();if(pd&&pd[0]){S.user={id:pd[0].id,email:pd[0].email,user_metadata:{full_name:pd[0].full_name}};S.token=tok;DB_MODE='live';await loadChildren();render();}else persist('hs_tok','');}
+      else persist('hs_tok','');
+    } else {
+      var r=await fetch(SB+'/auth/v1/user',{headers:sbH(tok)});
+      if(r.ok){S.user=await r.json();S.token=tok;DB_MODE='live';await ensureProfile(S.user,tok);await loadChildren();render();}
+      else persist('hs_tok','');
+    }
+  }catch(e){persist('hs_tok','');}
+})();
+</script>
+</body>
+</html>
