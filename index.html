@@ -275,7 +275,7 @@ input,textarea,button{font-family:var(--font)}
 /* ── CONFIG ─────────────────────────────────────────────────────────────────── */
 var SB   = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 var SBKEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZ3JnY2Joa3BpaHhxc2prbWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzYwOTQsImV4cCI6MjA5NDE1MjA5NH0.cGDgY80q6YL6pycCipe2kce-GHtkdIsF7sGFjmpNnng';
-var AIURL= 'https://api.anthropic.com/v1/messages';
+var AIURL= 'https://sehomeservices.app.n8n.cloud/webhook/ai-proxy';
 
 /* ── ROBUST JSON EXTRACTOR ──────────────────────────────────────────────────── */
 /* Handles: fenced blocks, truncated output, curly-quote contamination,
@@ -853,7 +853,7 @@ function buildLesson(){
 }
 
 function buildActive(lesson){
-  var qs=(lesson.questions||[]).map(function(q,i){
+  var qs=(typeof lesson.questions==='string'?JSON.parse(lesson.questions||'[]'):lesson.questions||[]).map(function(q,i){
     return '<div class="q-item"><label>Q'+(i+1)+'. '+esc(q)+'</label>'+
       '<textarea id="ans_'+i+'" oninput="S.drafts['+i+']=this.value">'+esc(S.drafts[i]||'')+'</textarea></div>';
   }).join('');
@@ -1099,7 +1099,7 @@ async function generateLesson(){
   var lesson=null;
   try{
     var res=await fetch(AIURL,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+      body:JSON.stringify({prompt:prompt,max_tokens:1200})});
     var data=await res.json();
     var txt=''; if(data.content)data.content.forEach(function(b){if(b.text)txt+=b.text;});
     lesson=extractJSON(txt);
@@ -1151,7 +1151,7 @@ async function submitLesson(){
   var mark=null;
   try{
     var res=await fetch(AIURL,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:mPrompt}]})});
+      body:JSON.stringify({prompt:mPrompt,max_tokens:800})});
     var data=await res.json();
     var txt=''; if(data.content)data.content.forEach(function(b){if(b.text)txt+=b.text;});
     mark=extractJSON(txt);
