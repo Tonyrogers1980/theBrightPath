@@ -751,7 +751,7 @@ function buildApp(){
   if(S.page==='lesson')   inner=buildLesson();
   else if(S.page==='history')  inner=buildHistory();
   else if(S.page==='rewards')  inner=buildRewards();
-  else if(S.page==='parent')    inner=buildParent();
+  else if(S.page==='parent')   inner=buildParentShell();
   else if(S.page==='settings') inner=buildSettings();
   else inner=buildDash();
   var shell=buildShell(inner);
@@ -1149,29 +1149,30 @@ function toggleLesson(id){
   if(c)c.classList.toggle('open',!open);
 }
 
-async function buildParent(){
+function buildParentShell(){
+  // Synchronous shell — data loads async after render
+  setTimeout(loadParentData, 50);
+  return '<div class="page-title">Parent Summary</div>'+
+    '<div id="parent-content" style="text-align:center;padding:3rem;color:var(--t2)">'+
+    '<div style="font-size:24px;margin-bottom:8px">\u23F3</div>Loading summary...</div>';
+}
+
+async function loadParentData(){
   var c=S.activeChild;
-  var h='<div class="page-title">Parent Summary</div>';
+  if(!c) return;
+  try{
+    var data=await rpc('get_parent_summary',{p_child_id:c.id});
+    if(!data) data={lessons:[],by_subject:{}};
+    var el=document.getElementById('parent-content');
+    if(el) el.outerHTML='<div id="parent-content">'+renderParentContent(c,data.lessons||[],data.by_subject||{})+'</div>';
+  }catch(e){
+    var el=document.getElementById('parent-content');
+    if(el) el.textContent='Could not load summary: '+(e.message||e);
+  }
+}
 
-  // Loading state
-  h+='<div id="parent-loading" style="text-align:center;padding:2rem;color:var(--t2)">Loading summary...</div>';
-
-  // Render placeholder first, then load data
-  setTimeout(async function(){
-    try{
-      var data=await rpc('get_parent_summary',{p_child_id:c.id});
-      if(!data){data={lessons:[],by_subject:{}};}
-      var lessons=data.lessons||[];
-      var bySubj=data.by_subject||{};
-      var el=document.getElementById('parent-loading');
-      if(el) el.outerHTML=renderParentContent(c,lessons,bySubj);
-    }catch(e){
-      var el=document.getElementById('parent-loading');
-      if(el) el.textContent='Could not load summary: '+(e.message||e);
-    }
-  },100);
-
-  return h;
+async function buildParent(){
+  return buildParentShell();
 }
 
 function renderParentContent(c,lessons,bySubj){
