@@ -1055,7 +1055,7 @@ function buildMarked(entry){
   '</div>'+
   (overall?'<div class="lcard">'+
     '<div class="fb-head">\ud83d\udcdd Teacher\'s overall comment</div>'+
-    '<div class="fb-overall">'+esc(overall)+'</div>'+
+    '<div class="fb-overall">'+overall.replace(/([.!?])\s+/g,'$1\n').split('\n').filter(function(s){return s.trim();}).map(function(s){return '<p style="margin:0 0 8px 0">'+esc(s)+'</p>';}).join('')+'</div>'+
   '</div>':'');
 }
 
@@ -1250,17 +1250,17 @@ function renderParentContent(c,lessons,bySubj){
   // Mine feedback text for specific issues and strengths
   var issueKeywords=[
     {pat:/spelling/i, label:'Spelling accuracy'},
-    {pat:/arithmetic|calculation|maths error|check your (maths|working|subtraction|addition|multiplication)/i, label:'Arithmetic accuracy'},
-    {pat:/show (your |the )?working/i, label:'Showing working'},
-    {pat:/more detail|expand|develop|too brief/i, label:'Developing detailed answers'},
-    {pat:/punctuation/i, label:'Punctuation'},
-    {pat:/grammar/i, label:'Grammar'},
-    {pat:/vocabulary|technical term|scientific term/i, label:'Subject vocabulary'},
-    {pat:/read(ing)? (the )?question carefully|re-read|answer all parts/i, label:'Reading questions carefully'},
-    {pat:/explain (more|further|your|why|how)/i, label:'Explaining reasoning'},
-    {pat:/structure|paragraph/i, label:'Answer structure'},
-    {pat:/evidence|quote|reference/i, label:'Using evidence'},
-    {pat:/time|rushed|check (your answers|before)/i, label:'Checking work before submitting'}
+    {pat:/check your (subtraction|addition|multiplication|division|arithmetic|calculation|working)|arithmetic error|maths error|calculation is (wrong|incorrect)/i, label:'Arithmetic accuracy'},
+    {pat:/show (your |the )?working/i, label:'Showing working', subjects:['maths','science']},
+    {pat:/more detail|expand your|develop your|too brief|not enough detail/i, label:'Developing detailed answers'},
+    {pat:/punctuation/i, label:'Punctuation', subjects:['english']},
+    {pat:/grammar/i, label:'Grammar', subjects:['english']},
+    {pat:/vocabulary|technical term|scientific term|key term/i, label:'Subject vocabulary'},
+    {pat:/re-?read|answer all parts|missed part|did not fully answer/i, label:'Reading questions fully'},
+    {pat:/explain (more|further|why|how|your reasoning)/i, label:'Explaining reasoning'},
+    {pat:/structure your|paragraph structure/i, label:'Answer structure', subjects:['english']},
+    {pat:/evidence|quote|reference the (text|source)/i, label:'Using evidence', subjects:['english','history']},
+    {pat:/check (your answers|before submitting|your work)/i, label:'Checking work carefully'}
   ];
   var strengthKeywords=[
     {pat:/excellent|outstanding|perfect|full marks|100%|very strong/i, label:'Excellent performance'},
@@ -1274,8 +1274,9 @@ function renderParentContent(c,lessons,bySubj){
     var fb=l.feedback||'';
     try{ var fp=JSON.parse(fb); fb=(fp.overall||'')+' '+(fp.question_feedback||[]).map(function(q){return q.comment||'';}).join(' '); }catch(e){}
     issueKeywords.forEach(function(k){
+      if(k.subjects&&k.subjects.indexOf(l.subject)===-1) return; // subject filter
       if(k.pat.test(fb)){
-        var key=l.subject+': '+k.label;
+        var key=l.subject.charAt(0).toUpperCase()+l.subject.slice(1)+': '+k.label;
         issueMap[key]=(issueMap[key]||0)+1;
       }
     });
@@ -1354,12 +1355,19 @@ function renderParentContent(c,lessons,bySubj){
         var qFb=fp&&fp.question_feedback?fp.question_feedback:[];
         var overall=fp&&fp.overall?fp.overall:(!fp?fb:'');
 
-        // Parent summary — honest, direct
+        // Parent summary — honest, direct, written for parents not child
         if(overall){
+          // Split into sentences and format as paragraphs for readability
+          var sentences=overall.replace(/([.!?])\s+/g,'$1\n').split('\n').filter(function(s){return s.trim();});
+          var paras=[];
+          for(var si=0;si<sentences.length;si+=2){
+            paras.push(sentences.slice(si,si+2).join(' '));
+          }
+          var formattedOverall=paras.map(function(p){return '<p style="margin:0 0 8px 0">'+esc(p)+'</p>';}).join('');
           feedbackHtml+=
             '<div style="margin-bottom:12px">'+
             '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--t2);margin-bottom:5px">Parent summary</div>'+
-            '<div style="font-size:13px;color:var(--t0);line-height:1.6;background:var(--s1);border-radius:var(--r8);padding:10px 12px;border-left:3px solid var(--am)">'+esc(overall)+'</div>'+
+            '<div style="font-size:13px;color:var(--t0);line-height:1.6;background:var(--s1);border-radius:var(--r8);padding:10px 12px;border-left:3px solid var(--am)">'+formattedOverall+'</div>'+
             '</div>';
         }
 
@@ -1718,8 +1726,8 @@ async function submitLesson(){
     '- Award 1 mark for a correct, sufficiently detailed answer. Award 0 for incorrect or too vague.\n'+
     '- For EACH question write a separate 1-2 sentence comment: acknowledge what was right, then clearly state what was wrong or missing.\n'+
     '- Be specific and honest - do not soften errors. If the answer is wrong, say it is wrong and explain why.\n'+
-    '- The per-question comments are shown to the CHILD so keep a warm but direct teacher tone.\n'+
-    '- The overall summary is shown to PARENTS so be frank and informative: summarise performance, highlight specific strengths and weaknesses, and give one or two concrete actions to improve.\n'+
+    '- The per-question comments are shown to the CHILD so use warm, encouraging, direct teacher language addressing the child as "you".\n'+
+    '- The overall summary is READ BY PARENTS ONLY, not the child. Write it as a teacher reporting to a parent: use "Rory" or "your child", not "you". Be frank, specific and honest. Do not soften poor performance. Parents need to know exactly what their child did well, what they got wrong, and what they need to practise. Write 3-4 sentences.\n'+
     '- Do NOT use apostrophes or single quotes inside any JSON string value. Reword contractions.\n'+
     '- Respond ONLY with a valid JSON object. No markdown fences. No text outside the JSON.\n'+
     '{"score":integer,"max_score":'+maxSc+',"question_feedback":[{"q":1,"mark":0or1,"comment":"teacher comment on Q1"},{"q":2,"mark":0or1,"comment":"teacher comment on Q2"}],"overall":"2-3 sentence honest parent-facing summary of performance, strengths and next steps"}';
