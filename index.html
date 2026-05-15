@@ -628,6 +628,12 @@ async function apiUpdateReadBooks(childId, readBooks) {
 
 function setAvatar(i){S.avatar=i;saveGameState();render();}
 
+async function toggleBookIdx(i){
+  var title=window._bookList&&window._bookList[i];
+  if(!title)return;
+  await toggleBook(title);
+}
+
 async function toggleBook(title){
   var rb=S.activeChild&&S.activeChild.read_books?
     (typeof S.activeChild.read_books==='string'?JSON.parse(S.activeChild.read_books||'[]'):S.activeChild.read_books):[];
@@ -1085,9 +1091,11 @@ function buildSettings(){
     (typeof S.activeChild.read_books==='string'?JSON.parse(S.activeChild.read_books||'[]'):S.activeChild.read_books):[];
   var ks2=KS_MAP[S.activeChild?S.activeChild.age:10];
   var allBooks=BOOKS[ks2]||BOOKS.KS2;
-  var bookRows=allBooks.map(function(b){
+  window._bookList=allBooks;
+  var bookRows=allBooks.map(function(b,bi){
     var read=rb.indexOf(b)!==-1;
-    return '<div onclick="toggleBook('+JSON.stringify(b)+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r12);border:1.5px solid '+(read?'var(--g)':'var(--b0)')+';background:'+(read?'var(--gl)':'var(--s0)')+';cursor:pointer;transition:all .15s;margin-bottom:6px">'+
+    var safeB=b.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return '<div onclick="toggleBookIdx('+bi+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r12);border:1.5px solid '+(read?'var(--g)':'var(--b0)')+';background:'+(read?'var(--gl)':'var(--s0)')+';cursor:pointer;transition:all .15s;margin-bottom:6px">'+
       '<div style="width:20px;height:20px;border-radius:50%;border:2px solid '+(read?'var(--g)':'var(--b1)')+';background:'+(read?'var(--g)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:11px;font-weight:700">'+(read?'\u2713':'')+' </div>'+
       '<span style="font-size:13px;color:'+(read?'var(--gd)':'var(--t0)')+'">'+esc(b)+'</span>'+
     '</div>';
