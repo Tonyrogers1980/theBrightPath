@@ -265,6 +265,45 @@ input,textarea,button{font-family:var(--font)}
 .lvl-modal p{font-size:14px;color:var(--t1);margin-bottom:1.5rem}
 .confetti-wrap{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:var(--r20)}
 .confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:confetti-fall .8s ease-in forwards}
+
+/* ── PARENT DASHBOARD ── */
+.parent-header{background:var(--s0);border:1px solid var(--b0);border-radius:var(--r16);padding:1.25rem;margin-bottom:1rem;box-shadow:var(--shadow-sm)}
+.parent-header h2{font-size:18px;font-weight:700;letter-spacing:-.3px;margin-bottom:2px}
+.parent-header p{font-size:13px;color:var(--t2)}
+.subj-perf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:1rem}
+.subj-perf{background:var(--s0);border:1px solid var(--b0);border-radius:var(--r12);padding:.85rem 1rem;box-shadow:var(--shadow-sm)}
+.subj-perf .sp-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--t2);margin-bottom:6px}
+.subj-perf .sp-pct{font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1}
+.subj-perf .sp-detail{font-size:11px;color:var(--t2);margin-top:3px}
+.subj-perf .sp-trend{font-size:11px;font-weight:600;margin-top:4px}
+.trend-up{color:#16a974}.trend-dn{color:#e74c3c}.trend-eq{color:var(--t2)}
+.perf-bar{height:4px;border-radius:2px;background:var(--s2);margin-top:6px;overflow:hidden}
+.perf-bar-fill{height:100%;border-radius:2px;transition:width .6s}
+.lesson-timeline{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.lt-item{background:var(--s0);border:1px solid var(--b0);border-radius:var(--r12);overflow:hidden;box-shadow:var(--shadow-sm)}
+.lt-head{display:flex;align-items:center;gap:10px;padding:.75rem 1rem;cursor:pointer}
+.lt-head:hover{background:var(--s1)}
+.lt-subj-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.lt-info{flex:1;min-width:0}
+.lt-title{font-size:13px;font-weight:600;color:var(--t0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lt-meta{font-size:11px;color:var(--t2);margin-top:1px}
+.lt-score{font-size:13px;font-weight:700;flex-shrink:0;text-align:right}
+.lt-score small{display:block;font-size:10px;font-weight:400;color:var(--t2)}
+.lt-body{padding:.75rem 1rem;border-top:1px solid var(--b0);background:var(--s1);font-size:13px;color:var(--t1);line-height:1.6;display:none}
+.lt-body.open{display:block}
+.lt-chevron{font-size:10px;color:var(--t2);transition:transform .2s;flex-shrink:0}
+.lt-chevron.open{transform:rotate(180deg)}
+.strengths-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+.strength-card{background:var(--s0);border:1px solid var(--b0);border-radius:var(--r12);padding:.85rem 1rem;box-shadow:var(--shadow-sm)}
+.strength-card h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.strength-card ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:5px}
+.strength-card ul li{font-size:12px;color:var(--t1);padding-left:14px;position:relative;line-height:1.4}
+.strength-card ul li::before{position:absolute;left:0;font-size:11px}
+.str-good ul li::before{content:'\2713';color:var(--g)}
+.str-improve ul li::before{content:'\2192';color:var(--am)}
+.pg-tabs{display:flex;gap:8px;margin-bottom:1rem}
+.pg-tab{flex:1;padding:8px;border:1px solid var(--b0);border-radius:var(--r8);font-size:12px;font-weight:600;text-align:center;cursor:pointer;background:var(--s0);color:var(--t2);transition:all .15s}
+.pg-tab.on{background:var(--gd);color:#fff;border-color:var(--gd)}
 </style>
 </head>
 <body>
@@ -595,6 +634,10 @@ var BADGES=[
 var AVATARS=['🦁','🐯','🦊','🐺','🦅','🐉','🦋','⭐','⚡','🔥'];
 var AVATAR_UNLOCK=[0,0,100,200,300,600,1000,1600,2400,3500];
 var COACH_NAMES=['Prof. Nova','Coach Maya','Dr. Spark','Tutor Rex','Ms. Bright'];
+function _draftKey(i){return S.subject+'_'+S.part+'_'+i;}
+function saveDraft(i,v){S.drafts[_draftKey(i)]=v;}
+function getDraft(i){return S.drafts[_draftKey(i)]||'';}
+
 function parseQs(qs){return Array.isArray(qs)?qs:(typeof qs==='string'?JSON.parse(qs||'[]'):[]);}
 
 function getRank(xp){var r=RANKS[0];for(var i=0;i<RANKS.length;i++){if(xp>=RANKS[i].min)r=RANKS[i];}return r;}
@@ -708,6 +751,7 @@ function buildApp(){
   if(S.page==='lesson')   inner=buildLesson();
   else if(S.page==='history')  inner=buildHistory();
   else if(S.page==='rewards')  inner=buildRewards();
+  else if(S.page==='parent')    inner=buildParent();
   else if(S.page==='settings') inner=buildSettings();
   else inner=buildDash();
   var shell=buildShell(inner);
@@ -806,6 +850,7 @@ function buildNav(){
     {id:'dashboard',lbl:'Today',   p:'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9.75L12 3l9 6.75V19.5a1.5 1.5 0 01-1.5 1.5h-5.25v-4.5h-4.5V21H4.5A1.5 1.5 0 013 19.5V9.75z"/>'},
     {id:'rewards',  lbl:'Rewards', p:'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>'},
     {id:'history',  lbl:'History', p:'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"/>'},
+    {id:'parent',   lbl:'Parent',  p:'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>'},
     {id:'settings', lbl:'Settings',p:'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281a7.5 7.5 0 011.5.866l1.198-.497a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827a7.535 7.535 0 010 1.729l1.003.827c.43.355.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.198-.497a7.5 7.5 0 01-1.5.866l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.02-.397-1.11-.94l-.213-1.281a7.5 7.5 0 01-1.5-.866l-1.198.497a1.125 1.125 0 01-1.37-.49l-1.296-2.248a1.125 1.125 0 01.26-1.431l1.004-.827a7.535 7.535 0 010-1.729L3.42 10.9a1.125 1.125 0 01-.26-1.43L4.456 7.22a1.125 1.125 0 011.37-.491l1.198.497a7.5 7.5 0 011.5-.866l.213-1.281z"/><circle cx="12" cy="12" r="3" stroke-width="1.5" stroke-linecap="round"/>'}
   ];
   var html='<div class="bnav" style="flex-direction:column">';
@@ -836,6 +881,11 @@ function buildOnboard(){
   ages.forEach(function(a){ h+='<div class="age-btn '+(S.obAge===a?'sel':'')+'" onclick="S.obAge='+a+';render()">'+a+'<small>'+KS_MAP[a]+'</small></div>'; });
   h+='</div>';
   if(S.obAge) h+='<div style="margin-bottom:1rem"><span class="ks-tag">\u2713 '+KS_YEAR[KS_MAP[S.obAge]]+' \u2014 '+KS_MAP[S.obAge]+'</span></div>';
+  h+='<div style="background:var(--gl);border:1px solid var(--gm);border-radius:var(--r12);padding:.85rem 1rem;margin-bottom:1.25rem;display:flex;gap:10px;align-items:flex-start">'+
+    '<div style="font-size:18px;flex-shrink:0">\U0001F4DA</div>'+
+    '<div><div style="font-size:13px;font-weight:700;color:var(--gd);margin-bottom:3px">Set up English lessons</div>'+
+    '<div style="font-size:12px;color:var(--gd);line-height:1.5">After creating the profile, go to <strong>Settings</strong> to select the books your child has already read. English lessons will be personalised to those books. If none are selected, lessons will cover the full English curriculum instead.</div></div>'+
+  '</div>';
   h+='<button class="btn btn-green" onclick="addFirstChild()" '+(!S.obName.trim()||!S.obAge?'disabled':'')+'>Start learning \u2192</button>';
   h+='</div></div>';
   return h;
@@ -900,6 +950,12 @@ function buildDash(){
   return '<div class="dash-greeting"><h2>'+greet+', '+esc(c.name)+'! \ud83d\udc4b</h2>'+
     '<p>'+new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+' \u00b7 '+KS_YEAR[ks]+' \u00b7 '+ks+'</p></div>'+
     xpH+streakHero+coachH+
+    (S.history.length===0&&done===0?'<div style="background:var(--gl);border:1px solid var(--gm);border-radius:var(--r12);padding:.85rem 1rem;margin-bottom:1rem;display:flex;gap:10px;align-items:center">'+
+      '<div style="font-size:18px">\U0001F4DA</div>'+
+      '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--gd)">Personalise English lessons</div>'+
+      '<div style="font-size:12px;color:var(--gd);margin-top:2px">Go to <strong>Settings</strong> to mark the books '+esc(c.name)+' has read. English lessons will be based on those books.</div></div>'+
+      '<button class="btn btn-sm" style="background:var(--g);color:#fff;border:none;flex-shrink:0" onclick="navTo(this.getAttribute(\x27data-p\x27))" data-p="settings">Settings \u2192</button>'+
+    '</div>':'')+
     '<div class="stats-grid">'+
     '<div class="stat-tile"><div class="n">'+done+'</div><div class="l">Today</div></div>'+
     '<div class="stat-tile"><div class="n">'+(mx>0?avg+'%':'\u2014')+'</div><div class="l">Avg score</div></div>'+
@@ -937,7 +993,7 @@ function buildLesson(){
 function buildActive(lesson){
   var qs=parseQs(lesson.questions).map(function(q,i){
     return '<div class="q-item"><label>Q'+(i+1)+'. '+esc(q)+'</label>'+
-      '<textarea id="ans_'+i+'" oninput="S.drafts['+i+']=this.value">'+esc(S.drafts[i]||'')+'</textarea></div>';
+      '<textarea id="ans_'+i+'" oninput="saveDraft('+i+',this.value)">'+esc(getDraft(i))+'</textarea></div>';
   }).join('');
   return '<div class="lcard"><h3>'+esc(lesson.title)+'</h3>'+
     '<div class="lbody">'+esc(lesson.content)+'</div>'+
@@ -1079,6 +1135,204 @@ function buildHistory(){
 }
 
 /* ── SETTINGS ───────────────────────────────────────────────────────────────── */
+
+/* ── PARENT DASHBOARD ── */
+var SUBJ_COLORS={maths:'#378ADD',english:'#16a974',science:'#E8593C',history:'#c47f0a',geography:'#6B5AE0'};
+var SUBJ_ICONS={maths:'\U0001F522',english:'\U0001F4DA',science:'\U0001F52C',history:'\U0001F3DB',geography:'\U0001F30D'};
+
+function toggleLesson(id){
+  var b=document.getElementById('ltb_'+id);
+  var c=document.getElementById('ltc_'+id);
+  if(!b)return;
+  var open=b.classList.contains('open');
+  b.classList.toggle('open',!open);
+  if(c)c.classList.toggle('open',!open);
+}
+
+async function buildParent(){
+  var c=S.activeChild;
+  var h='<div class="page-title">Parent Summary</div>';
+
+  // Loading state
+  h+='<div id="parent-loading" style="text-align:center;padding:2rem;color:var(--t2)">Loading summary...</div>';
+
+  // Render placeholder first, then load data
+  setTimeout(async function(){
+    try{
+      var data=await rpc('get_parent_summary',{p_child_id:c.id});
+      if(!data){data={lessons:[],by_subject:{}};}
+      var lessons=data.lessons||[];
+      var bySubj=data.by_subject||{};
+      var el=document.getElementById('parent-loading');
+      if(el) el.outerHTML=renderParentContent(c,lessons,bySubj);
+    }catch(e){
+      var el=document.getElementById('parent-loading');
+      if(el) el.textContent='Could not load summary: '+(e.message||e);
+    }
+  },100);
+
+  return h;
+}
+
+function renderParentContent(c,lessons,bySubj){
+  var h='';
+  var totalLessons=lessons.length;
+  var totalScore=lessons.reduce(function(a,l){return a+parseInt(l.score||0);},0);
+  var totalMax=lessons.reduce(function(a,l){return a+parseInt(l.max_score||1);},0);
+  var overallPct=totalMax>0?Math.round(totalScore/totalMax*100):0;
+  var rank=getRank(S.xp);
+  var dates={};
+  lessons.forEach(function(l){dates[l.lesson_date]=true;});
+  var daysActive=Object.keys(dates).length;
+
+  // ── HEADER ────────────────────────────────────────────────────────────────
+  h+='<div class="parent-header">';
+  h+='<h2>'+esc(c.name)+' — Progress Report</h2>';
+  h+='<p>'+KS_MAP[c.age]+' \u00b7 Age '+c.age+' \u00b7 '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})+'</p>';
+  h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">';
+  var stats=[
+    {n:totalLessons,l:'Lessons done'},
+    {n:overallPct+'%',l:'Overall avg'},
+    {n:S.streak,l:'Day streak'},
+    {n:daysActive,l:'Days active'}
+  ];
+  stats.forEach(function(s){
+    h+='<div style="text-align:center;background:var(--s1);border-radius:var(--r8);padding:8px 4px">'+
+      '<div style="font-size:20px;font-weight:700;letter-spacing:-.5px">'+s.n+'</div>'+
+      '<div style="font-size:10px;color:var(--t2);margin-top:2px">'+s.l+'</div></div>';
+  });
+  h+='</div></div>';
+
+  // ── SUBJECT PERFORMANCE ───────────────────────────────────────────────────
+  h+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);margin-bottom:8px">Performance by subject</div>';
+  h+='<div class="subj-perf-grid">';
+  var subjectOrder=['maths','english','science','history','geography'];
+  subjectOrder.forEach(function(subj){
+    var d=bySubj[subj];
+    if(!d)return;
+    var pct=parseInt(d.avg_pct||0);
+    var last=parseInt(d.last_pct||0);
+    var prev=parseInt(d.prev_pct||0);
+    var trend=prev>0?(last>prev+3?'\u2191 Improving':last<prev-3?'\u2193 Declining':'\u2192 Stable'):'';
+    var trendCls=last>prev+3?'trend-up':last<prev-3?'trend-dn':'trend-eq';
+    var col=SUBJ_COLORS[subj]||'var(--g)';
+    var barPct=Math.min(100,pct);
+    h+='<div class="subj-perf">'+
+      '<div class="sp-name">'+(SUBJ_ICONS[subj]||'')+' '+subj+'</div>'+
+      '<div class="sp-pct" style="color:'+col+'">'+pct+'%</div>'+
+      '<div class="sp-detail">'+d.count+' lesson'+(d.count!==1?'s':'')+' \u00b7 '+d.total_score+'/'+d.total_max+'</div>'+
+      (trend?'<div class="sp-trend '+trendCls+'">'+trend+'</div>':'')+
+      '<div class="perf-bar"><div class="perf-bar-fill" style="width:'+barPct+'%;background:'+col+'"></div></div>'+
+    '</div>';
+  });
+  h+='</div>';
+
+  // ── STRENGTHS & AREAS TO IMPROVE ─────────────────────────────────────────
+  var strengths=[], improvements=[];
+  subjectOrder.forEach(function(subj){
+    var d=bySubj[subj];
+    if(!d)return;
+    var pct=parseInt(d.avg_pct||0);
+    if(pct>=75) strengths.push(subj.charAt(0).toUpperCase()+subj.slice(1)+' ('+pct+'%)');
+    else if(pct<60) improvements.push(subj.charAt(0).toUpperCase()+subj.slice(1)+' ('+pct+'%)');
+  });
+  if(strengths.length||improvements.length){
+    h+='<div class="strengths-grid">';
+    if(strengths.length){
+      h+='<div class="strength-card str-good"><h4 style="color:var(--g)">\u2713 Strengths</h4><ul>';
+      strengths.forEach(function(s){h+='<li>'+esc(s)+'</li>';});
+      h+='</ul></div>';
+    }
+    if(improvements.length){
+      h+='<div class="strength-card str-improve"><h4 style="color:var(--am)">\u2197 Focus areas</h4><ul>';
+      improvements.forEach(function(s){h+='<li>'+esc(s)+'</li>';});
+      h+='</ul></div>';
+    }
+    h+='</div>';
+  }
+
+  // ── LESSON TIMELINE ───────────────────────────────────────────────────────
+  h+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);margin-bottom:8px">Lesson history</div>';
+
+  // Group by date
+  var byDate={};
+  lessons.forEach(function(l){
+    if(!byDate[l.lesson_date])byDate[l.lesson_date]=[];
+    byDate[l.lesson_date].push(l);
+  });
+  var dates2=Object.keys(byDate).sort().reverse();
+
+  dates2.forEach(function(date){
+    var dayLessons=byDate[date];
+    var dayScore=dayLessons.reduce(function(a,l){return a+parseInt(l.score||0);},0);
+    var dayMax=dayLessons.reduce(function(a,l){return a+parseInt(l.max_score||1);},0);
+    var dayPct=dayMax>0?Math.round(dayScore/dayMax*100):0;
+    var dateStr=new Date(date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+
+    h+='<div style="margin-bottom:12px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+      '<div style="font-size:12px;font-weight:700;color:var(--t1)">'+dateStr+'</div>'+
+      '<div style="font-size:11px;color:var(--t2)">'+dayLessons.length+' lessons \u00b7 '+dayPct+'% avg</div>'+
+    '</div>';
+    h+='<div class="lesson-timeline">';
+
+    dayLessons.forEach(function(l){
+      var pct=parseInt(l.pct||0);
+      var col=SUBJ_COLORS[l.subject]||'var(--g)';
+      var scoreCls=pct>=80?'var(--g)':pct>=60?'var(--am)':'var(--rd)';
+      var uid=l.id.replace(/-/g,'').slice(0,8);
+
+      // Parse feedback
+      var feedbackHtml='';
+      try{
+        var fb=l.feedback||'';
+        if(fb.trim()[0]==='{'){
+          var fp=JSON.parse(fb);
+          if(fp.question_feedback&&fp.question_feedback.length){
+            feedbackHtml+='<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">';
+            fp.question_feedback.forEach(function(qf){
+              var markCol=qf.mark>=1?'var(--g)':'var(--rd)';
+              feedbackHtml+='<div style="padding:6px 8px;background:var(--s0);border-radius:var(--r8);border-left:3px solid '+markCol+'">'+
+                '<div style="font-size:11px;font-weight:700;color:'+markCol+'">Q'+qf.q+' \u00b7 '+(qf.mark>=1?'1 mark':'0 marks')+'</div>'+
+                '<div style="font-size:12px;color:var(--t1);margin-top:2px">'+esc(qf.comment||'')+'</div>'+
+              '</div>';
+            });
+            feedbackHtml+='</div>';
+            if(fp.overall){
+              feedbackHtml+='<div style="font-size:13px;font-weight:600;color:var(--t0);margin-bottom:4px">Overall</div>'+
+                '<div style="font-size:13px;color:var(--t1);line-height:1.6">'+esc(fp.overall)+'</div>';
+            }
+          } else {
+            feedbackHtml='<div style="font-size:13px;color:var(--t1);line-height:1.6">'+esc(fp.overall||fb)+'</div>';
+          }
+        } else {
+          feedbackHtml='<div style="font-size:13px;color:var(--t1);line-height:1.6">'+esc(fb)+'</div>';
+        }
+      }catch(e){ feedbackHtml='<div style="font-size:13px;color:var(--t1)">'+esc(l.feedback||'')+'</div>'; }
+
+      h+='<div class="lt-item">'+
+        '<div class="lt-head" onclick="toggleLesson(\\x27'+uid+'\\x27)">'+
+          '<div class="lt-subj-dot" style="background:'+col+'"></div>'+
+          '<div class="lt-info">'+
+            '<div class="lt-title">'+esc(l.title)+'</div>'+
+            '<div class="lt-meta">'+l.subject.charAt(0).toUpperCase()+l.subject.slice(1)+' \u00b7 '+l.part+'</div>'+
+          '</div>'+
+          '<div class="lt-score" style="color:'+scoreCls+'">'+l.score+'/'+l.max_score+'<small>'+pct+'%</small></div>'+
+          '<div class="lt-chevron" id="ltc_'+uid+'">\u25bc</div>'+
+        '</div>'+
+        '<div class="lt-body" id="ltb_'+uid+'">'+feedbackHtml+'</div>'+
+      '</div>';
+    });
+    h+='</div></div>';
+  });
+
+  if(!lessons.length){
+    h+='<div style="text-align:center;padding:2rem;color:var(--t2)">No completed lessons yet. Lessons will appear here once marked.</div>';
+  }
+
+  return h;
+}
+
 function buildSettings(){
   var rows=S.children.map(function(ch){
     var active=S.activeChild&&S.activeChild.id===ch.id;
@@ -1345,7 +1599,7 @@ async function generateLesson(){
       book_title:lesson.book_title,youtube_query:lesson.youtube_query},S.token);
   }catch(e){ saved=Object.assign({id:uid()},lesson); }
 
-  S.todayLessons[key]={lesson:saved}; S.drafts={};
+  S.todayLessons[key]={lesson:saved}; // drafts preserved
   var el=document.getElementById('lbody');
   if(el&&S.page==='lesson') el.innerHTML=buildActive(saved);
 }
@@ -1357,7 +1611,7 @@ async function submitLesson(){
   var lesson=entry.lesson;
 
   var answers={};
-  parseQs(lesson.questions).forEach(function(_,i){var el=document.getElementById('ans_'+i);answers[i]=el?el.value:(S.drafts[i]||'');});
+  parseQs(lesson.questions).forEach(function(_,i){var el=document.getElementById('ans_'+i);answers[i]=el?el.value:getDraft(i);});
 
   var el=document.getElementById('lbody');
   if(el)el.innerHTML='<div class="lcard"><div class="spin-state"><div class="spin"></div>Marking your work\u2026</div></div>';
@@ -1403,7 +1657,9 @@ async function submitLesson(){
 
   S.todayLessons[key].submission=sub;
   S.todayLessons[key].marking=savedMk;
-  S.drafts={};
+  // Clear only this lesson's drafts
+  var dk=S.subject+'_'+S.part+'_';
+  Object.keys(S.drafts).forEach(function(k){if(k.slice(0,dk.length)===dk)delete S.drafts[k];});
   updateStreak();
   var isFirst=Object.values(S.todayLessons).filter(function(e){return e&&e.marking;}).length<=1;
   var xpAmt=xpForLesson(mark.score,mark.max_score,isFirst);
@@ -1421,7 +1677,7 @@ function navTo(pg){S.page=pg;render();}
 function setPart(p){S.part=p;render();}
 function toggleModal(){S.showModal=!S.showModal;render();}
 function openSubject(sub){
-  S.subject=sub; S.page='lesson'; S.drafts={};
+  S.subject=sub; S.page='lesson';
   var l1=!!(S.todayLessons[sub+'_L1']&&S.todayLessons[sub+'_L1'].marking);
   var l2=!!(S.todayLessons[sub+'_L2']&&S.todayLessons[sub+'_L2'].marking);
   S.part=l1&&!l2?'L2':'L1'; render();
