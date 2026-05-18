@@ -337,7 +337,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
         <h3 id="subBannerTitle">🎉 7-day free trial</h3>
         <p id="subBannerText">You have <strong id="trialDaysLeft">7</strong> days left. Subscribe to keep all progress and features.</p>
         <div class="trial-progress"><div class="trial-fill" id="trialBar" style="width:100%"></div></div>
-        <button class="btn btn-primary btn-sm" onclick="showSubscribe()">Subscribe — £4.99/month</button>
+        <button class="btn btn-primary btn-sm" onclick="showSubscribe('single')">Subscribe — £4.99/month</button>
       </div>
 
       <!-- Daily challenge -->
@@ -477,6 +477,10 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // CONFIG
 // ══════════════════════════════════════════════════
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
+const STRIPE_PK = 'pk_live_51Lt84DFs1WUxL14Lb8FhcCPf1Yj6zHXm2o3MZ73jbvXLVYTyZ54vVnCKzqX24yuRoVSAnCQ4cXNcvOCUYRM034Rh00cdaqM7a0';
+const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
+const PRICE_SINGLE = 'price_1TYU1cFs1WUxL14LqTTM5Ore';
+const PRICE_FAMILY = 'price_1TYU20Fs1WUxL14LKK1dl58q';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZ3JnY2Joa3BpaHhxc2prbWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzYwOTQsImV4cCI6MjA5NDE1MjA5NH0.cGDgY80q6YL6pycCipe2kce-GHtkdIsF7sGFjmpNnng';
 const AI_URL = 'https://sehomeservices.app.n8n.cloud/webhook/ai-proxy';
 
@@ -1444,12 +1448,34 @@ function renderSubStatus(p) {
       ${status==='active'?`<div style="font-size:13px;color:var(--success)">£4.99/month · Next renewal soon</div>`:''}
       </div>
     </div>
-    ${status!=='active'?`<button class="btn btn-primary btn-full" onclick="showSubscribe()">🚀 Subscribe — £4.99/month</button>
+    ${status!=='active'?`<button class="btn btn-primary btn-full" onclick="showSubscribe('single')">🚀 Subscribe — £4.99/month</button>
     <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Family plan (up to 4 children): £7.99/month</p>`:''}
   </div>`;
 }
-function showSubscribe() {
-  toast('Stripe payment coming soon — contact us to subscribe early! 🚀');
+async function showSubscribe(plan='single') {
+  const uid = getUid();
+  const email = getEmail();
+  if(!uid || !email) { toast('Please log in first'); return; }
+  const priceId = plan==='family' ? PRICE_FAMILY : PRICE_SINGLE;
+  const amount = plan==='family' ? '£7.99' : '£4.99';
+  toast('Opening secure checkout… ' + amount + '/month');
+  try {
+    const r = await fetch(STRIPE_CHECKOUT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ priceId, userId: uid, email, plan })
+    });
+    const d = await r.json();
+    if(d.url) {
+      window.location.href = d.url;
+    } else {
+      toast('Checkout error — please try again');
+      console.error('Stripe error:', d);
+    }
+  } catch(e) {
+    toast('Could not connect to payment system');
+    console.error('Stripe fetch error:', e);
+  }
 }
 
 // ── BOOK PICKER ─────────────────────────────────
@@ -1563,6 +1589,16 @@ function toast(msg, duration=2800) {
 // BOOT
 // ══════════════════════════════════════════════════
 async function boot() {
+  // Handle Stripe redirect back to app
+  const urlParams = new URLSearchParams(window.location.search);
+  if(urlParams.get('status') === 'success') {
+    // Payment succeeded — reload profile to get updated subscription_status
+    history.replaceState({}, '', window.location.pathname);
+    setTimeout(() => toast('Payment successful! Welcome to BrightPath 🎉'), 1500);
+  } else if(urlParams.get('status') === 'cancelled') {
+    history.replaceState({}, '', window.location.pathname);
+    setTimeout(() => toast('Payment cancelled — no charge made'), 1000);
+  }
   const saved = localStorage.getItem('bp_session');
   if(saved) {
     try {
