@@ -992,7 +992,8 @@ function buildLessonPrompt(subjectId, part, child) {
   const name = child.name;
   const isL2 = part==='L2';
   const subjLabel = SUBJECTS.find(s=>s.id===subjectId)?.label;
-  const readBooks = (child.read_books||[]).join(', ') || 'any popular childrens books';
+  const rb = child.read_books ? (typeof child.read_books==='string' ? JSON.parse(child.read_books) : child.read_books) : [];
+  const readBooks = rb.join(', ') || 'any popular childrens books';
   const englishTypes = ['book comprehension','persuasive writing','poetry analysis','grammar and punctuation','narrative writing','unseen text comprehension','argument writing','vocabulary and spelling'];
   const englishType = englishTypes[Math.floor(Math.random()*englishTypes.length)];
   const topicMap = {
