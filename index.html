@@ -478,7 +478,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZ3JnY2Joa3BpaHhxc2prbWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzYwOTQsImV4cCI6MjA5NDE1MjA5NH0.cGDgY80q6YL6pycCipe2kce-GHtkdIsF7sGFjmpNnng';
-const AI_URL = 'https://api.anthropic.com/v1/messages';
+const AI_URL = 'https://sehomeservices.app.n8n.cloud/webhook/ai-proxy';
 
 // ── YOUTUBE CHANNEL WHITELIST ──────────────────────
 const YT_CHANNELS = {
@@ -981,7 +981,8 @@ async function generateLesson(subjectId, part) {
     list.innerHTML = renderLessonList(subjectId, S.todayLessons[`${subjectId}:L1`], S.todayLessons[`${subjectId}:L2`], markings);
     toast(`${subj.label} lesson ready! 📚`);
   } catch(e) {
-    list.innerHTML = `<div class="empty-state"><span class="icon">⚠️</span><p>Generation failed. Check connection and try again.</p><button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="generateLesson('${subjectId}','${part}')">Retry</button></div>`;
+    console.error('[generateLesson] error:', e.message, e);
+    list.innerHTML = `<div class="empty-state"><span class="icon">⚠️</span><p>Generation failed: ${e.message}</p><button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="generateLesson('${subjectId}','${part}')">Retry</button></div>`;
   }
 }
 
@@ -1511,12 +1512,14 @@ async function toggleTimetable(childId, day, subjectId) {
 async function callAI(prompt, maxTokens=1000) {
   const r=await fetch(AI_URL,{
     method:'POST',
-    headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({prompt, max_tokens:maxTokens})
   });
-  if(!r.ok) throw new Error(`AI ${r.status}`);
+  if(!r.ok) throw new Error('AI request failed: '+r.status);
   const d=await r.json();
-  return d.content?.[0]?.text||'';
+  // n8n proxy: response may be string-encoded or direct object
+  const parsed = typeof d === 'string' ? JSON.parse(d) : d;
+  return parsed.content?.[0]?.text || parsed.text || '';
 }
 
 // ══════════════════════════════════════════════════
