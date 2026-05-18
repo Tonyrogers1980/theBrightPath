@@ -646,6 +646,26 @@ async function doSignup() {
   showAuthErr('Check your email for a confirmation link, then sign in.');
   btn.disabled=false; btn.textContent='Start free trial →';
 }
+// ── Robust uid/email helpers — handles all Supabase session shapes ──
+function getUid() {
+  const u = S.user;
+  if(!u) return null;
+  if(u.user && u.user.id) return u.user.id;   // password grant: {user:{id,...}}
+  if(u.id) return u.id;                         // restored session or user object
+  return null;
+}
+function getEmail() {
+  const u = S.user;
+  if(!u) return '';
+  return (u.user && u.user.email) ? u.user.email : (u.email || '');
+}
+function getDisplayName() {
+  const u = S.user;
+  if(!u) return '';
+  const meta = (u.user && u.user.user_metadata) ? u.user.user_metadata : (u.user_metadata || {});
+  return meta.full_name || '';
+}
+
 async function onSession(session) {
   S.user = session;
   localStorage.setItem('bp_session', JSON.stringify(session));
@@ -654,13 +674,20 @@ async function onSession(session) {
 }
 async function ensureProfile() {
   try {
-    const uid = S.user.user?.id || S.user.id;
-    const email = S.user.user?.email || S.user.email;
-    const name = S.user.user?.user_metadata?.full_name || '';
-    await sbUpsert('profiles', {id:uid, email, full_name:name, subscription_status:'trial', trial_started_at:new Date().toISOString()}, 'id');
-    const profiles = await sbGet('profiles', `id=eq.${uid}`);
+    const uid = getUid();
+    if(!uid) { console.warn('ensureProfile: no uid found in session'); return; }
+    const email = getEmail();
+    const name = getDisplayName();
+    // Only INSERT if profile missing — never overwrite trial_started_at on existing accounts
+    const existing = await sbGet('profiles', 'id=eq.' + uid);
+    if(!existing || !existing.length) {
+      await sbPost('profiles', {id:uid, email, full_name:name, subscription_status:'trial', trial_started_at:new Date().toISOString()});
+    } else {
+      await sbPatch('profiles', 'id=eq.' + uid, {email, full_name:name});
+    }
+    const profiles = await sbGet('profiles', 'id=eq.' + uid);
     S.profile = profiles[0] || null;
-  } catch(e) { console.warn('Profile upsert warn:', e.message); }
+  } catch(e) { console.warn('Profile warn:', e.message); }
 }
 function doLogout() {
   localStorage.removeItem('bp_session');
@@ -684,8 +711,9 @@ async function showApp() {
 }
 async function loadChildren() {
   try {
-    const uid = S.user.user?.id || S.user.id;
-    const rows = await sbGet('children', `user_id=eq.${uid}&order=created_at.asc`);
+    const uid = getUid();
+    if(!uid) { S.children=[]; return; }
+    const rows = await sbGet('children', 'user_id=eq.' + uid + '&order=created_at.asc');
     S.children = rows || [];
   } catch(e) { S.children=[]; }
 }
@@ -829,7 +857,8 @@ async function saveChild() {
   const name=document.getElementById('ac_name').value.trim();
   const age=parseInt(document.getElementById('ac_age').value);
   if(!name) { toast('Enter a name'); return; }
-  const uid = S.user.user?.id||S.user.id;
+  const uid = getUid();
+  if(!uid) { toast('Session error - please log out and back in'); return; }
   const ks = age<=7?'KS1':age<=11?'KS2':age<=14?'KS3':'KS4';
   try {
     const rows = await sbPost('children',{user_id:uid,name,age,key_stage:ks,avatar:selectedAvatar,total_xp:0,current_streak:0});
@@ -1512,10 +1541,18 @@ async function boot() {
       const session=JSON.parse(saved);
       if(session.access_token) {
         S.user=session;
-        const r=await fetch(`${SB_URL}/auth/v1/user`,{headers:{Authorization:`Bearer ${session.access_token}`,apikey:SB_KEY}});
-        if(r.ok) { await ensureProfile(); showApp(); return; }
+        // Re-fetch the user object so we always have a fresh {user:{id,...}} shape
+        const r=await fetch(SB_URL+'/auth/v1/user',{headers:{Authorization:'Bearer '+session.access_token,apikey:SB_KEY}});
+        if(r.ok) {
+          const userData = await r.json();
+          // Merge fresh user data into session so getUid() always works
+          S.user = Object.assign({}, session, {user: userData});
+          await ensureProfile();
+          showApp();
+          return;
+        }
       }
-    } catch(e){}
+    } catch(e){ console.warn('Boot restore error:', e); }
     localStorage.removeItem('bp_session');
   }
   document.getElementById('authPage').style.display='flex';
