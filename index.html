@@ -792,9 +792,19 @@ async function loadHomeData() {
   } catch(e) {}
 }
 async function getMarkings(lessonIds) {
-  if(!lessonIds.length) return [];
-  const q = lessonIds.map(id=>`lesson_id=eq.${id}`).join(',');
-  try { return await sbGet('markings', `or=(${q})`); } catch(e) { return []; }
+  if(!lessonIds || !lessonIds.length) return [];
+  // Use IN syntax for multiple IDs, eq for single
+  if(lessonIds.length === 1) {
+    try { return await sbGet('markings', `lesson_id=eq.${lessonIds[0]}`); } catch(e) { return []; }
+  }
+  // Batch in groups of 10 to avoid URL length issues
+  const results = [];
+  for(let i=0; i<lessonIds.length; i+=10) {
+    const batch = lessonIds.slice(i, i+10);
+    const q = `lesson_id=in.(${batch.join(',')})`;
+    try { const r = await sbGet('markings', q); if(r) results.push(...r); } catch(e) {}
+  }
+  return results;
 }
 
 // ══════════════════════════════════════════════════
@@ -1306,8 +1316,15 @@ function renderMarked(lesson, marking, qs, submission) {
 }
 
 async function redoLesson(lessonId) {
-  const lesson = Object.values(S.todayLessons).find(l=>l.id===lessonId);
-  if(!lesson) return;
+  // Look in todayLessons first, then fall back to DB
+  let lesson = Object.values(S.todayLessons).find(l=>l.id===lessonId);
+  if(!lesson) {
+    try {
+      const rows = await sbGet('lessons', `id=eq.${lessonId}`);
+      lesson = rows && rows[0];
+    } catch(e) {}
+  }
+  if(!lesson) { toast('Could not load lesson'); return; }
   const qs = parseQs(lesson.questions);
   const videoUrl = lesson.youtube_url || getCuratedVideo(lesson.subject, S.activeChild?.key_stage);
   const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
