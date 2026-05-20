@@ -1087,8 +1087,19 @@ function renderLessonBody(lesson, marking, subjectId) {
     <div class="questions-section">
       <h3>📝 Answer the questions</h3>
       ${qHtml}
-      <button class="btn btn-primary btn-full btn-lg" style="margin-top:8px" onclick="submitLesson('${lesson.id}')">Submit for marking ✨</button>
+      <div id="draftStatus" style="font-size:12px;color:var(--muted);text-align:right;margin-bottom:6px;min-height:16px"></div>
+      <button class="btn btn-primary btn-full btn-lg" style="margin-top:4px" onclick="submitLesson('${lesson.id}')">Submit for marking ✨</button>
     </div>`;
+  // Restore any saved draft
+  loadDraft(lesson.id);
+  // Autosave on every keystroke
+  document.querySelectorAll('[id^="ans_"]').forEach(el => {
+    el.addEventListener('input', () => {
+      saveDraft(lesson.id);
+      const status = document.getElementById('draftStatus');
+      if(status) status.textContent = '💾 Draft saved';
+    });
+  });
 }
 function markWatched(btn, url) {
   window.open(url,'_blank');
@@ -1130,6 +1141,7 @@ async function submitLesson(lessonId) {
     const marking = await sbPost('markings',{submission_id:subId,lesson_id:lessonId,score,max_score:maxScore,feedback:JSON.stringify(result)});
     const savedMarking = marking[0];
     await awardXP(lesson.subject, score, maxScore, lessonId);
+    clearDraft(lessonId);
     renderMarkedView(lesson, savedMarking, qs, score, maxScore, lesson.subject);
     showCelebration(score, maxScore, lesson.subject);
   } catch(e) {
@@ -1552,6 +1564,36 @@ async function callAI(prompt, maxTokens=1000) {
   const result = parsed.content?.[0]?.text || parsed.text || '';
   if(!result) throw new Error('AI response had no text content');
   return result;
+}
+
+// ══════════════════════════════════════════════════
+// DRAFT ANSWERS — persist to localStorage as user types
+// ══════════════════════════════════════════════════
+function draftKey(lessonId) { return 'bp_draft_' + lessonId; }
+
+function saveDraft(lessonId) {
+  const qs = document.querySelectorAll('[id^="ans_"]');
+  if(!qs.length) return;
+  const answers = {};
+  qs.forEach(el => { answers[el.id] = el.value; });
+  localStorage.setItem(draftKey(lessonId), JSON.stringify(answers));
+}
+
+function loadDraft(lessonId) {
+  try {
+    const saved = localStorage.getItem(draftKey(lessonId));
+    if(!saved) return;
+    const answers = JSON.parse(saved);
+    Object.entries(answers).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if(el) el.value = val;
+    });
+    if(Object.values(answers).some(v => v)) toast('📝 Draft answers restored');
+  } catch(e) {}
+}
+
+function clearDraft(lessonId) {
+  localStorage.removeItem(draftKey(lessonId));
 }
 
 // ══════════════════════════════════════════════════
