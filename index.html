@@ -1325,6 +1325,13 @@ async function redoLesson(lessonId) {
     } catch(e) {}
   }
   if(!lesson) { toast('Could not load lesson'); return; }
+  // Fetch previous submission answers to pre-fill
+  const prevSubmission = await getSubmission(lessonId);
+  const prevAnswers = (() => {
+    if(!prevSubmission) return {};
+    try { return typeof prevSubmission.answers==='string' ? JSON.parse(prevSubmission.answers) : (prevSubmission.answers||{}); }
+    catch(e) { return {}; }
+  })();
   const qs = parseQs(lesson.questions);
   const videoUrl = lesson.youtube_url || getCuratedVideo(lesson.subject, S.activeChild?.key_stage);
   const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
@@ -1332,13 +1339,16 @@ async function redoLesson(lessonId) {
     <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
     <div class="video-info" style="flex:1"><h4>${lesson.youtube_query||'Educational video'}</h4><button class="video-btn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button></div>
   </div>` : '';
-  const qHtml = qs.map((q,i)=>`<div class="question-card">
+  const qHtml = qs.map((q,i)=>{
+    const prev = prevAnswers[i] || prevAnswers[String(i)] || '';
+    return `<div class="question-card">
     <div class="question-num">Question ${i+1}</div>
     <div class="question-text">${q.q}</div>
     <span class="marks-badge">${q.marks} mark${q.marks!==1?'s':''}</span>
     ${q.hint?`<p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">💡 ${q.hint}</p>`:''}
-    <textarea rows="3" placeholder="Write your improved answer here…" id="ans_${i}" style="margin-top:4px"></textarea>
-  </div>`).join('');
+    <textarea rows="3" placeholder="Edit your answer…" id="ans_${i}" style="margin-top:4px">${prev}</textarea>
+  </div>`;
+  }).join('');
   const body = document.getElementById('lessonBody');
   body.innerHTML = `${videoHtml}
     <div style="background:rgba(124,106,247,0.1);border:1px solid rgba(124,106,247,0.3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--muted)">
