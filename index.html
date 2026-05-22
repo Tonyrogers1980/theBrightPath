@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BrightPath — AI Homeschool</title>
+<title>BrightPath — Extra Practice & Catch-Up for Kids</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -249,6 +249,21 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 .tt-day-name { font-size: 11px; font-weight: 800; color: var(--muted); text-align: center; margin-bottom: 8px; text-transform: uppercase; }
 .tt-subject { border-radius: 6px; padding: 4px 6px; font-size: 10px; font-weight: 700; text-align: center; margin-bottom: 4px; cursor: pointer; }
 
+/* ── ONBOARDING WIZARD ── */
+.onboard-overlay{position:fixed;inset:0;z-index:800;background:rgba(15,14,23,0.95);display:flex;align-items:center;justify-content:center;padding:20px}
+.onboard-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:420px;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+.onboard-steps{display:flex;gap:8px;margin-bottom:24px;justify-content:center}
+.onboard-step{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.onboard-step.active{background:var(--accent);width:24px;border-radius:4px}
+.onboard-step.done{background:var(--success)}
+.onboard-emoji{font-size:48px;text-align:center;display:block;margin-bottom:12px}
+.onboard-title{font-family:Nunito,sans-serif;font-size:22px;font-weight:900;text-align:center;margin-bottom:8px}
+.onboard-sub{font-size:14px;color:var(--muted);text-align:center;margin-bottom:20px;line-height:1.6}
+
+/* ── PAYWALL ── */
+.paywall-overlay{position:fixed;inset:0;z-index:700;background:rgba(15,14,23,0.97);display:flex;align-items:center;justify-content:center;padding:20px}
+.paywall-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:100%;max-width:400px;text-align:center}
+
 /* ── TOAST ── */
 #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 18px; font-size: 14px; font-weight: 600; z-index: 500; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -269,7 +284,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 <!-- AUTH PAGE -->
 <div id="authPage" style="display:none">
   <div class="auth-logo">✨ BrightPath</div>
-  <div class="auth-tagline">AI-powered homeschool learning<br>aligned to the UK curriculum</div>
+  <div class="auth-tagline">Extra practice that actually works<br>aligned to the UK curriculum</div>
   <div class="auth-box">
     <div class="auth-tabs">
       <div class="auth-tab active" onclick="switchAuthTab('login')">Sign in</div>
@@ -300,6 +315,10 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
         <label>Password</label>
         <input type="password" id="signupPass" placeholder="At least 8 characters">
       </div>
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px">
+        <input type="checkbox" id="agreeTerms" style="width:16px;height:16px;margin-top:2px;flex-shrink:0">
+        <label for="agreeTerms" style="font-size:12px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400">I agree to the <a href="#" onclick="showTerms()" style="color:var(--accent)">Terms of Service</a> and <a href="#" onclick="showPrivacyPolicy()" style="color:var(--accent)">Privacy Policy</a>. I confirm I am the parent or guardian of the child using this service.</label>
+      </div>
       <button class="btn btn-primary btn-full btn-lg" onclick="doSignup()">Start 7-day free trial →</button>
       <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px">No card required. Then £4.99/month.</p>
     </div>
@@ -329,7 +348,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
     <div id="homePage" class="page active">
       <div class="hero-greeting">
         <div class="hero-name" id="heroName">Hello! 👋</div>
-        <div class="hero-sub" id="heroSub">Ready to learn something amazing today?</div>
+        <div class="hero-sub" id="heroSub">Ready to practise something today?</div>
       </div>
 
       <!-- Trial/subscription banner -->
@@ -456,6 +475,18 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
   </nav>
 </div>
 
+<!-- ONBOARDING WIZARD -->
+<div id="onboardOverlay" class="onboard-overlay" style="display:none">
+  <div class="onboard-box">
+    <div class="onboard-steps">
+      <div class="onboard-step active" id="os1"></div>
+      <div class="onboard-step" id="os2"></div>
+      <div class="onboard-step" id="os3"></div>
+    </div>
+    <div id="onboardContent"></div>
+  </div>
+</div>
+
 <!-- CELEBRATION OVERLAY -->
 <div id="celebration">
   <canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:1000"></canvas>
@@ -554,7 +585,7 @@ const RANKS = [
 
 // ── MASCOT MESSAGES ──────────────────────────────
 const MASCOT_MSGS = {
-  home:    ["Hi! I'm Professor Hoot. Pick a subject and let's get started!","Great to see you! What shall we learn today?","Every lesson makes you smarter. What's first?"],
+  home:    ["Hi! I'm Professor Hoot. Pick a subject and let us get started!","Great to see you! What shall we practise today?","Every lesson makes you sharper. What is first?"],
   math:    ["Maths is like a puzzle — every problem has a solution!","Numbers are your friends. Let's go!"],
   english: ["Reading opens new worlds. Let's explore language today!","Great writers start just like you — one sentence at a time!"],
   science: ["Science is all about asking 'why?' — let's find out!","Every scientist started as a curious student!"],
@@ -693,6 +724,7 @@ async function doSignup() {
   const pass=document.getElementById('signupPass').value;
   if(!name||!email||!pass) return showAuthErr('Please fill in all fields');
   if(pass.length<8) return showAuthErr('Password must be at least 8 characters');
+  if(!document.getElementById('agreeTerms')?.checked) return showAuthErr('Please agree to the Terms and Privacy Policy');
   const btn=document.querySelector('#signupForm .btn'); btn.disabled=true; btn.textContent='Creating account…';
   const d = await sbAuth('signup',{email,password:pass,data:{full_name:name}});
   if(d.error) { showAuthErr(d.error_description||d.error); btn.disabled=false; btn.textContent='Start free trial →'; return; }
@@ -769,9 +801,22 @@ async function showApp() {
   document.getElementById('topnav').style.display='flex';
   startTokenRefreshTimer();
   await loadChildren();
-  if(!S.children.length) { showAddChild(); return; }
+  if(!S.children.length) {
+    // New user — show onboarding wizard instead of add child modal
+    showOnboarding();
+    return;
+  }
   S.activeChild = S.children[0];
   await loadHomeData();
+  // Show onboarding if user has never completed it
+  const onboarded = localStorage.getItem('bp_onboarded_' + getUid());
+  if(!onboarded && S.children.length) {
+    // Skip to step 3 (they already have a child) — just show welcome complete
+    obStep = 2;
+    document.getElementById('onboardOverlay').style.display = 'flex';
+    renderOnboardStep();
+    return;
+  }
   renderHome();
 }
 async function loadChildren() {
@@ -1004,6 +1049,8 @@ function renderLessonList(subjectId, l1, l2, markings) {
 // LESSON GENERATION
 // ══════════════════════════════════════════════════
 async function generateLesson(subjectId, part) {
+  // Check subscription before generating
+  if(!isSubscriptionValid()) { showPaywall(); return; }
   const subj = SUBJECTS.find(s=>s.id===subjectId);
   const c = S.activeChild;
   const list = document.getElementById('lessonList');
@@ -1575,7 +1622,12 @@ function renderParent() {
   </div>
   <div class="divider"></div>
   <button class="btn btn-secondary btn-full" onclick="doLogout()" style="margin-bottom:16px">Sign out</button>
-  <p style="font-size:11px;color:var(--hint);text-align:center">🇬🇧 UK Curriculum · 🔒 GDPR Compliant · ✅ No Ads<br>© 2025 BrightPath · <a href="#" style="color:var(--hint)">Privacy Policy</a> · <a href="#" style="color:var(--hint)">Terms</a></p>
+  <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;text-align:center">
+    <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:14px;margin-bottom:8px">Need help?</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">We typically respond within a few hours.</p>
+    <a href="mailto:hello@thebrightpath.uk" class="btn btn-secondary btn-full">✉️ hello@thebrightpath.uk</a>
+  </div>
+  <p style="font-size:11px;color:var(--hint);text-align:center">🇬🇧 UK Curriculum · 🔒 GDPR Compliant · ✅ No Ads<br>© 2025 BrightPath · <a href="#privacy" onclick="showPrivacyPolicy()" style="color:var(--hint)">Privacy Policy</a> · <a href="#terms" onclick="showTerms()" style="color:var(--hint)">Terms of Service</a></p>
   `;
 }
 function renderSubStatus(p) {
@@ -1596,6 +1648,66 @@ function renderSubStatus(p) {
     <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Family plan (up to 4 children): £7.99/month</p>`:''}
   </div>`;
 }
+function showPrivacyPolicy() {
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;inset:0;z-index:900;background:var(--bg);overflow-y:auto;padding:24px 20px';
+  div.innerHTML = `
+    <div style="max-width:640px;margin:0 auto">
+      <button onclick="this.parentElement.parentElement.remove()" class="btn btn-secondary btn-sm" style="margin-bottom:20px">← Back</button>
+      <h1 style="font-family:Nunito,sans-serif;font-weight:900;font-size:24px;margin-bottom:8px">Privacy Policy</h1>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:24px">Last updated: May 2025</p>
+      <div style="font-size:14px;line-height:1.8;color:rgba(255,255,255,0.85)">
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">1. Who we are</h2>
+        <p>BrightPath ("we", "us", "our") is an AI-powered homeschool learning platform operated in the United Kingdom. Contact: <a href="mailto:hello@thebrightpath.uk" style="color:var(--accent)">hello@thebrightpath.uk</a></p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">2. What data we collect</h2>
+        <p>We collect: parent/guardian name and email address; child's first name, age, and key stage; lesson responses and scores; usage data (lessons completed, streaks, XP). We do not collect children's email addresses, photos, or any sensitive personal data.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">3. How we use your data</h2>
+        <p>We use your data solely to: provide and personalise the BrightPath service; process subscription payments via Stripe; send progress reports to parents. We do not sell, share, or use your data for advertising.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">4. Children's privacy</h2>
+        <p>BrightPath is designed for use by children under parental supervision. Accounts are created and managed by parents or guardians. We collect only the minimum data necessary. Children's lesson data is only accessible to their parent/guardian account. We comply with UK GDPR and take the privacy of children very seriously.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">5. Data storage and security</h2>
+        <p>Data is stored securely using Supabase (EU region). All data is protected by row-level security — no user can access another user's data. Passwords are encrypted using bcrypt. Payment data is handled entirely by Stripe and never stored on our servers.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">6. Your rights</h2>
+        <p>Under UK GDPR you have the right to access, correct, or delete your data at any time. Email <a href="mailto:hello@thebrightpath.uk" style="color:var(--accent)">hello@thebrightpath.uk</a> and we will respond within 72 hours.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">7. Cookies</h2>
+        <p>We use only essential cookies required to keep you logged in. We do not use tracking, advertising, or analytics cookies.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">8. Contact</h2>
+        <p>For any privacy questions: <a href="mailto:hello@thebrightpath.uk" style="color:var(--accent)">hello@thebrightpath.uk</a></p>
+      </div>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+function showTerms() {
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;inset:0;z-index:900;background:var(--bg);overflow-y:auto;padding:24px 20px';
+  div.innerHTML = `
+    <div style="max-width:640px;margin:0 auto">
+      <button onclick="this.parentElement.parentElement.remove()" class="btn btn-secondary btn-sm" style="margin-bottom:20px">← Back</button>
+      <h1 style="font-family:Nunito,sans-serif;font-weight:900;font-size:24px;margin-bottom:8px">Terms of Service</h1>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:24px">Last updated: May 2025</p>
+      <div style="font-size:14px;line-height:1.8;color:rgba(255,255,255,0.85)">
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">1. Acceptance</h2>
+        <p>By creating a BrightPath account you agree to these terms. Accounts must be created by a parent or guardian aged 18 or over.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">2. Service</h2>
+        <p>BrightPath provides AI-generated educational content aligned to the UK National Curriculum. Lessons are generated by AI and are intended as a supplementary learning tool. They are not a substitute for formal education.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">3. Subscription and payment</h2>
+        <p>Single child plan: £4.99/month. Family plan (up to 4 children): £7.99/month. All plans include a 7-day free trial with no card required. Subscriptions renew automatically. You may cancel at any time via the Parent settings page. No refunds are provided for partial months.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">4. Acceptable use</h2>
+        <p>You must not share your account credentials. You must not attempt to reverse-engineer, copy, or resell BrightPath content. One account per family household.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">5. Limitation of liability</h2>
+        <p>BrightPath is provided "as is". We do not guarantee uninterrupted service. Our liability is limited to the subscription fees paid in the prior month.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">6. Changes</h2>
+        <p>We may update these terms with 30 days notice by email. Continued use after notice constitutes acceptance.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">7. Governing law</h2>
+        <p>These terms are governed by the laws of England and Wales.</p>
+        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">8. Contact</h2>
+        <p><a href="mailto:hello@thebrightpath.uk" style="color:var(--accent)">hello@thebrightpath.uk</a></p>
+      </div>
+    </div>`;
+  document.body.appendChild(div);
+}
+
 async function showSubscribe(plan='single') {
   const uid = getUid();
   const email = getEmail();
@@ -1704,6 +1816,153 @@ async function callAI(prompt, maxTokens=1000, attempt=1) {
     }
     throw e;
   }
+}
+
+// ══════════════════════════════════════════════════
+// ONBOARDING WIZARD
+// ══════════════════════════════════════════════════
+const ONBOARD_STEPS = [
+  {
+    emoji: '✨',
+    title: 'Welcome to BrightPath!',
+    sub: 'AI-powered lessons aligned to the UK curriculum. Get set up in 3 quick steps.',
+    content: () => `
+      <span class="onboard-emoji">✨</span>
+      <div class="onboard-title">Welcome to BrightPath!</div>
+      <div class="onboard-sub">AI-powered lessons personalised to your child, aligned to the UK curriculum. Let's get set up in 60 seconds.</div>
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:20px">📚</span><span style="font-size:13px;color:var(--muted)">Fresh lessons generated for your child daily</span></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:20px">✏️</span><span style="font-size:13px;color:var(--muted)">Automatically marked with detailed feedback</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">🏆</span><span style="font-size:13px;color:var(--muted)">XP, badges and streaks to keep kids motivated</span></div>
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" onclick="onboardNext()">Get started →</button>
+    `
+  },
+  {
+    emoji: '👤',
+    title: 'Add your child',
+    content: () => `
+      <span class="onboard-emoji">👤</span>
+      <div class="onboard-title">Tell us about your child</div>
+      <div class="onboard-sub">We use this to personalise every lesson to the right level.</div>
+      <div class="form-group"><label>Child's name</label><input id="ob_name" placeholder="e.g. Rory" autofocus></div>
+      <div class="form-group"><label>Age</label>
+        <select id="ob_age">${Array.from({length:12},(_,i)=>`<option value="${i+5}">${i+5} years old</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Choose an avatar</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${[['🚀','rocket'],['🐉','dragon'],['⭐','star'],['🧙','wizard'],['🤖','robot'],['🐱','cat'],['🦄','unicorn'],['🦊','fox']].map(([e,id])=>
+            `<button onclick="obSelectAvatar('${id}',this)" id="obav_${id}" class="btn btn-secondary btn-sm" style="font-size:20px;padding:8px 10px">${e}</button>`
+          ).join('')}
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" onclick="onboardSaveChild()" style="margin-top:8px">Next →</button>
+    `
+  },
+  {
+    emoji: '🎯',
+    title: 'All set!',
+    content: (name) => `
+      <span class="onboard-emoji">🎉</span>
+      <div class="onboard-title">You're all set, ${name||''}!</div>
+      <div class="onboard-sub">BrightPath is ready. Pick a subject from the home screen and generate your first lesson — it takes about 20 seconds.</div>
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:20px">
+        <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:13px;margin-bottom:10px;color:var(--muted)">YOUR 7-DAY FREE TRIAL INCLUDES</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">✅</span><span style="font-size:13px;color:var(--muted)">Unlimited lessons in all 5 subjects</span></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">✅</span><span style="font-size:13px;color:var(--muted)">AI marking and detailed feedback</span></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">✅</span><span style="font-size:13px;color:var(--muted)">XP, badges and daily challenges</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">✅</span><span style="font-size:13px;color:var(--muted)">No card required for trial</span></div>
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" onclick="closeOnboarding()">Start learning! 🚀</button>
+      <p style="font-size:12px;color:var(--hint);text-align:center;margin-top:10px">Questions? Email us at <a href="mailto:hello@thebrightpath.uk" style="color:var(--muted)">hello@thebrightpath.uk</a></p>
+    `
+  }
+];
+
+let obStep = 0;
+let obAvatar = 'rocket';
+
+function showOnboarding() {
+  obStep = 0;
+  obAvatar = 'rocket';
+  document.getElementById('onboardOverlay').style.display = 'flex';
+  renderOnboardStep();
+}
+
+function renderOnboardStep() {
+  const step = ONBOARD_STEPS[obStep];
+  document.getElementById('onboardContent').innerHTML = step.content(S.activeChild?.name || '');
+  document.querySelectorAll('.onboard-step').forEach((el,i) => {
+    el.className = 'onboard-step' + (i < obStep ? ' done' : i === obStep ? ' active' : '');
+  });
+}
+
+function onboardNext() {
+  obStep++;
+  renderOnboardStep();
+}
+
+function obSelectAvatar(id, btn) {
+  obAvatar = id;
+  document.querySelectorAll('[id^="obav_"]').forEach(b => b.style.borderColor = 'var(--border)');
+  btn.style.borderColor = 'var(--accent)';
+}
+
+async function onboardSaveChild() {
+  const name = (document.getElementById('ob_name')||{}).value?.trim();
+  const age = parseInt((document.getElementById('ob_age')||{}).value||10);
+  if(!name) { toast('Please enter your childs name'); return; }
+  const uid = getUid();
+  if(!uid) { toast('Session error, please refresh'); return; }
+  const ks = age<=7?'KS1':age<=11?'KS2':age<=14?'KS3':'KS4';
+  try {
+    const rows = await sbPost('children', {user_id:uid, name, age, key_stage:ks, avatar:obAvatar, total_xp:0, current_streak:0, longest_streak:0, badges:'[]', read_books:'[]', timetable:'{}'});
+    const child = rows[0];
+    S.children.push(child);
+    S.activeChild = child;
+    obStep++;
+    renderOnboardStep();
+  } catch(e) { toast('Could not save, please try again'); }
+}
+
+function closeOnboarding() {
+  document.getElementById('onboardOverlay').style.display = 'none';
+  localStorage.setItem('bp_onboarded_' + getUid(), '1');
+  renderHome();
+}
+
+// ══════════════════════════════════════════════════
+// SUBSCRIPTION GATING
+// ══════════════════════════════════════════════════
+function isSubscriptionValid() {
+  const p = S.profile;
+  if(!p) return true; // don't block if profile not loaded yet
+  if(p.subscription_status === 'active') return true;
+  if(p.subscription_status === 'trialing') return true; // Stripe-managed trial
+  if(p.subscription_status === 'trial') {
+    // In-app trial fallback (before Stripe subscription created)
+    const start = new Date(p.trial_started_at);
+    const daysUsed = Math.floor((Date.now() - start) / 86400000);
+    return daysUsed < 7;
+  }
+  return false;
+}
+
+function showPaywall() {
+  const existing = document.getElementById('paywallOverlay');
+  if(existing) return;
+  const div = document.createElement('div');
+  div.id = 'paywallOverlay';
+  div.className = 'paywall-overlay';
+  div.innerHTML = `<div class="paywall-box">
+    <div style="font-size:52px;margin-bottom:12px">🔒</div>
+    <div style="font-family:Nunito,sans-serif;font-size:24px;font-weight:900;margin-bottom:8px">Trial ended</div>
+    <div style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6">Your 7-day free trial has ended. Subscribe to keep Rory learning with unlimited lessons, AI marking, and daily challenges.</div>
+    <button class="btn btn-primary btn-full btn-lg" onclick="document.getElementById('paywallOverlay').remove();showSubscribe('single')" style="margin-bottom:10px">🚀 Subscribe — £4.99/month</button>
+    <button class="btn btn-secondary btn-full" onclick="document.getElementById('paywallOverlay').remove();showSubscribe('family')">👨‍👩‍👧‍👦 Family plan — £7.99/month</button>
+    <p style="font-size:12px;color:var(--hint);margin-top:12px">Secure payment via Stripe. Cancel anytime.<br>Questions? <a href="mailto:hello@thebrightpath.uk" style="color:var(--muted)">hello@thebrightpath.uk</a></p>
+  </div>`;
+  document.body.appendChild(div);
 }
 
 // ══════════════════════════════════════════════════
