@@ -4,2082 +4,251 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BrightPath — Extra Practice & Catch-Up for Kids</title>
+<meta name="description" content="AI-powered extra practice aligned to the UK curriculum. Personalised to your child's year group, automatically marked, with feedback that actually helps. Perfect for catch-up and extension work.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0f0e17;
-  --surface: #1a1825;
-  --surface2: #231f35;
-  --border: rgba(255,255,255,0.08);
-  --text: #fffffe;
-  --muted: rgba(255,255,255,0.55);
-  --hint: rgba(255,255,255,0.3);
-  --math: #4fc3f7;
-  --math-bg: rgba(79,195,247,0.12);
-  --english: #ff9a56;
-  --english-bg: rgba(255,154,86,0.12);
-  --science: #69f0ae;
-  --science-bg: rgba(105,240,174,0.12);
-  --history: #ffd54f;
-  --history-bg: rgba(255,213,79,0.12);
-  --geo: #ce93d8;
-  --geo-bg: rgba(206,147,216,0.12);
-  --accent: #7c6af7;
-  --accent2: #f7596a;
-  --success: #69f0ae;
-  --warning: #ffd54f;
-  --xp: #f7c948;
-  --radius: 16px;
-  --radius-sm: 10px;
-  font-size: 16px;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Nunito Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-h1,h2,h3,.font-display { font-family: 'Nunito', sans-serif; }
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f0e17;--surface:#1a1825;--surface2:#231f35;--border:rgba(255,255,255,0.08);--text:#fffffe;--muted:rgba(255,255,255,0.55);--accent:#7c6af7;--accent2:#f7596a;--success:#69f0ae;--radius:16px}
+body{font-family:'Nunito Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+h1,h2,h3,.display{font-family:'Nunito',sans-serif}
+a{color:var(--accent);text-decoration:none}
+.container{max-width:720px;margin:0 auto;padding:0 20px}
 
-/* ── LAYOUT ── */
-#app { max-width: 720px; margin: 0 auto; padding: 0 16px 80px; }
-.page { display: none; }
-.page.active { display: block; }
+/* NAV */
+nav{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;max-width:720px;margin:0 auto}
+.logo{font-family:Nunito,sans-serif;font-weight:900;font-size:22px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-family:Nunito,sans-serif;font-weight:700;font-size:14px;cursor:pointer;text-decoration:none}
 
-/* ── CARDS ── */
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; }
-.card-sm { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; }
+/* HERO */
+.hero{padding:60px 20px 40px;text-align:center;max-width:720px;margin:0 auto}
+.hero-badge{display:inline-block;background:rgba(124,106,247,0.15);border:1px solid rgba(124,106,247,0.3);border-radius:20px;padding:6px 16px;font-size:13px;font-weight:700;color:var(--accent);margin-bottom:20px}
+.hero h1{font-size:clamp(32px,6vw,52px);font-weight:900;line-height:1.15;margin-bottom:16px}
+.hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:18px;color:var(--muted);max-width:480px;margin:0 auto 32px;line-height:1.7}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:16px 28px;font-family:Nunito,sans-serif;font-weight:800;font-size:16px;cursor:pointer;text-decoration:none;display:inline-block;transition:all 0.15s}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-2px)}
+.btn-secondary{background:transparent;color:var(--text);border:1px solid var(--border);border-radius:12px;padding:16px 28px;font-family:Nunito,sans-serif;font-weight:700;font-size:16px;cursor:pointer;text-decoration:none;display:inline-block;transition:all 0.15s}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.hero-note{font-size:13px;color:var(--muted);margin-top:14px}
 
-/* ── TOP NAV ── */
-#topnav { position: sticky; top: 0; z-index: 100; background: rgba(15,14,23,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; max-width: 720px; margin: 0 auto; }
-.nav-logo { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 20px; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.nav-right { display: flex; align-items: center; gap: 10px; }
-.xp-badge { background: rgba(247,201,72,0.15); border: 1px solid rgba(247,201,72,0.3); border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: 700; color: var(--xp); font-family: 'Nunito', sans-serif; }
-.streak-badge { background: rgba(247,89,106,0.15); border: 1px solid rgba(247,89,106,0.3); border-radius: 20px; padding: 4px 10px; font-size: 13px; font-weight: 700; color: var(--accent2); }
-.avatar-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--surface2); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+/* TRUST */
+.trust{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;padding:20px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:0 20px}
+.trust-item{font-size:13px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px}
 
-/* ── BOTTOM NAV ── */
-#bottomnav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(26,24,37,0.95); backdrop-filter: blur(12px); border-top: 1px solid var(--border); display: flex; z-index: 100; }
-.bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; cursor: pointer; color: var(--hint); font-size: 10px; font-weight: 600; transition: color 0.15s; }
-.bnav-item.active { color: var(--accent); }
-.bnav-item svg { width: 22px; height: 22px; }
+/* HOW IT WORKS */
+.section{padding:60px 20px;max-width:720px;margin:0 auto}
+.section-label{font-size:12px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px}
+.section h2{font-size:32px;font-weight:900;margin-bottom:12px}
+.section-sub{font-size:16px;color:var(--muted);margin-bottom:36px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.step-num{width:36px;height:36px;border-radius:50%;background:rgba(124,106,247,0.2);border:1px solid rgba(124,106,247,0.4);display:flex;align-items:center;justify-content:center;font-family:Nunito,sans-serif;font-weight:900;color:var(--accent);font-size:16px;margin-bottom:12px}
+.step h3{font-family:Nunito,sans-serif;font-size:16px;font-weight:800;margin-bottom:6px}
+.step p{font-size:13px;color:var(--muted);line-height:1.6}
 
-/* ── BUTTONS ── */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border-radius: var(--radius-sm); font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 15px; cursor: pointer; border: none; transition: all 0.15s; }
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-.btn-secondary:hover { border-color: var(--accent); }
-.btn-full { width: 100%; }
-.btn-lg { padding: 16px 24px; font-size: 17px; border-radius: var(--radius); }
-.btn-sm { padding: 8px 14px; font-size: 13px; }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-.btn-success { background: var(--success); color: #0a2e1a; }
-.btn-danger { background: var(--accent2); color: #fff; }
+/* SUBJECTS */
+.subjects{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:24px 0}
+.subj{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.subj-emoji{font-size:28px;display:block;margin-bottom:6px}
+.subj-name{font-family:Nunito,sans-serif;font-size:14px;font-weight:800}
+.subj-ks{font-size:12px;color:var(--muted);margin-top:2px}
 
-/* ── INPUTS ── */
-input, textarea, select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 12px 14px; font-family: 'Nunito Sans', sans-serif; font-size: 15px; width: 100%; outline: none; transition: border-color 0.15s; }
-input:focus, textarea:focus, select:focus { border-color: var(--accent); }
-textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
-select option { background: var(--surface2); }
-label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px; }
+/* FEATURES */
+.features{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.feat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;gap:12px}
+.feat-icon{font-size:24px;flex-shrink:0}
+.feat h3{font-family:Nunito,sans-serif;font-size:14px;font-weight:800;margin-bottom:4px}
+.feat p{font-size:13px;color:var(--muted);line-height:1.5}
 
-/* ── SUBJECT COLORS ── */
-.subj-math  { --sc: var(--math);  --scbg: var(--math-bg);  }
-.subj-english { --sc: var(--english); --scbg: var(--english-bg); }
-.subj-science { --sc: var(--science); --scbg: var(--science-bg); }
-.subj-history { --sc: var(--history); --scbg: var(--history-bg); }
-.subj-geography { --sc: var(--geo); --scbg: var(--geo-bg); }
-.subj-pill { background: var(--scbg); color: var(--sc); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 700; display: inline-block; }
-.subj-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--sc); display: inline-block; }
-.subj-icon-wrap { width: 44px; height: 44px; border-radius: 12px; background: var(--scbg); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+/* PRICING */
+.pricing{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px}
+.price-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.price-card.featured{border-color:rgba(124,106,247,0.5);background:rgba(124,106,247,0.08)}
+.price-badge{display:inline-block;background:rgba(124,106,247,0.2);color:var(--accent);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;margin-bottom:10px}
+.price-card h3{font-family:Nunito,sans-serif;font-size:18px;font-weight:900;margin-bottom:4px}
+.price-amount{font-family:Nunito,sans-serif;font-size:36px;font-weight:900;margin:10px 0 4px}
+.price-amount span{font-size:16px;color:var(--muted);font-weight:400}
+.price-trial{font-size:13px;color:var(--success);margin-bottom:14px;font-weight:600}
+.price-features{list-style:none;margin-bottom:18px}
+.price-features li{font-size:13px;color:var(--muted);padding:4px 0;display:flex;align-items:center;gap:8px}
+.price-features li::before{content:'✓';color:var(--success);font-weight:700}
 
-/* ── HOME PAGE ── */
-.hero-greeting { padding: 28px 0 8px; }
-.hero-name { font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 900; }
-.hero-sub { color: var(--muted); font-size: 15px; margin-top: 4px; }
-.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
-.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 12px; text-align: center; }
-.stat-val { font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900; }
-.stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 600; }
+/* FAQ */
+.faqs{margin-top:24px}
+.faq{border-bottom:1px solid var(--border);padding:16px 0;cursor:pointer}
+.faq-q{font-family:Nunito,sans-serif;font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+.faq-a{font-size:14px;color:var(--muted);line-height:1.7;margin-top:10px;display:none}
+.faq.open .faq-a{display:block}
+.faq.open .faq-q::after{transform:rotate(180deg)}
+.faq-q::after{content:'↓';transition:transform 0.2s;color:var(--muted)}
 
-/* ── DAILY CHALLENGE BANNER ── */
-.challenge-banner { background: linear-gradient(135deg, rgba(124,106,247,0.2), rgba(247,89,106,0.2)); border: 1px solid rgba(124,106,247,0.4); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.15s; }
-.challenge-banner:hover { border-color: var(--accent); transform: translateY(-1px); }
-.challenge-fire { font-size: 32px; }
-.challenge-text h3 { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; }
-.challenge-text p { font-size: 13px; color: var(--muted); margin-top: 2px; }
-.challenge-xp { margin-left: auto; background: rgba(247,201,72,0.2); border: 1px solid rgba(247,201,72,0.4); border-radius: 20px; padding: 6px 14px; font-family: 'Nunito', sans-serif; font-weight: 900; color: var(--xp); font-size: 14px; white-space: nowrap; }
+/* CTA */
+.cta-section{padding:60px 20px;text-align:center;max-width:720px;margin:0 auto}
+.cta-section h2{font-size:36px;font-weight:900;margin-bottom:12px}
+.cta-section p{font-size:16px;color:var(--muted);margin-bottom:28px}
 
-/* ── SUBJECT CARDS ── */
-.subject-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
-.subject-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
-.subject-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--sc); }
-.subject-card:hover { border-color: var(--sc); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-.subject-card h3 { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; margin: 10px 0 4px; }
-.subject-card .lessons-done { font-size: 12px; color: var(--muted); }
-.subject-prog { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 12px; overflow: hidden; }
-.subject-prog-fill { height: 100%; background: var(--sc); border-radius: 2px; transition: width 0.4s; }
-.lock-overlay { position: absolute; inset: 0; background: rgba(15,14,23,0.6); display: flex; align-items: center; justify-content: center; border-radius: var(--radius); font-size: 22px; }
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:24px 20px;text-align:center;max-width:720px;margin:0 auto}
+footer p{font-size:12px;color:var(--muted)}
 
-/* ── MASCOT ── */
-.mascot { text-align: center; margin: 16px 0; }
-.mascot-face { font-size: 52px; transition: all 0.3s; display: inline-block; }
-.mascot-bubble { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; margin-top: 8px; font-size: 14px; color: var(--muted); line-height: 1.5; position: relative; }
-.mascot-bubble::before { content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); border: 8px solid transparent; border-bottom-color: var(--border); border-top: 0; }
-
-/* ── LESSON PAGE ── */
-.lesson-header { padding: 20px 0 12px; display: flex; align-items: center; gap: 12px; }
-.lesson-title { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 900; }
-.lesson-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
-.back-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; cursor: pointer; color: var(--muted); font-size: 20px; flex-shrink: 0; }
-.back-btn:hover { color: var(--text); border-color: var(--accent); }
-
-/* ── VIDEO CARD ── */
-.video-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 16px; display: flex; gap: 14px; align-items: center; }
-.video-thumb { width: 80px; height: 54px; border-radius: 8px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow: hidden; position: relative; cursor: pointer; }
-.video-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.video-play-icon { position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 20px; }
-.video-info h4 { font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
-.video-info p { font-size: 12px; color: var(--muted); }
-.video-actions { display: flex; gap: 8px; margin-top: 8px; }
-.video-btn { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text); transition: all 0.15s; }
-.video-btn:hover { border-color: var(--accent); color: var(--accent); }
-.video-btn.watched { background: rgba(105,240,174,0.15); border-color: var(--success); color: var(--success); }
-.video-feedback { display: flex; gap: 6px; margin-top: 6px; }
-.vf-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; color: var(--muted); transition: all 0.15s; }
-.vf-btn:hover { border-color: rgba(255,255,255,0.3); color: var(--text); }
-
-/* ── LESSON CONTENT ── */
-.lesson-content { font-size: 15px; line-height: 1.75; color: rgba(255,255,255,0.85); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-.lesson-content h2, .lesson-content h3 { font-family: 'Nunito', sans-serif; color: var(--text); margin: 16px 0 8px; }
-.lesson-content p { margin-bottom: 10px; }
-.lesson-content ul, .lesson-content ol { padding-left: 20px; margin-bottom: 10px; }
-.lesson-content li { margin-bottom: 4px; }
-.lesson-content strong { color: var(--text); }
-
-/* ── QUESTIONS ── */
-.questions-section h3 { font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 800; margin-bottom: 14px; }
-.question-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; }
-.question-num { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-.question-text { font-size: 15px; line-height: 1.5; margin-bottom: 10px; font-weight: 600; }
-.marks-badge { font-size: 11px; background: rgba(124,106,247,0.15); color: var(--accent); border: 1px solid rgba(124,106,247,0.3); border-radius: 10px; padding: 2px 8px; margin-bottom: 10px; display: inline-block; }
-
-/* ── MARKING RESULT ── */
-.marking-result { border-radius: var(--radius); overflow: hidden; margin-bottom: 14px; }
-.score-banner { padding: 20px; text-align: center; }
-.score-big { font-family: 'Nunito', sans-serif; font-size: 52px; font-weight: 900; }
-.score-pct { font-size: 18px; font-weight: 700; opacity: 0.8; }
-.score-stars { font-size: 28px; margin: 8px 0; }
-.score-msg { font-size: 15px; font-weight: 600; }
-.q-feedback { padding: 14px 16px; border-top: 1px solid var(--border); }
-.q-fb-item { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
-.q-fb-item:last-child { border-bottom: none; }
-.q-fb-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 13px; font-weight: 700; }
-.q-fb-mark { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
-.q-fb-mark.correct { background: rgba(105,240,174,0.2); color: var(--success); }
-.q-fb-mark.wrong { background: rgba(247,89,106,0.2); color: var(--accent2); }
-.q-fb-comment { font-size: 13px; color: var(--muted); line-height: 1.5; padding-left: 30px; }
-
-/* ── CELEBRATION OVERLAY ── */
-#celebration { position: fixed; inset: 0; z-index: 999; display: none; align-items: center; justify-content: center; background: rgba(15,14,23,0.85); }
-#celebration.show { display: flex; }
-.celebrate-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 40px; text-align: center; max-width: 340px; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.celebrate-emoji { font-size: 64px; display: block; margin-bottom: 12px; animation: bounce 0.6s ease 0.3s both; }
-@keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
-.celebrate-title { font-family: 'Nunito', sans-serif; font-size: 26px; font-weight: 900; margin-bottom: 6px; }
-.celebrate-sub { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
-.xp-pop { display: inline-block; background: rgba(247,201,72,0.15); border: 1px solid rgba(247,201,72,0.4); border-radius: 20px; padding: 6px 18px; font-family: 'Nunito', sans-serif; font-weight: 900; color: var(--xp); font-size: 18px; margin-bottom: 18px; }
-.confetti-burst { position: absolute; pointer-events: none; }
-
-/* ── PROGRESS / HISTORY PAGE ── */
-.prog-header { padding: 24px 0 16px; }
-.prog-header h2 { font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 900; }
-.subject-prog-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; }
-.subj-prog-info { flex: 1; }
-.subj-prog-name { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; }
-.subj-prog-stats { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.subj-prog-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; margin-top: 8px; overflow: hidden; }
-.subj-prog-fill { height: 100%; border-radius: 3px; background: var(--sc); }
-.subj-score-ring { width: 44px; height: 44px; flex-shrink: 0; }
-
-/* ── BADGES ── */
-.badges-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0; }
-.badge-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 8px; text-align: center; }
-.badge-item.earned { border-color: rgba(247,201,72,0.4); background: rgba(247,201,72,0.07); }
-.badge-item.locked { opacity: 0.4; }
-.badge-emoji { font-size: 24px; display: block; margin-bottom: 4px; }
-.badge-name { font-size: 10px; font-weight: 700; color: var(--muted); }
-.badge-item.earned .badge-name { color: var(--xp); }
-
-/* ── SETTINGS / PARENT PAGE ── */
-.parent-section { margin-bottom: 24px; }
-.parent-section h3 { font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 800; margin-bottom: 12px; }
-
-/* ── SUBSCRIPTION BANNER ── */
-.sub-banner { background: linear-gradient(135deg, rgba(124,106,247,0.25), rgba(247,89,106,0.25)); border: 1px solid rgba(124,106,247,0.5); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-.sub-banner h3 { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; margin-bottom: 4px; }
-.sub-banner p { font-size: 14px; color: var(--muted); margin-bottom: 14px; }
-.trial-progress { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; margin-bottom: 10px; overflow: hidden; }
-.trial-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; }
-
-/* ── LOADING STATES ── */
-.skeleton { background: linear-gradient(90deg, var(--surface2) 25%, var(--surface) 50%, var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius-sm); }
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-.spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-msg { text-align: center; padding: 40px 20px; }
-.loading-msg p { color: var(--muted); font-size: 14px; margin-top: 12px; }
-
-/* ── AUTH PAGE ── */
-#authPage { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
-.auth-logo { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
-.auth-tagline { color: var(--muted); font-size: 16px; margin-bottom: 32px; text-align: center; }
-.auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 380px; }
-.auth-tabs { display: flex; gap: 0; margin-bottom: 24px; background: var(--bg); border-radius: var(--radius-sm); overflow: hidden; }
-.auth-tab { flex: 1; padding: 10px; text-align: center; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 14px; cursor: pointer; color: var(--muted); transition: all 0.15s; }
-.auth-tab.active { background: var(--accent); color: #fff; }
-.form-group { margin-bottom: 16px; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.auth-divider { text-align: center; color: var(--hint); font-size: 12px; margin: 12px 0; }
-.trust-badges { display: flex; justify-content: center; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
-.trust-badge { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 11px; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 5px; }
-
-/* ── TIMETABLE ── */
-.timetable-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-.tt-day { background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 8px; }
-.tt-day-name { font-size: 11px; font-weight: 800; color: var(--muted); text-align: center; margin-bottom: 8px; text-transform: uppercase; }
-.tt-subject { border-radius: 6px; padding: 4px 6px; font-size: 10px; font-weight: 700; text-align: center; margin-bottom: 4px; cursor: pointer; }
-
-/* ── ONBOARDING WIZARD ── */
-.onboard-overlay{position:fixed;inset:0;z-index:800;background:rgba(15,14,23,0.95);display:flex;align-items:center;justify-content:center;padding:20px}
-.onboard-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:420px;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1)}
-.onboard-steps{display:flex;gap:8px;margin-bottom:24px;justify-content:center}
-.onboard-step{width:8px;height:8px;border-radius:50%;background:var(--border)}
-.onboard-step.active{background:var(--accent);width:24px;border-radius:4px}
-.onboard-step.done{background:var(--success)}
-.onboard-emoji{font-size:48px;text-align:center;display:block;margin-bottom:12px}
-.onboard-title{font-family:Nunito,sans-serif;font-size:22px;font-weight:900;text-align:center;margin-bottom:8px}
-.onboard-sub{font-size:14px;color:var(--muted);text-align:center;margin-bottom:20px;line-height:1.6}
-
-/* ── PAYWALL ── */
-.paywall-overlay{position:fixed;inset:0;z-index:700;background:rgba(15,14,23,0.97);display:flex;align-items:center;justify-content:center;padding:20px}
-.paywall-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:100%;max-width:400px;text-align:center}
-
-/* ── TOAST ── */
-#toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 18px; font-size: 14px; font-weight: 600; z-index: 500; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; }
-#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* ── MISC ── */
-.section-title { font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-.empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
-.empty-state .icon { font-size: 40px; margin-bottom: 10px; display: block; }
-.divider { height: 1px; background: var(--border); margin: 16px 0; }
-.tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 600; margin: 2px; cursor: pointer; color: var(--muted); transition: all 0.15s; }
-.tag.selected { background: rgba(124,106,247,0.2); border-color: var(--accent); color: var(--accent); }
-.progress-ring-wrap { position: relative; display: inline-block; }
-.progress-ring-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800; }
+@media(max-width:480px){.features{grid-template-columns:1fr}.pricing{grid-template-columns:1fr}.hero-btns{flex-direction:column;align-items:center}}
 </style>
 </head>
 <body>
 
-<!-- AUTH PAGE -->
-<div id="authPage" style="display:none">
-  <div class="auth-logo">✨ BrightPath</div>
-  <div class="auth-tagline">Extra practice that actually works<br>aligned to the UK curriculum</div>
-  <div class="auth-box">
-    <div class="auth-tabs">
-      <div class="auth-tab active" onclick="switchAuthTab('login')">Sign in</div>
-      <div class="auth-tab" onclick="switchAuthTab('signup')">Free trial</div>
-    </div>
-    <div id="loginForm">
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="loginEmail" placeholder="you@email.com">
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="loginPass" placeholder="••••••••">
-      </div>
-      <button class="btn btn-primary btn-full btn-lg" onclick="doLogin()">Sign in →</button>
-      <p style="text-align:center;margin-top:10px"><a href="#" onclick="doForgotPassword()" style="font-size:13px;color:var(--muted)">Forgot password?</a></p>
-    </div>
-    <div id="signupForm" style="display:none">
-      <div class="form-group">
-        <label>Your name</label>
-        <input type="text" id="signupName" placeholder="Parent's name">
-      </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="signupEmail" placeholder="you@email.com">
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="signupPass" placeholder="At least 8 characters">
-      </div>
-      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px">
-        <input type="checkbox" id="agreeTerms" style="width:16px;height:16px;margin-top:2px;flex-shrink:0">
-        <label for="agreeTerms" style="font-size:12px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400">I agree to the <a href="#" onclick="showTerms()" style="color:var(--accent)">Terms of Service</a> and <a href="#" onclick="showPrivacyPolicy()" style="color:var(--accent)">Privacy Policy</a>. I confirm I am the parent or guardian of the child using this service.</label>
-      </div>
-      <button class="btn btn-primary btn-full btn-lg" onclick="doSignup()">Start 7-day free trial →</button>
-      <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px">No card required. Then £4.99/month.</p>
-    </div>
-    <div id="authErr" style="color:var(--accent2);font-size:13px;margin-top:10px;text-align:center;display:none"></div>
+<nav>
+  <div class="logo">✨ BrightPath</div>
+  <a href="https://thebrightpath.uk/app.html" class="nav-btn">Sign in</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">🇬🇧 UK Curriculum Aligned</div>
+  <h1>Extra practice your child<br><span>will actually enjoy</span></h1>
+  <p>Personalised to your child's year group. Automatically marked with specific feedback. Perfect for 2-3 sessions a week alongside school.</p>
+  <div class="hero-btns">
+    <a href="https://thebrightpath.uk/app.html" class="btn-primary">Start free trial — no card needed →</a>
   </div>
-  <div class="trust-badges">
-    <div class="trust-badge">🇬🇧 UK Curriculum</div>
-    <div class="trust-badge">🔒 GDPR Safe</div>
-    <div class="trust-badge">✅ No Ads</div>
-    <div class="trust-badge">📱 Works on any device</div>
+  <p class="hero-note">7-day free trial · Then £4.99/month · Cancel anytime</p>
+</div>
+
+<div class="trust">
+  <div class="trust-item">🇬🇧 UK National Curriculum</div>
+  <div class="trust-item">🔒 GDPR Safe</div>
+  <div class="trust-item">✅ No Ads Ever</div>
+  <div class="trust-item">📱 Works on any device</div>
+  <div class="trust-item">🧒 Ages 5–16</div>
+</div>
+
+<div class="section">
+  <div class="section-label">How it works</div>
+  <h2>A full practice session in 3 simple steps</h2>
+  <p class="section-sub">No planning, no printing, no marking. BrightPath does it all in minutes.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Pick a subject</h3>
+      <p>Choose from Maths, English, Science, History, or Geography. BrightPath knows your child's age and key stage.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Generate a lesson</h3>
+      <p>Professor Hoot generates a fresh, personalised practice session in about 20 seconds — content and questions pitched exactly at your child's level.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Get marked instantly</h3>
+      <p>Answers are marked by AI with per-question feedback, a score out of 3 stars, and specific suggestions to improve.</p>
+    </div>
   </div>
 </div>
 
-<!-- MAIN APP -->
-<div id="mainApp" style="display:none">
-  <nav id="topnav" style="display:none">
-    <div class="nav-logo">✨ BrightPath</div>
-    <div class="nav-right">
-      <div class="xp-badge" id="navXp">⚡ 0 XP</div>
-      <div class="streak-badge" id="navStreak">🔥 0</div>
-      <div class="avatar-btn" id="navAvatar" onclick="goPage('parent')">👤</div>
-    </div>
-  </nav>
-
-  <div id="app">
-    <!-- HOME PAGE -->
-    <div id="homePage" class="page active">
-      <div class="hero-greeting">
-        <div class="hero-name" id="heroName">Hello! 👋</div>
-        <div class="hero-sub" id="heroSub">Ready to practise something today?</div>
-      </div>
-
-      <!-- Trial/subscription banner -->
-      <div id="subBanner" class="sub-banner" style="display:none">
-        <h3 id="subBannerTitle">🎉 7-day free trial</h3>
-        <p id="subBannerText">You have <strong id="trialDaysLeft">7</strong> days left. Subscribe to keep all progress and features.</p>
-        <div class="trial-progress"><div class="trial-fill" id="trialBar" style="width:100%"></div></div>
-        <button class="btn btn-primary btn-sm" onclick="showSubscribe('single')">Subscribe — £4.99/month</button>
-      </div>
-
-      <!-- Daily challenge -->
-      <div class="challenge-banner" onclick="goPage('challenge')" id="challengeBanner">
-        <div class="challenge-fire">🔥</div>
-        <div class="challenge-text">
-          <h3>Daily Challenge</h3>
-          <p id="challengeSubText">Beat today's bonus question for 2× XP!</p>
-        </div>
-        <div class="challenge-xp" id="challengeXpBadge">+50 XP</div>
-      </div>
-
-      <!-- Stats -->
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-val" id="statLessons">0</div>
-          <div class="stat-lbl">Lessons</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val" style="color:var(--xp)" id="statXp">0</div>
-          <div class="stat-lbl">Total XP</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val" style="color:var(--accent2)" id="statAvg">—</div>
-          <div class="stat-lbl">Avg Score</div>
-        </div>
-      </div>
-
-      <!-- Mascot -->
-      <div class="mascot" id="mascotArea">
-        <div class="mascot-face" id="mascotFace">🦉</div>
-        <div class="mascot-bubble" id="mascotMsg">Hi! I'm Professor Hoot. Pick a subject and let's get started!</div>
-      </div>
-
-      <!-- Subjects -->
-      <div class="section-title">Today's Subjects</div>
-      <div class="subject-grid" id="subjectGrid">
-        <!-- populated by JS -->
-      </div>
-
-      <!-- Child switcher -->
-      <div id="childSwitcher" style="margin-top:16px; display:none">
-        <div class="section-title">Learning profiles</div>
-        <div id="childList"></div>
-        <button class="btn btn-secondary btn-sm" onclick="showAddChild()" style="margin-top:8px">+ Add child</button>
-      </div>
-    </div>
-
-    <!-- SUBJECT PAGE -->
-    <div id="subjectPage" class="page">
-      <div class="lesson-header">
-        <button class="back-btn" onclick="goPage('home')">←</button>
-        <div>
-          <div class="lesson-title" id="subjectTitle">Subject</div>
-          <div class="lesson-meta" id="subjectMeta">Lesson 1 of 2</div>
-        </div>
-      </div>
-      <div id="lessonList"></div>
-    </div>
-
-    <!-- LESSON PAGE -->
-    <div id="lessonPage" class="page">
-      <div class="lesson-header">
-        <button class="back-btn" id="lessonBackBtn">←</button>
-        <div>
-          <div class="lesson-title" id="lessonTitle">Lesson</div>
-          <div class="lesson-meta" id="lessonMeta"></div>
-        </div>
-      </div>
-      <div id="lessonBody"></div>
-    </div>
-
-    <!-- CHALLENGE PAGE -->
-    <div id="challengePage" class="page">
-      <div class="lesson-header">
-        <button class="back-btn" onclick="goPage('home')">←</button>
-        <div>
-          <div class="lesson-title">🔥 Daily Challenge</div>
-          <div class="lesson-meta">Double XP · Resets at midnight</div>
-        </div>
-      </div>
-      <div id="challengeBody"></div>
-    </div>
-
-    <!-- PROGRESS PAGE -->
-    <div id="progressPage" class="page">
-      <div class="prog-header">
-        <h2>📊 Progress</h2>
-      </div>
-      <div id="progressBody"></div>
-    </div>
-
-    <!-- PARENT PAGE -->
-    <div id="parentPage" class="page">
-      <div class="prog-header">
-        <h2>⚙️ Settings & Parent</h2>
-      </div>
-      <div id="parentBody"></div>
-    </div>
-  </div>
-
-  <!-- BOTTOM NAV -->
-  <nav id="bottomnav">
-    <div class="bnav-item active" onclick="goPage('home')" data-page="home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      Home
-    </div>
-    <div class="bnav-item" onclick="goPage('progress')" data-page="progress">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-      Progress
-    </div>
-    <div class="bnav-item" onclick="goPage('parent')" data-page="parent">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M6 20v-1a6 6 0 0112 0v1"/></svg>
-      Parent
-    </div>
-  </nav>
-</div>
-
-<!-- ONBOARDING WIZARD -->
-<div id="onboardOverlay" class="onboard-overlay" style="display:none">
-  <div class="onboard-box">
-    <div class="onboard-steps">
-      <div class="onboard-step active" id="os1"></div>
-      <div class="onboard-step" id="os2"></div>
-      <div class="onboard-step" id="os3"></div>
-    </div>
-    <div id="onboardContent"></div>
+<div class="section">
+  <div class="section-label">Subjects</div>
+  <h2>5 subjects, KS1 to KS4</h2>
+  <p class="section-sub">Every lesson is tailored to your child's exact year group and key stage.</p>
+  <div class="subjects">
+    <div class="subj"><span class="subj-emoji">🔢</span><div class="subj-name">Maths</div><div class="subj-ks">KS1 – KS4</div></div>
+    <div class="subj"><span class="subj-emoji">📖</span><div class="subj-name">English</div><div class="subj-ks">KS1 – KS4</div></div>
+    <div class="subj"><span class="subj-emoji">🔬</span><div class="subj-name">Science</div><div class="subj-ks">KS1 – KS4</div></div>
+    <div class="subj"><span class="subj-emoji">🏛️</span><div class="subj-name">History</div><div class="subj-ks">KS1 – KS4</div></div>
+    <div class="subj"><span class="subj-emoji">🌍</span><div class="subj-name">Geography</div><div class="subj-ks">KS1 – KS4</div></div>
   </div>
 </div>
 
-<!-- CELEBRATION OVERLAY -->
-<div id="celebration">
-  <canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:1000"></canvas>
-  <div class="celebrate-box">
-    <span class="celebrate-emoji" id="celebEmoji">🎉</span>
-    <div class="celebrate-title" id="celebTitle">Amazing!</div>
-    <div class="celebrate-sub" id="celebSub">Lesson complete</div>
-    <div class="xp-pop" id="celebXp">+25 XP</div>
-    <div class="score-stars" id="celebStars">⭐⭐⭐</div>
-    <button class="btn btn-primary btn-full" onclick="closeCelebration()">Continue →</button>
+<div class="section">
+  <div class="section-label">Features</div>
+  <h2>Built for every school family</h2>
+  <p class="section-sub">Perfect for catch-up, extension work, or reinforcing what teachers say needs practice.</p>
+  <div class="features">
+    <div class="feat"><div class="feat-icon">🦉</div><div><h3>Professor Hoot</h3><p>Your child's AI tutor who marks every answer with specific, encouraging feedback.</p></div></div>
+    <div class="feat"><div class="feat-icon">🔥</div><div><h3>Daily challenges</h3><p>A bonus question every day worth double XP — builds the habit of daily learning.</p></div></div>
+    <div class="feat"><div class="feat-icon">⭐</div><div><h3>XP and badges</h3><p>Kids earn XP, climb the rank ladder, and unlock named badges as they progress.</p></div></div>
+    <div class="feat"><div class="feat-icon">🔄</div><div><h3>Redo to improve</h3><p>Every marked lesson can be redone with prior answers pre-filled — learn from feedback.</p></div></div>
+    <div class="feat"><div class="feat-icon">📺</div><div><h3>Curated videos</h3><p>Relevant educational videos from trusted UK channels alongside every lesson.</p></div></div>
+    <div class="feat"><div class="feat-icon">👨‍👩‍👧</div><div><h3>Family plan</h3><p>Up to 4 children on one account, each with their own personalised profile and progress tracker.</p></div></div>
   </div>
 </div>
 
-<!-- TOAST -->
-<div id="toast"></div>
-
-<script>
-// ══════════════════════════════════════════════════
-// CONFIG
-// ══════════════════════════════════════════════════
-const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
-const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
-const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
-const PRICE_SINGLE = 'price_1TYVwaB0UeOnCbV7fkzdH6jT';
-const PRICE_FAMILY = 'price_1TYVxZB0UeOnCbV7oZhTMKob';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZ3JnY2Joa3BpaHhxc2prbWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzYwOTQsImV4cCI6MjA5NDE1MjA5NH0.cGDgY80q6YL6pycCipe2kce-GHtkdIsF7sGFjmpNnng';
-const AI_URL = 'https://sehomeservices.app.n8n.cloud/webhook/ai-proxy';
-
-// ── YOUTUBE CHANNEL WHITELIST ──────────────────────
-const YT_CHANNELS = {
-  math:    ['UCVCkMuBHgLmOF0gSMCe6tDg','UCWX3yGbODM3VGCCPsHSNTsA','UC4a-Gbdw7vOaccHmFo40b9g'],
-  english: ['UCeW_9HEkBHCCBM4OVFbQq7g','UCVTlvUkGslCV_h-nSAId8Sw'],
-  science: ['UC295-Dw4tzbRmAgFl2-G8sA','UCsooa4yRKGN_zEE8iknghZA','UC6107grRI4m0o2-emgoDnAA'],
-  history: ['UCRrFHROhHMEBlYAYmzFKPyg','UCX6b17PVsYBQ0ip5gyeme-Q','UCHIBMHamJWkn43K1FMFMFaA'],
-  geography:['UCMSRmhRYCx-oInQDcJAabcg','UCsooa4yRKGN_zEE8iknghZA']
-};
-const YT_CURATED = {
-  'math:ks1':['https://www.youtube.com/watch?v=hOWDrSS2tcc','https://www.youtube.com/watch?v=WT_wvvEvkw0'],
-  'math:ks2':['https://www.youtube.com/watch?v=4uLAz1G1jy4','https://www.youtube.com/watch?v=Ih3h_Cl7I5U','https://www.youtube.com/watch?v=PBLHfHJTMkA'],
-  'math:ks3':['https://www.youtube.com/watch?v=Cqe-S42J9Sc','https://www.youtube.com/watch?v=5tpigGhIAwQ'],
-  'math:ks4':['https://www.youtube.com/watch?v=8miBovX8rqs','https://www.youtube.com/watch?v=Y9lFTxKhPUM'],
-  'english:ks1':['https://www.youtube.com/watch?v=LCFn2zxzp0g'],
-  'english:ks2':['https://www.youtube.com/watch?v=5q8WmosXy_E','https://www.youtube.com/watch?v=kQXuCJkEDGs'],
-  'english:ks3':['https://www.youtube.com/watch?v=6cGLANQiGOI'],
-  'english:ks4':['https://www.youtube.com/watch?v=GaKPOt0GNCY'],
-  'science:ks1':['https://www.youtube.com/watch?v=HGRB8JHWZHE'],
-  'science:ks2':['https://www.youtube.com/watch?v=y9_r5sDfZNQ','https://www.youtube.com/watch?v=gblHJvGgM1c'],
-  'science:ks3':['https://www.youtube.com/watch?v=H-MyEOa0TMg','https://www.youtube.com/watch?v=4uLAz1G1jy4'],
-  'science:ks4':['https://www.youtube.com/watch?v=QnQnUbCFEro'],
-  'history:ks2':['https://www.youtube.com/watch?v=sMtMc_w0tIg','https://www.youtube.com/watch?v=S-cCFHXS3IM'],
-  'history:ks3':['https://www.youtube.com/watch?v=UXHIJWVKXLM'],
-  'geography:ks2':['https://www.youtube.com/watch?v=oOuGUZUJDvU'],
-  'geography:ks3':['https://www.youtube.com/watch?v=bTdBSoVaazE'],
-};
-
-function getCuratedVideo(subject, ks) {
-  const key = `${subject.toLowerCase()}:${ks.toLowerCase()}`;
-  const list = YT_CURATED[key] || YT_CURATED[`${subject.toLowerCase()}:ks2`] || [];
-  if (!list.length) return null;
-  return list[Math.floor(Math.random() * list.length)];
-}
-
-// ── SUBJECTS CONFIG ──────────────────────────────
-const SUBJECTS = [
-  { id:'math',      label:'Maths',     emoji:'🔢', cls:'subj-math' },
-  { id:'english',   label:'English',   emoji:'📖', cls:'subj-english' },
-  { id:'science',   label:'Science',   emoji:'🔬', cls:'subj-science' },
-  { id:'history',   label:'History',   emoji:'🏛️', cls:'subj-history' },
-  { id:'geography', label:'Geography', emoji:'🌍', cls:'subj-geography' },
-];
-
-// ── BADGES CONFIG ────────────────────────────────
-const BADGES_DEF = [
-  { id:'first_lesson',  emoji:'🌟', name:'First Star',      desc:'Complete your first lesson',             xp:10  },
-  { id:'streak_3',      emoji:'🔥', name:'On Fire',         desc:'3-day streak',                           xp:30  },
-  { id:'streak_7',      emoji:'⚡', name:'Week Warrior',   desc:'7-day streak',                           xp:70  },
-  { id:'math_100',      emoji:'🧮', name:'Calculator King', desc:'Score 100% in maths',                    xp:50  },
-  { id:'english_book',  emoji:'📚', name:'Bookworm',        desc:'Complete 5 English lessons',             xp:40  },
-  { id:'science_ace',   emoji:'🧪', name:'Lab Master',      desc:'Score 80%+ in 3 science lessons',        xp:60  },
-  { id:'history_hero',  emoji:'🏆', name:"Pharaoh's Scholar", desc:'Complete 3 history lessons',          xp:40  },
-  { id:'geo_explorer',  emoji:'🗺️', name:'World Explorer',  desc:'Complete 3 geography lessons',          xp:40  },
-  { id:'all_subjects',  emoji:'🎓', name:'All-Rounder',     desc:'Complete a lesson in every subject',     xp:100 },
-  { id:'perfect_week',  emoji:'💎', name:'Diamond Week',    desc:'Do at least one lesson every day for 7 days', xp:150 },
-  { id:'challenge_5',   emoji:'⚔️', name:'Challenge Ace',   desc:'Complete 5 daily challenges',           xp:80  },
-  { id:'top_scorer',    emoji:'👑', name:'Top Scorer',      desc:'Average 90%+ over 10 lessons',          xp:100 },
-];
-
-const RANKS = [
-  { min:0,    label:'Learner',    emoji:'🌱' },
-  { min:100,  label:'Explorer',   emoji:'🗺️' },
-  { min:300,  label:'Scholar',    emoji:'📚' },
-  { min:600,  label:'Academic',   emoji:'🎓' },
-  { min:1000, label:'Professor',  emoji:'🏆' },
-  { min:2000, label:'Genius',     emoji:'💎' },
-];
-
-// ── MASCOT MESSAGES ──────────────────────────────
-const MASCOT_MSGS = {
-  home:    ["Hi! I'm Professor Hoot. Pick a subject and let us get started!","Great to see you! What shall we practise today?","Every lesson makes you sharper. What is first?"],
-  math:    ["Maths is like a puzzle — every problem has a solution!","Numbers are your friends. Let's go!"],
-  english: ["Reading opens new worlds. Let's explore language today!","Great writers start just like you — one sentence at a time!"],
-  science: ["Science is all about asking 'why?' — let's find out!","Every scientist started as a curious student!"],
-  history: ["The past holds amazing stories. Let's discover them!","History isn't just dates — it's people and adventures!"],
-  geography:["The world is huge and wonderful. Let's explore it!","Every place on Earth has something unique to discover!"],
-  correct: ["Brilliant! You really understood that! 🎉","Spot on! That's excellent thinking!","Perfect answer — you're on fire! 🔥"],
-  wrong:   ["Good try! Let's look at that together.","Almost! Every mistake teaches us something new.","Keep going — you're getting there!"],
-};
-
-function mascotMsg(key) {
-  const msgs = MASCOT_MSGS[key] || MASCOT_MSGS.home;
-  return msgs[Math.floor(Math.random() * msgs.length)];
-}
-
-// ── APP STATE ────────────────────────────────────
-let S = {
-  user: null, profile: null, children: [], activeChild: null,
-  todayLessons: {}, activeLessonId: null, activeSubject: null,
-  dbMode: 'live'
-};
-const LDB = { profiles:{}, children:{}, lessons:{}, submissions:{}, markings:{} };
-
-// ══════════════════════════════════════════════════
-// SUPABASE HELPERS
-// ══════════════════════════════════════════════════
-async function refreshSession() {
-  try {
-    const session = S.user;
-    if(!session || !session.refresh_token) return false;
-    const r = await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SB_KEY},
-      body: JSON.stringify({refresh_token: session.refresh_token})
-    });
-    const refreshed = await r.json();
-    if(refreshed.access_token && refreshed.user && refreshed.user.id) {
-      S.user = refreshed;
-      localStorage.setItem('bp_session', JSON.stringify(refreshed));
-      return true;
-    }
-    return false;
-  } catch(e) { return false; }
-}
-
-async function sbFetch(path, opts={}, isRetry=false) {
-  const token = S.user?.access_token || '';
-  try {
-    const r = await fetch(`${SB_URL}/rest/v1${path}`, {
-      ...opts,
-      headers: { 'Content-Type':'application/json', 'apikey':SB_KEY,
-        'Authorization':`Bearer ${token||SB_KEY}`,
-        'Prefer':'return=representation', ...(opts.headers||{}) }
-    });
-    // Token expired — refresh silently and retry once
-    if(r.status === 401 && !isRetry) {
-      const ok = await refreshSession();
-      if(ok) return sbFetch(path, opts, true);
-    }
-    if (!r.ok) { const e=await r.json(); throw new Error(e.message||r.status); }
-    return r.status===204 ? null : r.json();
-  } catch(e) {
-    if(e.message==='Failed to fetch') S.dbMode='local';
-    throw e;
-  }
-}
-async function sbAuth(action, body) {
-  const r = await fetch(`${SB_URL}/auth/v1/${action}`, {
-    method:'POST', headers:{'Content-Type':'application/json','apikey':SB_KEY},
-    body: JSON.stringify(body)
-  });
-  return r.json();
-}
-async function sbGet(table, query='') {
-  if(S.dbMode==='local') return Object.values(LDB[table]||{});
-  return sbFetch(`/${table}?${query}`);
-}
-async function sbPost(table, data) {
-  if(S.dbMode==='local') { const id=Date.now()+''; LDB[table][id]={id,...data}; return [LDB[table][id]]; }
-  return sbFetch(`/${table}`, {method:'POST',body:JSON.stringify(data)});
-}
-async function sbPatch(table, query, data) {
-  if(S.dbMode==='local') return [];
-  return sbFetch(`/${table}?${query}`, {method:'PATCH',body:JSON.stringify(data)});
-}
-async function sbUpsert(table, data, onConflict) {
-  if(S.dbMode==='local') { LDB[table][data.id||Date.now()]=data; return [data]; }
-  return sbFetch(`/${table}?on_conflict=${onConflict}`, {method:'POST',body:JSON.stringify(data),headers:{'Prefer':'resolution=merge-duplicates,return=representation'}});
-}
-
-// ══════════════════════════════════════════════════
-// AUTH
-// ══════════════════════════════════════════════════
-async function doForgotPassword() {
-  const email = document.getElementById('loginEmail').value.trim();
-  if(!email) { showAuthErr('Enter your email address first'); return; }
-  const r = await fetch(SB_URL+'/auth/v1/recover', {
-    method:'POST',
-    headers:{'Content-Type':'application/json','apikey':SB_KEY},
-    body: JSON.stringify({email})
-  });
-  if(r.ok) {
-    document.getElementById('authErr').style.display='';
-    document.getElementById('authErr').style.color='var(--success)';
-    document.getElementById('authErr').textContent='Password reset email sent! Check your inbox.';
-  } else {
-    showAuthErr('Could not send reset email');
-  }
-}
-function switchAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='signup')));
-  document.getElementById('loginForm').style.display = tab==='login'?'':'none';
-  document.getElementById('signupForm').style.display = tab==='signup'?'':'none';
-}
-function showAuthErr(msg) { const e=document.getElementById('authErr'); e.textContent=msg; e.style.display=''; }
-async function doLogin() {
-  const email=document.getElementById('loginEmail').value.trim();
-  const pass=document.getElementById('loginPass').value;
-  if(!email||!pass) return showAuthErr('Please fill in all fields');
-  const btn=document.querySelector('#loginForm .btn'); btn.disabled=true; btn.textContent='Signing in…';
-  const d = await sbAuth('token?grant_type=password',{email,password:pass});
-  if(d.error || !d.access_token) { 
-    showAuthErr(d.error_description||d.error||'Login failed'); 
-    btn.disabled=false; btn.textContent='Sign in →'; 
-    return; 
-  }
-  if(!d.user || !d.user.id) {
-    showAuthErr('Session error — please try again');
-    btn.disabled=false; btn.textContent='Sign in →';
-    return;
-  }
-  await onSession(d);
-}
-async function doSignup() {
-  const name=document.getElementById('signupName').value.trim();
-  const email=document.getElementById('signupEmail').value.trim();
-  const pass=document.getElementById('signupPass').value;
-  if(!name||!email||!pass) return showAuthErr('Please fill in all fields');
-  if(pass.length<8) return showAuthErr('Password must be at least 8 characters');
-  if(!document.getElementById('agreeTerms')?.checked) return showAuthErr('Please agree to the Terms and Privacy Policy');
-  const btn=document.querySelector('#signupForm .btn'); btn.disabled=true; btn.textContent='Creating account…';
-  const d = await sbAuth('signup',{email,password:pass,data:{full_name:name}});
-  if(d.error) { showAuthErr(d.error_description||d.error); btn.disabled=false; btn.textContent='Start free trial →'; return; }
-  if(d.access_token) { await onSession(d); return; }
-  showAuthErr('Check your email for a confirmation link, then sign in.');
-  btn.disabled=false; btn.textContent='Start free trial →';
-}
-// ── Robust uid/email helpers ──
-// Supabase password grant shape: { access_token, refresh_token, user: { id, email, user_metadata } }
-function getUid() {
-  if(!S.user) return null;
-  // Standard shape from password grant or refresh
-  if(S.user.user && S.user.user.id) return S.user.user.id;
-  return null;
-}
-function getEmail() {
-  if(!S.user) return '';
-  if(S.user.user && S.user.user.email) return S.user.user.email;
-  return '';
-}
-function getDisplayName() {
-  if(!S.user) return '';
-  const meta = S.user.user && S.user.user.user_metadata ? S.user.user.user_metadata : {};
-  return meta.full_name || '';
-}
-
-async function onSession(session) {
-  S.user = session;
-  localStorage.setItem('bp_session', JSON.stringify(session));
-  await ensureProfile();
-  await showApp();
-}
-async function ensureProfile() {
-  try {
-    const uid = getUid();
-    if(!uid) return;
-    const email = getEmail();
-    const name = getDisplayName();
-    const existing = await sbGet('profiles', 'id=eq.' + uid);
-    if(!existing || !existing.length) {
-      await sbPost('profiles', {id:uid, email, full_name:name, subscription_status:'trial', trial_started_at:new Date().toISOString()});
-    } else {
-      await sbPatch('profiles', 'id=eq.' + uid, {email, full_name:name});
-    }
-    const profiles = await sbGet('profiles', 'id=eq.' + uid);
-    S.profile = profiles[0] || null;
-  } catch(e) { console.warn('[ensureProfile] error:', e.message); }
-}
-function doLogout() {
-  localStorage.removeItem('bp_session');
-  S = {user:null,profile:null,children:[],activeChild:null,todayLessons:{},activeLessonId:null,activeSubject:null,dbMode:'live'};
-  document.getElementById('mainApp').style.display='none';
-  document.getElementById('authPage').style.display='flex';
-}
-
-// ══════════════════════════════════════════════════
-// PROACTIVE TOKEN REFRESH — every 45 mins so session never expires mid-use
-// ══════════════════════════════════════════════════
-function startTokenRefreshTimer() {
-  // Refresh token every 45 minutes proactively (tokens expire after 60 mins)
-  setInterval(async () => {
-    if(S.user && S.user.refresh_token) {
-      await refreshSession();
-    }
-  }, 45 * 60 * 1000);
-}
-
-// ══════════════════════════════════════════════════
-// APP INIT
-// ══════════════════════════════════════════════════
-async function showApp() {
-  document.getElementById('authPage').style.display='none';
-  document.getElementById('mainApp').style.display='';
-  document.getElementById('topnav').style.display='flex';
-  startTokenRefreshTimer();
-  await loadChildren();
-  if(!S.children.length) {
-    // New user — show onboarding wizard instead of add child modal
-    showOnboarding();
-    return;
-  }
-  S.activeChild = S.children[0];
-  await loadHomeData();
-  // Show onboarding if user has never completed it
-  const onboarded = localStorage.getItem('bp_onboarded_' + getUid());
-  if(!onboarded && S.children.length) {
-    // Skip to step 3 (they already have a child) — just show welcome complete
-    obStep = 2;
-    document.getElementById('onboardOverlay').style.display = 'flex';
-    renderOnboardStep();
-    return;
-  }
-  renderHome();
-}
-async function loadChildren() {
-  try {
-    const uid = getUid();
-    if(!uid) { S.children=[]; return; }
-    const rows = await sbGet('children', 'user_id=eq.' + uid + '&order=created_at.asc');
-    S.children = rows || [];
-  } catch(e) { S.children=[]; }
-}
-async function loadHomeData() {
-  if(!S.activeChild) return;
-  const today = new Date().toISOString().split('T')[0];
-  try {
-    const lessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}&lesson_date=eq.${today}`);
-    S.todayLessons = {};
-    (lessons||[]).forEach(l => { const k=`${l.subject}:${l.part}`; S.todayLessons[k]=l; });
-  } catch(e) {}
-}
-async function getMarkings(lessonIds) {
-  if(!lessonIds || !lessonIds.length) return [];
-  // Use IN syntax for multiple IDs, eq for single
-  if(lessonIds.length === 1) {
-    try { return await sbGet('markings', `lesson_id=eq.${lessonIds[0]}`); } catch(e) { return []; }
-  }
-  // Batch in groups of 10 to avoid URL length issues
-  const results = [];
-  for(let i=0; i<lessonIds.length; i+=10) {
-    const batch = lessonIds.slice(i, i+10);
-    const q = `lesson_id=in.(${batch.join(',')})`;
-    try { const r = await sbGet('markings', q); if(r) results.push(...r); } catch(e) {}
-  }
-  return results;
-}
-
-// ══════════════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════════════
-function goPage(name) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(name+'Page').classList.add('active');
-  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.toggle('active', b.dataset.page===name));
-  if(name==='home') renderHome();
-  if(name==='progress') renderProgress();
-  if(name==='parent') renderParent();
-  if(name==='challenge') renderChallenge();
-  window.scrollTo(0,0);
-}
-
-// ══════════════════════════════════════════════════
-// HOME RENDER
-// ══════════════════════════════════════════════════
-function renderHome() {
-  const c = S.activeChild;
-  if(!c) return;
-  const hour = new Date().getHours();
-  const finalGreet = hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
-  document.getElementById('heroName').textContent = `${finalGreet}, ${c.name}! 👋`;
-  document.getElementById('heroSub').textContent = `${c.key_stage} · ${ageLabel(c.age)} · Let's learn something amazing!`;
-  document.getElementById('navXp').textContent = `⚡ ${c.total_xp||0} XP`;
-  document.getElementById('navStreak').textContent = `🔥 ${c.current_streak||0}`;
-  document.getElementById('navAvatar').textContent = avatarEmoji(c.avatar);
-  document.getElementById('statLessons').textContent = Object.keys(S.todayLessons).length;
-  document.getElementById('statXp').textContent = c.total_xp||0;
-  document.getElementById('statAvg').textContent = '—';
-  document.getElementById('mascotMsg').textContent = mascotMsg('home');
-  renderSubscriptionBanner();
-  renderSubjectGrid();
-  renderChildSwitcher();
-}
-function ageLabel(age) { return `Age ${age}`; }
-function avatarEmoji(av) {
-  const map={rocket:'🚀',dragon:'🐉',star:'⭐',wizard:'🧙',robot:'🤖',cat:'🐱',unicorn:'🦄',fox:'🦊'};
-  return map[av]||'👤';
-}
-function renderSubscriptionBanner() {
-  const p = S.profile;
-  if(!p) return;
-  const banner = document.getElementById('subBanner');
-  if(p.subscription_status==='active') { banner.style.display='none'; return; }
-  if(p.subscription_status==='trial') {
-    const start = new Date(p.trial_started_at);
-    const days = Math.max(0, 7 - Math.floor((Date.now()-start)/86400000));
-    document.getElementById('trialDaysLeft').textContent = days;
-    document.getElementById('trialBar').style.width = (days/7*100)+'%';
-    document.getElementById('subBannerTitle').textContent = days>0 ? '🎉 Free Trial Active' : '⚠️ Trial Ended';
-    banner.style.display = '';
-  }
-}
-function renderSubjectGrid() {
-  const grid = document.getElementById('subjectGrid');
-  grid.innerHTML = SUBJECTS.map(s => {
-    const l1 = S.todayLessons[`${s.id}:L1`];
-    const l2 = S.todayLessons[`${s.id}:L2`];
-    const done = (l1?1:0)+(l2?1:0);
-    const pct = done/2*100;
-    return `<div class="subject-card ${s.cls}" onclick="openSubject('${s.id}')">
-      <div class="subj-icon-wrap">${s.emoji}</div>
-      <h3>${s.label}</h3>
-      <div class="lessons-done">${done}/2 lessons today</div>
-      <div class="subject-prog"><div class="subject-prog-fill" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('');
-}
-function renderChildSwitcher() {
-  if(S.children.length<=1) { document.getElementById('childSwitcher').style.display='none'; return; }
-  document.getElementById('childSwitcher').style.display='';
-  document.getElementById('childList').innerHTML = S.children.map(ch=>
-    `<div class="card-sm" style="cursor:pointer;border-color:${ch.id===S.activeChild?.id?'var(--accent)':'var(--border)'};margin-bottom:8px;display:flex;align-items:center;gap:10px" onclick="switchChild('${ch.id}')">
-      <span style="font-size:22px">${avatarEmoji(ch.avatar)}</span>
-      <div><div style="font-family:Nunito,sans-serif;font-weight:800;font-size:15px">${ch.name}</div>
-      <div style="font-size:12px;color:var(--muted)">${ch.key_stage} · Age ${ch.age}</div></div>
-      ${ch.id===S.activeChild?.id?'<span style="margin-left:auto;color:var(--accent);font-size:18px">✓</span>':''}
-    </div>`
-  ).join('');
-}
-async function switchChild(id) {
-  S.activeChild = S.children.find(c=>c.id===id);
-  await loadHomeData();
-  renderHome();
-  toast(`Switched to ${S.activeChild.name}`);
-}
-
-// ══════════════════════════════════════════════════
-// ADD CHILD MODAL
-// ══════════════════════════════════════════════════
-function showAddChild() {
-  const html = `<div style="position:fixed;inset:0;z-index:900;background:rgba(15,14,23,0.9);display:flex;align-items:center;justify-content:center;padding:20px" id="addChildModal">
-    <div class="card" style="width:100%;max-width:380px">
-      <h3 style="font-family:Nunito,sans-serif;font-weight:900;font-size:20px;margin-bottom:20px">Add a child</h3>
-      <div class="form-group"><label>Child's name</label><input id="ac_name" placeholder="e.g. Rory"></div>
-      <div class="form-group"><label>Age</label>
-        <select id="ac_age">${Array.from({length:12},(_,i)=>`<option value="${i+5}">${i+5} years old</option>`).join('')}</select>
-      </div>
-      <div class="form-group"><label>Favourite avatar</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${['🚀','🐉','⭐','🧙','🤖','🐱','🦄','🦊'].map((e,i)=>{
-            const ids=['rocket','dragon','star','wizard','robot','cat','unicorn','fox'];
-            return `<button onclick="selectAvatar('${ids[i]}')" id="av_${ids[i]}" class="btn btn-secondary btn-sm" style="font-size:20px;padding:8px 10px">${e}</button>`;
-          }).join('')}
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:4px">
-        <button class="btn btn-secondary btn-full" onclick="document.getElementById('addChildModal').remove()">Cancel</button>
-        <button class="btn btn-primary btn-full" onclick="saveChild()">Add child →</button>
-      </div>
+<div class="section">
+  <div class="section-label">Pricing</div>
+  <h2>Simple, honest pricing</h2>
+  <p class="section-sub">Start free. No card required.</p>
+  <div class="pricing">
+    <div class="price-card">
+      <h3>Single child</h3>
+      <div class="price-amount">£4.99<span>/month</span></div>
+      <div class="price-trial">✓ 7-day free trial</div>
+      <ul class="price-features">
+        <li>1 child profile</li>
+        <li>All 5 subjects</li>
+        <li>Unlimited lessons</li>
+        <li>AI marking & feedback</li>
+        <li>XP, badges & streaks</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <a href="https://thebrightpath.uk/app.html" class="btn-primary" style="width:100%;text-align:center;display:block">Start free trial →</a>
     </div>
-  </div>`;
-  document.body.insertAdjacentHTML('beforeend',html);
-}
-let selectedAvatar = 'rocket';
-function selectAvatar(id) {
-  selectedAvatar = id;
-  document.querySelectorAll('[id^="av_"]').forEach(b=>b.style.borderColor='var(--border)');
-  document.getElementById('av_'+id).style.borderColor='var(--accent)';
-}
-async function saveChild() {
-  const name=document.getElementById('ac_name').value.trim();
-  const age=parseInt(document.getElementById('ac_age').value);
-  if(!name) { toast('Enter a name'); return; }
-  const uid = getUid();
-  if(!uid) { toast('Session error - please log out and back in'); return; }
-  const ks = age<=7?'KS1':age<=11?'KS2':age<=14?'KS3':'KS4';
-  try {
-    const rows = await sbPost('children',{user_id:uid,name,age,key_stage:ks,avatar:selectedAvatar,total_xp:0,current_streak:0});
-    const child = rows[0];
-    S.children.push(child);
-    S.activeChild = child;
-    document.getElementById('addChildModal').remove();
-    await loadHomeData();
-    renderHome();
-    toast(`${name} added! 🎉`);
-  } catch(e) { toast('Error saving — try again'); }
-}
-
-// ══════════════════════════════════════════════════
-// SUBJECT PAGE
-// ══════════════════════════════════════════════════
-async function openSubject(subjectId) {
-  const subj = SUBJECTS.find(s=>s.id===subjectId);
-  S.activeSubject = subjectId;
-  document.getElementById('subjectTitle').textContent = `${subj.emoji} ${subj.label}`;
-  document.getElementById('subjectMeta').textContent = `${S.activeChild?.key_stage} · ${S.activeChild?.name}`;
-  document.getElementById('mascotFace').textContent = '🦉';
-  document.getElementById('mascotMsg').textContent = mascotMsg(subjectId);
-  const list = document.getElementById('lessonList');
-  list.innerHTML = '<div class="loading-msg"><div class="spinner"></div><p>Loading lessons…</p></div>';
-  goPage('subject');
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    let l1 = S.todayLessons[`${subjectId}:L1`];
-    let l2 = S.todayLessons[`${subjectId}:L2`];
-    const markingIds = [l1?.id,l2?.id].filter(Boolean);
-    const markings = markingIds.length ? await getMarkings(markingIds) : [];
-    list.innerHTML = renderLessonList(subjectId, l1, l2, markings);
-  } catch(e) {
-    list.innerHTML = '<div class="empty-state"><span class="icon">⚠\uFE0F</span><p>Could not load lessons. Check connection.</p></div>';
-  }
-}
-function renderLessonList(subjectId, l1, l2, markings) {
-  const subj = SUBJECTS.find(s=>s.id===subjectId);
-  const mById = {};
-  markings.forEach(m=>mById[m.lesson_id]=m);
-  const parts = ['L1','L2'];
-  return parts.map((part,i) => {
-    const lesson = i===0?l1:l2;
-    const locked = i===1 && !l1; // L2 locked until L1 exists
-    const marking = lesson ? mById[lesson.id] : null;
-    const pct = marking ? Math.round(marking.score/marking.max_score*100) : null;
-    const stars = pct!==null ? (pct>=80?3:pct>=50?2:1) : 0;
-    return `<div class="card ${subj.cls}" style="position:relative;cursor:${locked?'not-allowed':'pointer'}" onclick="${locked?'toast("Complete Lesson 1 first!")':`openLesson('${subjectId}','${part}')`}">
-      ${locked?'<div class="lock-overlay">🔒</div>':''}
-      <div style="display:flex;align-items:center;gap:12px">
-        <div class="subj-icon-wrap" style="font-size:24px">${part==='L1'?'①':'②'}</div>
-        <div style="flex:1">
-          <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:16px">${part==='L1'?'Lesson 1':'Lesson 2'}
-            ${marking?`<span style="color:var(--success);font-size:13px;margin-left:6px">✓ Marked</span>`:''}
-          </div>
-          <div style="font-size:13px;color:var(--muted);margin-top:2px">${lesson?lesson.title:'Not started yet'}</div>
-          ${marking?`<div style="margin-top:6px;font-size:14px">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)} <span style="color:var(--muted);font-size:12px">${pct}%</span></div>`:''}
-        </div>
-        <div style="font-size:20px;color:var(--muted)">→</div>
-      </div>
-      ${!lesson&&!locked?`<button class="btn btn-primary btn-sm" style="margin-top:12px;width:100%" onclick="event.stopPropagation();generateLesson('${subjectId}','${part}')">✨ Generate Lesson</button>`:''}
-    </div>`;
-  }).join('');
-}
-
-// ══════════════════════════════════════════════════
-// LESSON GENERATION
-// ══════════════════════════════════════════════════
-async function generateLesson(subjectId, part) {
-  // Check subscription before generating
-  if(!isSubscriptionValid()) { showPaywall(); return; }
-  const subj = SUBJECTS.find(s=>s.id===subjectId);
-  const c = S.activeChild;
-  const list = document.getElementById('lessonList');
-  list.innerHTML = `<div class="loading-msg"><div class="spinner"></div><p>Professor Hoot is preparing your ${subj.label} lesson…</p></div>`;
-  const prompt = buildLessonPrompt(subjectId, part, c);
-  try {
-    const raw = await callAI(prompt, 1800);
-    const lesson = extractJSON(raw);
-    if(!lesson?.title) throw new Error('Bad response');
-    const videoUrl = getCuratedVideo(subjectId, c.key_stage);
-    const row = {
-      child_id: c.id,
-      lesson_date: new Date().toISOString().split('T')[0],
-      subject: subjectId,
-      part,
-      title: lesson.title || 'Lesson',
-      content: lesson.content || '',
-      questions: lesson.questions||[],
-      youtube_url: videoUrl || null,
-      youtube_query: lesson.videoQuery || subj.label,
-      created_at: new Date().toISOString()
-    };
-    const saved = await sbPost('lessons', row);
-    const savedLesson = saved[0];
-    S.todayLessons[`${subjectId}:${part}`] = savedLesson;
-    const markings = await getMarkings([savedLesson.id]);
-    list.innerHTML = renderLessonList(subjectId, S.todayLessons[`${subjectId}:L1`], S.todayLessons[`${subjectId}:L2`], markings);
-    toast(`${subj.label} lesson ready! 📚`);
-  } catch(e) {
-    console.error('[generateLesson] error:', e.message, e);
-    list.innerHTML = `<div class="empty-state"><span class="icon">⚠️</span><p>Generation failed: ${e.message}</p><button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="generateLesson('${subjectId}','${part}')">Retry</button></div>`;
-  }
-}
-
-function buildLessonPrompt(subjectId, part, child) {
-  const ks = child.key_stage;
-  const age = child.age;
-  const name = child.name;
-  const isL2 = part==='L2';
-  const subjLabel = SUBJECTS.find(s=>s.id===subjectId)?.label;
-  const rb = child.read_books ? (typeof child.read_books==='string' ? JSON.parse(child.read_books) : child.read_books) : [];
-  const readBooks = rb.join(', ') || 'any popular childrens books';
-  const englishTypes = ['book comprehension','persuasive writing','poetry analysis','grammar and punctuation','narrative writing','unseen text comprehension','argument writing','vocabulary and spelling'];
-  const englishType = englishTypes[Math.floor(Math.random()*englishTypes.length)];
-  const topicMap = {
-    math: {KS1:['counting and place value','addition and subtraction','shapes and patterns'],KS2:['multiplication and division','fractions and decimals','area and perimeter','statistics'],KS3:['algebra','ratio and proportion','geometry','probability'],KS4:['quadratic equations','trigonometry','statistics and data','simultaneous equations']},
-    science: {KS1:['plants and animals','materials','seasons'],KS2:['forces and motion','habitats','human body','states of matter','light and sound'],KS3:['cells and organisms','chemical reactions','energy','waves'],KS4:['atomic structure','genetics','electromagnetism','organic chemistry']},
-    history: {KS1:['famous people from the past','significant events'],KS2:['ancient Egypt','ancient Greece','the Vikings','the Romans','World War 2','the Tudors'],KS3:['the Norman conquest','the Renaissance','British Empire','World War 1'],KS4:['Cold War','civil rights','20th century conflicts']},
-    geography: {KS1:['our local area','weather and seasons'],KS2:['rainforests','rivers','mountains','countries and capitals'],KS3:['plate tectonics','urbanisation','climate change'],KS4:['ecosystems','development and globalisation','natural hazards']},
-  };
-  let topic;
-  if(subjectId==='english') topic = englishType;
-  else { const ksTopics=(topicMap[subjectId]||{})[ks]||['general']; topic=ksTopics[Math.floor(Math.random()*ksTopics.length)]; }
-  return `You are an expert UK primary/secondary school teacher creating an interactive lesson for ${name}, age ${age}, ${ks}.
-Subject: ${subjLabel}. Topic: ${topic}. This is ${isL2?'Lesson 2 (deeper, harder)':'Lesson 1 (introduction)'}.
-${subjectId==='english'&&topic.includes('book')?`Books the child has read: ${readBooks}`:''}
-
-Return ONLY valid JSON (no markdown, no preamble):
-{
-  "title": "specific engaging lesson title",
-  "content": "full lesson content in markdown, 350-500 words, age-appropriate, engaging, with examples. Use ## headings, bullet points, bold key terms.",
-  "questions": [
-    {"q":"question text","marks":2,"hint":"optional short hint"},
-    {"q":"question text","marks":3,"hint":""},
-    {"q":"question text","marks":2,"hint":""},
-    {"q":"question text","marks":4,"hint":""},
-    {"q":"question text","marks":4,"hint":""}
-  ],
-  "videoQuery": "specific 4-6 word YouTube search for a relevant ${ks} educational video"
-}
-Questions must be clear, ${ks}-appropriate, require full-sentence answers. Total marks: ${isL2?18:15}.`;
-}
-
-// ══════════════════════════════════════════════════
-// OPEN LESSON
-// ══════════════════════════════════════════════════
-async function openLesson(subjectId, part) {
-  const lesson = S.todayLessons[`${subjectId}:${part}`];
-  if(!lesson) { await generateLesson(subjectId, part); return; }
-  S.activeLessonId = lesson.id;
-  document.getElementById('lessonTitle').textContent = lesson.title;
-  const subj = SUBJECTS.find(s=>s.id===subjectId);
-  document.getElementById('lessonMeta').innerHTML = `<span class="subj-pill ${subj.cls}">${subj.label}</span> ${part} · ${S.activeChild?.key_stage}`;
-  document.getElementById('lessonBackBtn').onclick = () => openSubject(subjectId);
-  try {
-    const [markings, submissions] = await Promise.all([
-      getMarkings([lesson.id]),
-      getSubmission(lesson.id)
-    ]);
-    const marking = markings[0]||null;
-    renderLessonBody(lesson, marking, subjectId, submissions);
-  } catch(e) {
-    renderLessonBody(lesson, null, subjectId, null);
-  }
-  goPage('lesson');
-}
-
-async function getSubmission(lessonId) {
-  try {
-    const rows = await sbGet('submissions', `lesson_id=eq.${lessonId}&order=submitted_at.desc&limit=1`);
-    return rows && rows.length ? rows[0] : null;
-  } catch(e) { return null; }
-}
-function renderLessonBody(lesson, marking, subjectId, submission) {
-  const body = document.getElementById('lessonBody');
-  const qs = parseQs(lesson.questions);
-  const videoUrl = lesson.youtube_url || getCuratedVideo(subjectId, S.activeChild?.key_stage);
-  const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
-  const videoHtml = videoUrl ? `<div class="video-card">
-    <div class="video-thumb" onclick="openVideo('${videoUrl}')">
-      ${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none';this.parentElement.innerHTML='▶️'">`:''}<div class="video-play-icon">▶️</div>
-    </div>
-    <div class="video-info" style="flex:1">
-      <h4>Watch: ${lesson.youtube_query||'Educational video'}</h4>
-      <p style="font-size:11px;color:var(--muted)">Curated for ${S.activeChild?.key_stage}</p>
-      <div class="video-actions">
-        <button class="video-btn" id="watchedBtn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button>
-      </div>
-      <div class="video-feedback">
-        <button class="vf-btn" onclick="videoFeedback(true,'${videoUrl}')">👍 Helpful</button>
-        <button class="vf-btn" onclick="videoFeedback(false,'${videoUrl}')">👎 Not helpful</button>
-      </div>
-    </div>
-  </div>` : '';
-  if(marking) {
-    body.innerHTML = videoHtml + renderMarked(lesson, marking, qs, submission);
-    return;
-  }
-  const qHtml = qs.map((q,i)=>`<div class="question-card">
-    <div class="question-num">Question ${i+1}</div>
-    <div class="question-text">${q.q}</div>
-    <span class="marks-badge">${q.marks} mark${q.marks!==1?'s':''}</span>
-    ${q.hint?`<p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">💡 ${q.hint}</p>`:''}
-    <textarea rows="3" placeholder="Write your answer here…" id="ans_${i}" style="margin-top:4px"></textarea>
-  </div>`).join('');
-  body.innerHTML = `${videoHtml}
-    <div class="lesson-content" id="lessonContent">${markdownToHtml(lesson.content)}</div>
-    <div class="questions-section">
-      <h3>📝 Answer the questions</h3>
-      ${qHtml}
-      <div id="draftStatus" style="font-size:12px;color:var(--muted);text-align:right;margin-bottom:6px;min-height:16px"></div>
-      <button class="btn btn-primary btn-full btn-lg" style="margin-top:4px" onclick="submitLesson('${lesson.id}')">Submit for marking ✨</button>
-    </div>`;
-  // Restore any saved draft
-  loadDraft(lesson.id);
-  // Autosave on every keystroke
-  document.querySelectorAll('[id^="ans_"]').forEach(el => {
-    el.addEventListener('input', () => {
-      saveDraft(lesson.id);
-      const status = document.getElementById('draftStatus');
-      if(status) status.textContent = '💾 Draft saved';
-    });
-  });
-}
-function markWatched(btn, url) {
-  window.open(url,'_blank');
-  btn.className='video-btn watched';
-  btn.textContent='✓ Watched';
-}
-async function videoFeedback(helpful, url) {
-  if(!S.activeChild) return;
-  try { await sbPost('video_feedback',{child_id:S.activeChild.id,youtube_url:url,helpful}); } catch(e){}
-  toast(helpful?'Thanks! 👍':'Noted, we will improve the videos');
-}
-function openVideo(url) { window.open(url,'_blank'); }
-
-// ══════════════════════════════════════════════════
-// SUBMIT & MARKING
-// ══════════════════════════════════════════════════
-async function submitLesson(lessonId) {
-  const lesson = Object.values(S.todayLessons).find(l=>l.id===lessonId);
-  if(!lesson) return;
-  const qs = parseQs(lesson.questions);
-  const answers = {};
-  let allFilled = true;
-  qs.forEach((_,i)=>{
-    const val=(document.getElementById('ans_'+i)||{}).value?.trim()||'';
-    answers[i]=val;
-    if(!val) allFilled=false;
-  });
-  if(!allFilled) { toast('Answer all questions before submitting'); return; }
-  const btn = document.querySelector('#lessonBody .btn-primary');
-  if(btn) { btn.disabled=true; btn.textContent='Professor Hoot is marking… 🦉'; }
-  try {
-    const sub = await sbPost('submissions',{lesson_id:lessonId,answers});
-    const subId = sub[0]?.id;
-    const markPrompt = buildMarkPrompt(lesson, qs, answers);
-    const raw = await callAI(markPrompt, 1200);
-    const result = extractJSON(raw);
-    const score = (result.feedback||[]).reduce((a,f)=>a+(f.score||0),0);
-    const maxScore = qs.reduce((a,q)=>a+(q.marks||1),0);
-    const marking = await sbPost('markings',{submission_id:subId,lesson_id:lessonId,score,max_score:maxScore,feedback:JSON.stringify(result)});
-    const savedMarking = marking[0];
-    await awardXP(lesson.subject, score, maxScore, lessonId);
-    clearDraft(lessonId);
-    renderMarkedView(lesson, savedMarking, qs, score, maxScore, lesson.subject, {answers});
-    showCelebration(score, maxScore, lesson.subject);
-  } catch(e) {
-    if(btn) { btn.disabled=false; btn.textContent='Submit for marking ✨'; }
-    toast('Marking failed — check connection');
-  }
-}
-function buildMarkPrompt(lesson, qs, answers) {
-  const lines = qs.map((q,i)=>`Q${i+1} (${q.marks} marks): ${q.q}\nStudent answer: ${answers[i]||'[no answer]'}`).join('\n\n');
-  return `You are a ${S.activeChild?.key_stage} teacher marking a lesson titled "${lesson.title}".
-Mark each answer fairly, award partial marks where appropriate.
-
-${lines}
-
-Return ONLY valid JSON:
-{
-  "feedback": [
-    {"q":1,"score":N,"max":N,"comment":"specific constructive comment"},
-    ...
-  ],
-  "overall": "2-3 sentence encouraging overall comment with specific strengths and one area to improve"
-}`;
-}
-async function awardXP(subject, score, maxScore, lessonId) {
-  if(!S.activeChild) return;
-  const pct = score/maxScore;
-  const xp = Math.round(pct>=0.9?30:pct>=0.7?25:pct>=0.5?18:12);
-  const newXp = (S.activeChild.total_xp||0)+xp;
-  const today = new Date().toISOString().split('T')[0];
-  const lastActive = S.activeChild.last_active_date;
-  let streak = S.activeChild.current_streak||0;
-  if(lastActive) {
-    const diff = (new Date(today)-new Date(lastActive))/86400000;
-    streak = diff<=1 ? streak+1 : 1;
-  } else { streak=1; }
-  const longest = Math.max(streak, S.activeChild.longest_streak||0);
-  try {
-    await sbPatch('children',`id=eq.${S.activeChild.id}`,{total_xp:newXp,current_streak:streak,longest_streak:longest,last_active_date:today});
-    S.activeChild.total_xp=newXp; S.activeChild.current_streak=streak; S.activeChild.longest_streak=longest;
-    document.getElementById('navXp').textContent=`⚡ ${newXp} XP`;
-    document.getElementById('navStreak').textContent=`🔥 ${streak}`;
-    await checkBadges(subject, score, maxScore);
-  } catch(e){}
-}
-async function checkBadges(subject, score, maxScore) {
-  // simplified badge check
-  const earned = S.activeChild.badges||[];
-  const newBadges=[];
-  if(!earned.includes('first_lesson')) newBadges.push('first_lesson');
-  if((S.activeChild.current_streak||0)>=3&&!earned.includes('streak_3')) newBadges.push('streak_3');
-  if(score===maxScore&&subject==='math'&&!earned.includes('math_100')) newBadges.push('math_100');
-  if(newBadges.length) {
-    const all=[...earned,...newBadges];
-    await sbPatch('children',`id=eq.${S.activeChild.id}`,{badges:JSON.stringify(all)});
-    S.activeChild.badges=all;
-    newBadges.forEach(b=>{const def=BADGES_DEF.find(d=>d.id===b);if(def)toast(`🏆 Badge unlocked: ${def.name}!`);});
-  }
-}
-function renderMarkedView(lesson, marking, qs, score, maxScore, subject, submission) {
-  const result = typeof marking.feedback==='string'?JSON.parse(marking.feedback):marking.feedback;
-  const videoUrl = lesson.youtube_url || getCuratedVideo(subject, S.activeChild?.key_stage);
-  const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
-  const videoHtml = videoUrl ? `<div class="video-card">
-    <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
-    <div class="video-info" style="flex:1"><h4>${lesson.youtube_query||'Educational video'}</h4><button class="video-btn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button></div>
-  </div>` : '';
-  document.getElementById('lessonBody').innerHTML = videoHtml + renderMarked(lesson, marking, qs, submission);
-}
-function renderMarked(lesson, marking, qs, submission) {
-  const result = typeof marking.feedback==='string'?JSON.parse(marking.feedback):marking.feedback;
-  const score=marking.score; const maxScore=marking.max_score;
-  const pct=Math.round(score/maxScore*100);
-  const stars=pct>=80?3:pct>=50?2:1;
-  const [bg,emoji,msg] = pct>=80?['rgba(105,240,174,0.15)','🌟','Outstanding work!']:pct>=50?['rgba(247,201,72,0.15)','⭐','Good effort!']:['rgba(247,89,106,0.15)','💪','Keep practising!'];
-  // Parse saved answers from submission
-  const savedAnswers = (() => {
-    if(!submission) return {};
-    try {
-      const a = typeof submission.answers==='string' ? JSON.parse(submission.answers) : (submission.answers||{});
-      return a;
-    } catch(e) { return {}; }
-  })();
-  const fbItems=(result.feedback||[]).map((f,i)=>{
-    const q=qs[f.q-1]||qs[i]||{};
-    const idx = f.q!==undefined ? f.q-1 : i;
-    const studentAnswer = savedAnswers[idx] || savedAnswers[String(idx)] || savedAnswers['ans_'+idx] || '';
-    return `<div class="q-fb-item">
-      <div class="q-fb-header">
-        <div class="q-fb-mark ${f.score>0?'correct':'wrong'}">${f.score>0?'✓':'✗'}</div>
-        Q${f.q||i+1}: ${f.score||0}/${f.max||q.marks||1} marks
-      </div>
-      <div style="font-size:13px;color:var(--text);margin:4px 0 4px 30px;font-weight:600">${q.q||''}</div>
-      ${studentAnswer?`<div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px 10px;margin:0 0 6px 30px;font-size:13px;color:var(--muted);font-style:italic;border-left:2px solid var(--accent)">"${studentAnswer}"</div>`:''}
-      <div class="q-fb-comment">${f.comment||''}</div>
-    </div>`;
-  }).join('');
-  return `<div class="marking-result">
-    <div class="score-banner" style="background:${bg}">
-      <div class="score-big">${score}/${maxScore}</div>
-      <div class="score-pct">${pct}%</div>
-      <div class="score-stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
-      <div style="font-size:32px;margin:4px 0">${emoji}</div>
-      <div class="score-msg">${msg}</div>
-    </div>
-    <div class="q-feedback">
-      ${fbItems}
-      ${result.overall?`<div style="padding:14px;background:rgba(124,106,247,0.1);border-radius:var(--radius-sm);margin-top:10px;font-size:14px;line-height:1.6;color:var(--muted)"><strong style="color:var(--text)">🦉 Professor Hoot says:</strong><br>${result.overall}</div>`:''}
+    <div class="price-card featured">
+      <div class="price-badge">Most popular</div>
+      <h3>Family</h3>
+      <div class="price-amount">£7.99<span>/month</span></div>
+      <div class="price-trial">✓ 7-day free trial</div>
+      <ul class="price-features">
+        <li>Up to 4 children</li>
+        <li>All 5 subjects</li>
+        <li>Unlimited lessons</li>
+        <li>AI marking & feedback</li>
+        <li>XP, badges & streaks</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <a href="https://thebrightpath.uk/app.html" class="btn-primary" style="width:100%;text-align:center;display:block">Start free trial →</a>
     </div>
   </div>
-  <div style="margin-top:16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
-    <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:15px;margin-bottom:6px">Want to improve your score?</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Read Professor Hoot's feedback above, then have another go. Your best score will be kept.</p>
-    <button class="btn btn-primary btn-full" onclick="redoLesson('${lesson.id}')">🔄 Redo this lesson</button>
-  </div>`;
-}
+</div>
 
-async function redoLesson(lessonId) {
-  // Look in todayLessons first, then fall back to DB
-  let lesson = Object.values(S.todayLessons).find(l=>l.id===lessonId);
-  if(!lesson) {
-    try {
-      const rows = await sbGet('lessons', `id=eq.${lessonId}`);
-      lesson = rows && rows[0];
-    } catch(e) {}
-  }
-  if(!lesson) { toast('Could not load lesson'); return; }
-  // Fetch previous submission answers to pre-fill
-  const prevSubmission = await getSubmission(lessonId);
-  const prevAnswers = (() => {
-    if(!prevSubmission) return {};
-    try { return typeof prevSubmission.answers==='string' ? JSON.parse(prevSubmission.answers) : (prevSubmission.answers||{}); }
-    catch(e) { return {}; }
-  })();
-  const qs = parseQs(lesson.questions);
-  const videoUrl = lesson.youtube_url || getCuratedVideo(lesson.subject, S.activeChild?.key_stage);
-  const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
-  const videoHtml = videoUrl ? `<div class="video-card">
-    <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
-    <div class="video-info" style="flex:1"><h4>${lesson.youtube_query||'Educational video'}</h4><button class="video-btn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button></div>
-  </div>` : '';
-  const qHtml = qs.map((q,i)=>{
-    const prev = prevAnswers[i] || prevAnswers[String(i)] || '';
-    return `<div class="question-card">
-    <div class="question-num">Question ${i+1}</div>
-    <div class="question-text">${q.q}</div>
-    <span class="marks-badge">${q.marks} mark${q.marks!==1?'s':''}</span>
-    ${q.hint?`<p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">💡 ${q.hint}</p>`:''}
-    <textarea rows="3" placeholder="Edit your answer…" id="ans_${i}" style="margin-top:4px">${prev}</textarea>
-  </div>`;
-  }).join('');
-  const body = document.getElementById('lessonBody');
-  body.innerHTML = `${videoHtml}
-    <div style="background:rgba(124,106,247,0.1);border:1px solid rgba(124,106,247,0.3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--muted)">
-      🦉 Read the feedback carefully and try to improve your answers below.
+<div class="section">
+  <div class="section-label">FAQ</div>
+  <h2>Common questions</h2>
+  <div class="faqs">
+    <div class="faq" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Is BrightPath aligned to the UK curriculum?</div>
+      <div class="faq-a">Yes. Every lesson is generated specifically for the UK National Curriculum key stage matching your child's age — KS1 (ages 5–7), KS2 (7–11), KS3 (11–14), and KS4 (14–16).</div>
     </div>
-    <div class="lesson-content">${markdownToHtml(lesson.content)}</div>
-    <div class="questions-section">
-      <h3>📝 Improved answers</h3>
-      ${qHtml}
-      <div id="draftStatus" style="font-size:12px;color:var(--muted);text-align:right;margin-bottom:6px;min-height:16px"></div>
-      <button class="btn btn-primary btn-full btn-lg" style="margin-top:4px" onclick="submitLesson('${lessonId}')">Submit improved answers ✨</button>
-    </div>`;
-  loadDraft(lessonId + '_redo');
-  document.querySelectorAll('[id^="ans_"]').forEach(el => {
-    el.addEventListener('input', () => {
-      saveDraft(lessonId + '_redo');
-      const status = document.getElementById('draftStatus');
-      if(status) status.textContent = '💾 Draft saved';
-    });
-  });
-  window.scrollTo(0, 0);
-}
-
-// ══════════════════════════════════════════════════
-// CELEBRATION
-// ══════════════════════════════════════════════════
-function showCelebration(score, maxScore, subject) {
-  const pct = Math.round(score/maxScore*100);
-  const stars = pct>=80?3:pct>=50?2:1;
-  const xp = Math.round(pct>=0.9?30:pct>=0.7?25:pct>=0.5?18:12);
-  const [emoji,title,sub] = pct===100?['🏆','Perfect Score!','Absolutely incredible!']:pct>=80?['🎉','Brilliant!','You nailed it!']:pct>=50?['⭐','Well done!','Good work today']:['💪','Keep going!','Every lesson makes you better'];
-  document.getElementById('celebEmoji').textContent=emoji;
-  document.getElementById('celebTitle').textContent=title;
-  document.getElementById('celebSub').textContent=sub;
-  document.getElementById('celebXp').textContent=`+${xp} XP`;
-  document.getElementById('celebStars').textContent='⭐'.repeat(stars)+'☆'.repeat(3-stars);
-  document.getElementById('celebration').classList.add('show');
-  launchConfetti();
-}
-function closeCelebration() {
-  document.getElementById('celebration').classList.remove('show');
-  stopConfetti();
-}
-
-// ── CONFETTI ────────────────────────────────────
-let confettiAnim=null;
-const CONFETTI_COLORS=['#7c6af7','#f7596a','#69f0ae','#ffd54f','#4fc3f7','#ce93d8'];
-function launchConfetti() {
-  const canvas=document.getElementById('confettiCanvas');
-  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-  const ctx=canvas.getContext('2d');
-  const pieces=Array.from({length:80},()=>({
-    x:Math.random()*canvas.width, y:Math.random()*canvas.height-canvas.height,
-    r:Math.random()*6+3, c:CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)],
-    d:Math.random()*3+1, tilt:Math.random()*10-5, tiltSpeed:Math.random()*0.1+0.05
-  }));
-  let frame=0;
-  function draw() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    pieces.forEach(p=>{
-      p.y+=p.d; p.x+=Math.sin(frame*0.01)*0.5; p.tilt+=p.tiltSpeed;
-      if(p.y>canvas.height) { p.y=-10; p.x=Math.random()*canvas.width; }
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle=p.c; ctx.fill();
-    });
-    frame++;
-    confettiAnim=requestAnimationFrame(draw);
-  }
-  draw();
-}
-function stopConfetti() {
-  if(confettiAnim) cancelAnimationFrame(confettiAnim);
-  const canvas=document.getElementById('confettiCanvas');
-  canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
-}
-
-// ══════════════════════════════════════════════════
-// DAILY CHALLENGE
-// ══════════════════════════════════════════════════
-async function renderChallenge() {
-  const body=document.getElementById('challengeBody');
-  body.innerHTML='<div class="loading-msg"><div class="spinner"></div><p>Loading today\'s challenge…</p></div>';
-  const today=new Date().toISOString().split('T')[0];
-  try {
-    const existing=await sbGet('daily_challenges',`child_id=eq.${S.activeChild.id}&challenge_date=eq.${today}`);
-    if(existing&&existing.length) { renderChallengeCard(body,existing[0]); return; }
-    const subjs=SUBJECTS[Math.floor(Math.random()*SUBJECTS.length)];
-    const prompt=`Generate a single hard ${subjs.label} question for ${S.activeChild.key_stage} (age ${S.activeChild.age}).
-Return ONLY JSON: {"subject":"${subjs.id}","question":"the question text","answer":"model answer","hint":"one short hint"}`;
-    const raw=await callAI(prompt,300);
-    const d=extractJSON(raw);
-    const row={child_id:S.activeChild.id,challenge_date:today,subject:d.subject||subjs.id,question:d.question,correct_answer:d.answer,xp_awarded:50};
-    const saved=await sbPost('daily_challenges',row);
-    renderChallengeCard(body,saved[0]);
-  } catch(e) {
-    body.innerHTML='<div class="empty-state"><span class="icon">⚠️</span><p>Could not load challenge. Try again.</p></div>';
-  }
-}
-function renderChallengeCard(body,ch) {
-  const done=!!ch.submitted_answer;
-  const subj=SUBJECTS.find(s=>s.id===ch.subject)||SUBJECTS[0];
-  body.innerHTML=`<div class="challenge-banner" style="cursor:default;margin-bottom:16px">
-    <div class="challenge-fire">🔥</div>
-    <div class="challenge-text"><h3>Today's ${subj.label} Challenge</h3><p>${done?'Completed ✓':'Complete for 2× XP!'}</p></div>
-    <div class="challenge-xp">+50 XP</div>
-  </div>
-  <div class="card">
-    <div class="question-text" style="font-size:17px;margin-bottom:16px">${ch.question}</div>
-    ${done
-      ?`<div style="background:rgba(105,240,174,0.1);border:1px solid rgba(105,240,174,0.3);border-radius:var(--radius-sm);padding:14px;font-size:14px;color:var(--success)">✓ Submitted: ${ch.submitted_answer}</div>
-        <div style="background:rgba(124,106,247,0.1);border-radius:var(--radius-sm);padding:14px;margin-top:10px;font-size:14px;color:var(--muted)">Model answer: ${ch.correct_answer||'–'}</div>`
-      :`<textarea rows="4" id="challengeAns" placeholder="Write your answer…"></textarea>
-        <button class="btn btn-primary btn-full btn-lg" style="margin-top:10px" onclick="submitChallenge('${ch.id}')">Submit challenge (+50 XP) →</button>`
-    }
-  </div>`;
-}
-async function submitChallenge(id) {
-  const ans=(document.getElementById('challengeAns')||{}).value?.trim();
-  if(!ans) { toast('Write an answer first'); return; }
-  try {
-    await sbPatch('daily_challenges',`id=eq.${id}`,{submitted_answer:ans,xp_awarded:50,completed_at:new Date().toISOString()});
-    await awardXP('challenge',1,1,'challenge');
-    showCelebration(2,2,'challenge');
-    renderChallenge();
-  } catch(e) { toast('Submit failed'); }
-}
-
-// ══════════════════════════════════════════════════
-// PROGRESS PAGE
-// ══════════════════════════════════════════════════
-async function renderProgress() {
-  const body=document.getElementById('progressBody');
-  body.innerHTML='<div class="loading-msg"><div class="spinner"></div><p>Loading your progress…</p></div>';
-  if(!S.activeChild) { body.innerHTML='<div class="empty-state"><span class="icon">👤</span><p>Add a child first</p></div>'; return; }
-  try {
-    const lessons=await sbGet('lessons',`child_id=eq.${S.activeChild.id}&order=created_at.desc`);
-    const mIds=(lessons||[]).map(l=>l.id);
-    const markings=mIds.length?await getMarkings(mIds):[];
-    const mByLesson={};
-    markings.forEach(m=>mByLesson[m.lesson_id]=m);
-    const subjectStats={};
-    SUBJECTS.forEach(s=>subjectStats[s.id]={total:0,scored:0,lessons:0});
-    (lessons||[]).forEach(l=>{
-      const m=mByLesson[l.id];
-      if(!subjectStats[l.subject]) subjectStats[l.subject]={total:0,scored:0,lessons:0};
-      subjectStats[l.subject].lessons++;
-      if(m) { subjectStats[l.subject].total+=m.max_score; subjectStats[l.subject].scored+=m.score; }
-    });
-    const c=S.activeChild;
-    const rank=RANKS.filter(r=>r.min<=(c.total_xp||0)).pop()||RANKS[0];
-    const nextRank=RANKS.find(r=>r.min>(c.total_xp||0));
-    const earnedBadges=c.badges||[];
-    body.innerHTML=`
-    <div class="card" style="text-align:center;margin-bottom:16px">
-      <div style="font-size:52px">${rank.emoji}</div>
-      <div style="font-family:Nunito,sans-serif;font-size:22px;font-weight:900;margin:6px 0">${rank.label}</div>
-      <div style="color:var(--xp);font-family:Nunito,sans-serif;font-weight:800;font-size:18px">⚡ ${c.total_xp||0} XP</div>
-      ${nextRank?`<div style="font-size:13px;color:var(--muted);margin-top:4px">${nextRank.min-(c.total_xp||0)} XP to ${nextRank.emoji} ${nextRank.label}</div>`:'<div style="color:var(--success);font-size:13px;margin-top:4px">Maximum rank achieved! 💎</div>'}
-      <div style="display:flex;justify-content:center;gap:20px;margin-top:16px">
-        <div><div style="font-family:Nunito,sans-serif;font-size:22px;font-weight:900;color:var(--accent2)">🔥 ${c.current_streak||0}</div><div style="font-size:12px;color:var(--muted)">Day streak</div></div>
-        <div><div style="font-family:Nunito,sans-serif;font-size:22px;font-weight:900">${(lessons||[]).length}</div><div style="font-size:12px;color:var(--muted)">Lessons</div></div>
-        <div><div style="font-family:Nunito,sans-serif;font-size:22px;font-weight:900">${c.longest_streak||0}</div><div style="font-size:12px;color:var(--muted)">Best streak</div></div>
-      </div>
+    <div class="faq" onclick="this.classList.toggle('open')">
+      <div class="faq-q">How is my child's privacy protected?</div>
+      <div class="faq-a">We collect only the minimum data needed — your email, your child's first name, age, and their lesson responses. We never sell data, never show ads, and comply fully with UK GDPR. Children's data is only accessible to their parent account.</div>
     </div>
-    <div class="section-title" style="margin-bottom:10px">Subject Progress</div>
-    ${SUBJECTS.map(s=>{
-      const st=subjectStats[s.id]||{lessons:0,scored:0,total:0};
-      const pct=st.total>0?Math.round(st.scored/st.total*100):0;
-      return `<div class="subject-prog-card ${s.cls}">
-        <div class="subj-icon-wrap">${s.emoji}</div>
-        <div class="subj-prog-info">
-          <div class="subj-prog-name">${s.label}</div>
-          <div class="subj-prog-stats">${st.lessons} lessons · ${st.total>0?pct+'% avg':'No marks yet'}</div>
-          <div class="subj-prog-bar"><div class="subj-prog-fill" style="width:${pct}%"></div></div>
-        </div>
-        <div style="font-family:Nunito,sans-serif;font-size:20px;font-weight:900;color:var(--sc)">${st.total>0?pct+'%':'—'}</div>
-      </div>`;
-    }).join('')}
-    <div class="section-title" style="margin:16px 0 10px">Badges</div>
-    <div class="badges-grid">
-      ${BADGES_DEF.map(b=>{
-        const has=earnedBadges.includes(b.id);
-        return `<div class="badge-item ${has?'earned':'locked'}" title="${b.desc}">
-          <span class="badge-emoji">${has?b.emoji:'🔒'}</span>
-          <div class="badge-name">${b.name}</div>
-        </div>`;
-      }).join('')}
-    </div>`;
-  } catch(e) {
-    body.innerHTML='<div class="empty-state"><span class="icon">⚠\uFE0F</span><p>Could not load progress</p></div>';
-  }
-}
-
-// ══════════════════════════════════════════════════
-// PARENT PAGE
-// ══════════════════════════════════════════════════
-function renderParent() {
-  const body=document.getElementById('parentBody');
-  const c=S.activeChild;
-  const p=S.profile;
-  body.innerHTML=`
-  <div class="parent-section">
-    <h3>Subscription</h3>
-    ${p?renderSubStatus(p):'<div class="card-sm" style="color:var(--muted)">Loading…</div>'}
-  </div>
-  <div class="parent-section">
-    <h3>Children</h3>
-    ${S.children.map(ch=>`<div class="card-sm" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-      <span style="font-size:24px">${avatarEmoji(ch.avatar)}</span>
-      <div style="flex:1"><div style="font-family:Nunito,sans-serif;font-weight:800">${ch.name}</div>
-      <div style="font-size:12px;color:var(--muted)">${ch.key_stage} · Age ${ch.age} · ⚡${ch.total_xp||0} XP</div></div>
-    </div>`).join('')}
-    <button class="btn btn-secondary btn-sm" onclick="showAddChild()">+ Add child</button>
-  </div>
-  <div class="parent-section">
-    <h3>Book list for English</h3>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Mark which books ${c?.name||'your child'} has read to personalise English lessons.</p>
-    ${c?renderBookPicker(c):'<p style="color:var(--muted);font-size:13px">Select a child first</p>'}
-  </div>
-  <div class="parent-section">
-    <h3>Weekly timetable</h3>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Set which subjects to do each day.</p>
-    ${c?renderTimetable(c):''}
-  </div>
-  <div class="divider"></div>
-  <button class="btn btn-secondary btn-full" onclick="doLogout()" style="margin-bottom:16px">Sign out</button>
-  <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;text-align:center">
-    <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:14px;margin-bottom:8px">Need help?</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">We typically respond within a few hours.</p>
-    <a href="mailto:hello@thebrightpath.uk" class="btn btn-secondary btn-full">✉️ hello@thebrightpath.uk</a>
-  </div>
-  <p style="font-size:11px;color:var(--hint);text-align:center">🇬🇧 UK Curriculum · 🔒 GDPR Compliant · ✅ No Ads<br>© 2025 BrightPath · <a href="#privacy" onclick="showPrivacyPolicy()" style="color:var(--hint)">Privacy Policy</a> · <a href="#terms" onclick="showTerms()" style="color:var(--hint)">Terms of Service</a></p>
-  `;
-}
-function renderSubStatus(p) {
-  const status=p.subscription_status||'trial';
-  const icons={trial:'🎉',active:'✅',expired:'⚠️',cancelled:'❌'};
-  const labels={trial:'Free Trial',active:'Active Subscription',expired:'Trial Expired',cancelled:'Cancelled'};
-  const trialStart=p.trial_started_at?new Date(p.trial_started_at):new Date();
-  const daysLeft=Math.max(0,7-Math.floor((Date.now()-trialStart)/86400000));
-  return `<div class="card" style="background:var(--surface2)">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <span style="font-size:28px">${icons[status]||'❓'}</span>
-      <div><div style="font-family:Nunito,sans-serif;font-weight:800">${labels[status]}</div>
-      ${status==='trial'?`<div style="font-size:13px;color:var(--muted)">${daysLeft} days remaining</div>`:''}
-      ${status==='active'?`<div style="font-size:13px;color:var(--success)">£4.99/month · Next renewal soon</div>`:''}
-      </div>
+    <div class="faq" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Can I use BrightPath on a tablet?</div>
+      <div class="faq-a">Yes — BrightPath works on any device with a modern browser: iPhone, iPad, Android tablet, laptop, or desktop. No app download required.</div>
     </div>
-    ${status!=='active'?`<button class="btn btn-primary btn-full" onclick="showSubscribe('single')">🚀 Subscribe — £4.99/month</button>
-    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Family plan (up to 4 children): £7.99/month</p>`:''}
-  </div>`;
-}
-function showPrivacyPolicy() {
-  const div = document.createElement('div');
-  div.style.cssText = 'position:fixed;inset:0;z-index:900;background:var(--bg);overflow-y:auto;padding:24px 20px';
-  div.innerHTML = `
-    <div style="max-width:640px;margin:0 auto">
-      <button onclick="this.parentElement.parentElement.remove()" class="btn btn-secondary btn-sm" style="margin-bottom:20px">← Back</button>
-      <h1 style="font-family:Nunito,sans-serif;font-weight:900;font-size:24px;margin-bottom:8px">Privacy Policy</h1>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:24px">Last updated: May 2025</p>
-      <div style="font-size:14px;line-height:1.8;color:rgba(255,255,255,0.85)">
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">1. Who we are</h2>
-        <p>BrightPath ("we", "us", "our") is an AI-powered homeschool learning platform operated in the United Kingdom. Contact: <a href="mailto:hello@thebrightpath.uk" style="color:var(--accent)">hello@thebrightpath.uk</a></p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">2. What data we collect</h2>
-        <p>We collect: parent/guardian name and email address; child's first name, age, and key stage; lesson responses and scores; usage data (lessons completed, streaks, XP). We do not collect children's email addresses, photos, or any sensitive personal data.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">3. How we use your data</h2>
-        <p>We use your data solely to: provide and personalise the BrightPath service; process subscription payments via Stripe; send progress reports to parents. We do not sell, share, or use your data for advertising.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">4. Children's privacy</h2>
-        <p>BrightPath is designed for use by children under parental supervision. Accounts are created and managed by parents or guardians. We collect only the minimum data necessary. Children's lesson data is only accessible to their parent/guardian account. We comply with UK GDPR and take the privacy of children very seriously.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">5. Data storage and security</h2>
-        <p>Data is stored securely using Supabase (EU region). All data is protected by row-level security — no user can access another user's data. Passwords are encrypted using bcrypt. Payment data is handled entirely by Stripe and never stored on our servers.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">6. Your rights</h2>
-        <p>Under UK GDPR you have the right to access, correct, or delete your data at any time. Email <a href="mailto:hello@thebrightpath.uk" style="color:var(--accent)">hello@thebrightpath.uk</a> and we will respond within 72 hours.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">7. Cookies</h2>
-        <p>We use only essential cookies required to keep you logged in. We do not use tracking, advertising, or analytics cookies.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">8. Contact</h2>
-        <p>For any privacy questions: <a href="mailto:hello@thebrightpath.uk" style="color:var(--accent)">hello@thebrightpath.uk</a></p>
-      </div>
-    </div>`;
-  document.body.appendChild(div);
-}
-
-function showTerms() {
-  const div = document.createElement('div');
-  div.style.cssText = 'position:fixed;inset:0;z-index:900;background:var(--bg);overflow-y:auto;padding:24px 20px';
-  div.innerHTML = `
-    <div style="max-width:640px;margin:0 auto">
-      <button onclick="this.parentElement.parentElement.remove()" class="btn btn-secondary btn-sm" style="margin-bottom:20px">← Back</button>
-      <h1 style="font-family:Nunito,sans-serif;font-weight:900;font-size:24px;margin-bottom:8px">Terms of Service</h1>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:24px">Last updated: May 2025</p>
-      <div style="font-size:14px;line-height:1.8;color:rgba(255,255,255,0.85)">
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">1. Acceptance</h2>
-        <p>By creating a BrightPath account you agree to these terms. Accounts must be created by a parent or guardian aged 18 or over.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">2. Service</h2>
-        <p>BrightPath provides AI-generated educational content aligned to the UK National Curriculum. Lessons are generated by AI and are intended as a supplementary learning tool. They are not a substitute for formal education.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">3. Subscription and payment</h2>
-        <p>Single child plan: £4.99/month. Family plan (up to 4 children): £7.99/month. All plans include a 7-day free trial with no card required. Subscriptions renew automatically. You may cancel at any time via the Parent settings page. No refunds are provided for partial months.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">4. Acceptable use</h2>
-        <p>You must not share your account credentials. You must not attempt to reverse-engineer, copy, or resell BrightPath content. One account per family household.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">5. Limitation of liability</h2>
-        <p>BrightPath is provided "as is". We do not guarantee uninterrupted service. Our liability is limited to the subscription fees paid in the prior month.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">6. Changes</h2>
-        <p>We may update these terms with 30 days notice by email. Continued use after notice constitutes acceptance.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">7. Governing law</h2>
-        <p>These terms are governed by the laws of England and Wales.</p>
-        <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">8. Contact</h2>
-        <p><a href="mailto:hello@thebrightpath.uk" style="color:var(--accent)">hello@thebrightpath.uk</a></p>
-      </div>
-    </div>`;
-  document.body.appendChild(div);
-}
-
-async function showSubscribe(plan='single') {
-  const uid = getUid();
-  const email = getEmail();
-  if(!uid || !email) { toast('Please log in first'); return; }
-  const priceId = plan==='family' ? PRICE_FAMILY : PRICE_SINGLE;
-  const amount = plan==='family' ? '£7.99' : '£4.99';
-  toast('Opening secure checkout… ' + amount + '/month');
-  try {
-    const r = await fetch(STRIPE_CHECKOUT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ priceId, userId: uid, email, plan })
-    });
-    const d = await r.json();
-    if(d.url) {
-      window.location.href = d.url;
-    } else {
-      toast('Checkout error — please try again');
-      console.error('Stripe error:', d);
-    }
-  } catch(e) {
-    toast('Could not connect to payment system');
-    console.error('Stripe fetch error:', e);
-  }
-}
-
-// ── BOOK PICKER ─────────────────────────────────
-const ALL_BOOKS = {
-  KS1:['The Gruffalo','Zog','The Tiger Who Came to Tea','Each Peach Pear Plum','Elmer','Where the Wild Things Are','The Very Hungry Caterpillar','Charlie and Lola'],
-  KS2:["Charlie and the Chocolate Factory","Matilda","James and the Giant Peach","Harry Potter and the Philosopher's Stone","The Lion the Witch and the Wardrobe","The Hobbit","The Explorer","Cogheart","Percy Jackson","Holes","Wonder","Tom Gates","Diary of a Wimpy Kid","The Worst Witch"],
-  KS3:["The Hunger Games","Percy Jackson and the Lightning Thief","The Book Thief","Animal Farm","Of Mice and Men","Skellig","Kensuke's Kingdom","Private Peaceful","War Horse","The Boy in the Striped Pyjamas","Stormbreaker","His Dark Materials","Holes","The Curious Incident of the Dog in the Night-Time"],
-  KS4:["To Kill a Mockingbird","1984","Brave New World","Lord of the Flies","The Great Gatsby","An Inspector Calls","Macbeth","Romeo and Juliet","A Christmas Carol","Pride and Prejudice","Frankenstein","The Strange Case of Dr Jekyll and Mr Hyde"],
-};
-function renderBookPicker(c) {
-  const books=ALL_BOOKS[c.key_stage]||ALL_BOOKS.KS2;
-  const read=c.read_books||[];
-  return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
-    ${books.map(b=>`<span class="tag ${read.includes(b)?'selected':''}" onclick="toggleBook('${b.replace(/'/g,"\\'")}','${c.id}')">${b}</span>`).join('')}
+    <div class="faq" onclick="this.classList.toggle('open')">
+      <div class="faq-q">How long does a lesson take?</div>
+      <div class="faq-a">Each lesson takes about 20–30 minutes. The content reads in around 10 minutes, and answering the questions takes another 10–15. There are 2 lessons per subject per day — one introductory, one deeper.</div>
+    </div>
+    <div class="faq" onclick="this.classList.toggle('open')">
+      <div class="faq-q">How do I cancel?</div>
+      <div class="faq-a">You can cancel at any time from the Parent settings page inside the app. You'll keep access until the end of your billing period. No questions asked.</div>
+    </div>
+    <div class="faq" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Can my child redo a lesson?</div>
+      <div class="faq-a">Yes — every marked lesson has a "Redo" button. Previous answers are pre-filled so your child can read the feedback and improve specific answers rather than starting from scratch.</div>
+    </div>
   </div>
-  <p style="font-size:12px;color:var(--muted)">${read.length} book${read.length!==1?'s':''} selected</p>`;
-}
-async function toggleBook(book, childId) {
-  const ch=S.children.find(c=>c.id===childId);
-  if(!ch) return;
-  const read=ch.read_books||[];
-  const newRead=read.includes(book)?read.filter(b=>b!==book):[...read,book];
-  try {
-    await sbPatch('children',`id=eq.${childId}`,{read_books:JSON.stringify(newRead)});
-    ch.read_books=newRead;
-    renderParent();
-    toast(newRead.includes(book)?`Added: ${book} 📚`:`Removed: ${book}`);
-  } catch(e) { toast('Could not save'); }
-}
+</div>
 
-// ── TIMETABLE ───────────────────────────────────
-const DAYS=['Mon','Tue','Wed','Thu','Fri'];
-function renderTimetable(c) {
-  const tt=c.timetable||{};
-  return `<div class="timetable-grid">
-    ${DAYS.map(d=>{
-      const active=tt[d]||[];
-      return `<div class="tt-day">
-        <div class="tt-day-name">${d}</div>
-        ${SUBJECTS.map(s=>`<div class="tt-subject ${s.cls}" style="opacity:${active.includes(s.id)?1:0.25}" onclick="toggleTimetable('${c.id}','${d}','${s.id}')">${s.emoji}</div>`).join('')}
-      </div>`;
-    }).join('')}
-  </div>
-  <p style="font-size:12px;color:var(--muted);margin-top:8px">Tap subjects to add/remove from each day</p>`;
-}
-async function toggleTimetable(childId, day, subjectId) {
-  const ch=S.children.find(c=>c.id===childId);
-  if(!ch) return;
-  const tt={...ch.timetable||{}};
-  const curr=tt[day]||[];
-  tt[day]=curr.includes(subjectId)?curr.filter(s=>s!==subjectId):[...curr,subjectId];
-  try {
-    await sbPatch('children',`id=eq.${childId}`,{timetable:JSON.stringify(tt)});
-    ch.timetable=tt; renderParent();
-  } catch(e){}
-}
+<div class="cta-section">
+  <h2>Ready to get started?</h2>
+  <p>Start your child's extra practice today. 7-day free trial, no card needed.</p>
+  <a href="https://thebrightpath.uk/app.html" class="btn-primary">Start your free trial →</a>
+  <p style="font-size:13px;color:var(--muted);margin-top:14px">Questions? Email us: <a href="mailto:hello@thebrightpath.uk">hello@thebrightpath.uk</a></p>
+</div>
 
-// ══════════════════════════════════════════════════
-// AI HELPER
-// ══════════════════════════════════════════════════
-async function callAI(prompt, maxTokens=1000, attempt=1) {
-  try {
-    const r = await fetch(AI_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({prompt, max_tokens: maxTokens})
-    });
-    if(!r.ok) throw new Error('AI request failed: ' + r.status);
-    const text = await r.text();
-    if(!text || !text.trim()) throw new Error('AI returned empty response');
-    let d;
-    try { d = JSON.parse(text); } catch(e) { throw new Error('AI response not valid JSON'); }
-    const parsed = typeof d === 'string' ? JSON.parse(d) : d;
-    const result = parsed.content?.[0]?.text || parsed.text || '';
-    if(!result) throw new Error('AI response had no text content');
-    return result;
-  } catch(e) {
-    // Retry once on network errors
-    if(attempt < 2 && (e.message.includes('fetch') || e.message.includes('network') || e.message.includes('empty'))) {
-      await new Promise(r => setTimeout(r, 2000));
-      return callAI(prompt, maxTokens, 2);
-    }
-    throw e;
-  }
-}
+<footer>
+  <p>© 2025 BrightPath · <a href="https://thebrightpath.uk/#privacy" style="color:var(--muted)">Privacy Policy</a> · <a href="https://thebrightpath.uk/#terms" style="color:var(--muted)">Terms of Service</a> · <a href="mailto:hello@thebrightpath.uk" style="color:var(--muted)">Contact</a></p>
+</footer>
 
-// ══════════════════════════════════════════════════
-// ONBOARDING WIZARD
-// ══════════════════════════════════════════════════
-const ONBOARD_STEPS = [
-  {
-    emoji: '✨',
-    title: 'Welcome to BrightPath!',
-    sub: 'AI-powered lessons aligned to the UK curriculum. Get set up in 3 quick steps.',
-    content: () => `
-      <span class="onboard-emoji">✨</span>
-      <div class="onboard-title">Welcome to BrightPath!</div>
-      <div class="onboard-sub">AI-powered lessons personalised to your child, aligned to the UK curriculum. Let's get set up in 60 seconds.</div>
-      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:20px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:20px">📚</span><span style="font-size:13px;color:var(--muted)">Fresh lessons generated for your child daily</span></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:20px">✏️</span><span style="font-size:13px;color:var(--muted)">Automatically marked with detailed feedback</span></div>
-        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">🏆</span><span style="font-size:13px;color:var(--muted)">XP, badges and streaks to keep kids motivated</span></div>
-      </div>
-      <button class="btn btn-primary btn-full btn-lg" onclick="onboardNext()">Get started →</button>
-    `
-  },
-  {
-    emoji: '👤',
-    title: 'Add your child',
-    content: () => `
-      <span class="onboard-emoji">👤</span>
-      <div class="onboard-title">Tell us about your child</div>
-      <div class="onboard-sub">We use this to personalise every lesson to the right level.</div>
-      <div class="form-group"><label>Child's name</label><input id="ob_name" placeholder="e.g. Rory" autofocus></div>
-      <div class="form-group"><label>Age</label>
-        <select id="ob_age">${Array.from({length:12},(_,i)=>`<option value="${i+5}">${i+5} years old</option>`).join('')}</select>
-      </div>
-      <div class="form-group"><label>Choose an avatar</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${[['🚀','rocket'],['🐉','dragon'],['⭐','star'],['🧙','wizard'],['🤖','robot'],['🐱','cat'],['🦄','unicorn'],['🦊','fox']].map(([e,id])=>
-            `<button onclick="obSelectAvatar('${id}',this)" id="obav_${id}" class="btn btn-secondary btn-sm" style="font-size:20px;padding:8px 10px">${e}</button>`
-          ).join('')}
-        </div>
-      </div>
-      <button class="btn btn-primary btn-full btn-lg" onclick="onboardSaveChild()" style="margin-top:8px">Next →</button>
-    `
-  },
-  {
-    emoji: '🎯',
-    title: 'All set!',
-    content: (name) => `
-      <span class="onboard-emoji">🎉</span>
-      <div class="onboard-title">You're all set, ${name||''}!</div>
-      <div class="onboard-sub">BrightPath is ready. Pick a subject from the home screen and generate your first lesson — it takes about 20 seconds.</div>
-      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:20px">
-        <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:13px;margin-bottom:10px;color:var(--muted)">YOUR 7-DAY FREE TRIAL INCLUDES</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">✅</span><span style="font-size:13px;color:var(--muted)">Unlimited lessons in all 5 subjects</span></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">✅</span><span style="font-size:13px;color:var(--muted)">AI marking and detailed feedback</span></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">✅</span><span style="font-size:13px;color:var(--muted)">XP, badges and daily challenges</span></div>
-        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">✅</span><span style="font-size:13px;color:var(--muted)">No card required for trial</span></div>
-      </div>
-      <button class="btn btn-primary btn-full btn-lg" onclick="closeOnboarding()">Start learning! 🚀</button>
-      <p style="font-size:12px;color:var(--hint);text-align:center;margin-top:10px">Questions? Email us at <a href="mailto:hello@thebrightpath.uk" style="color:var(--muted)">hello@thebrightpath.uk</a></p>
-    `
-  }
-];
-
-let obStep = 0;
-let obAvatar = 'rocket';
-
-function showOnboarding() {
-  obStep = 0;
-  obAvatar = 'rocket';
-  document.getElementById('onboardOverlay').style.display = 'flex';
-  renderOnboardStep();
-}
-
-function renderOnboardStep() {
-  const step = ONBOARD_STEPS[obStep];
-  document.getElementById('onboardContent').innerHTML = step.content(S.activeChild?.name || '');
-  document.querySelectorAll('.onboard-step').forEach((el,i) => {
-    el.className = 'onboard-step' + (i < obStep ? ' done' : i === obStep ? ' active' : '');
-  });
-}
-
-function onboardNext() {
-  obStep++;
-  renderOnboardStep();
-}
-
-function obSelectAvatar(id, btn) {
-  obAvatar = id;
-  document.querySelectorAll('[id^="obav_"]').forEach(b => b.style.borderColor = 'var(--border)');
-  btn.style.borderColor = 'var(--accent)';
-}
-
-async function onboardSaveChild() {
-  const name = (document.getElementById('ob_name')||{}).value?.trim();
-  const age = parseInt((document.getElementById('ob_age')||{}).value||10);
-  if(!name) { toast('Please enter your childs name'); return; }
-  const uid = getUid();
-  if(!uid) { toast('Session error, please refresh'); return; }
-  const ks = age<=7?'KS1':age<=11?'KS2':age<=14?'KS3':'KS4';
-  try {
-    const rows = await sbPost('children', {user_id:uid, name, age, key_stage:ks, avatar:obAvatar, total_xp:0, current_streak:0, longest_streak:0, badges:'[]', read_books:'[]', timetable:'{}'});
-    const child = rows[0];
-    S.children.push(child);
-    S.activeChild = child;
-    obStep++;
-    renderOnboardStep();
-  } catch(e) { toast('Could not save, please try again'); }
-}
-
-function closeOnboarding() {
-  document.getElementById('onboardOverlay').style.display = 'none';
-  localStorage.setItem('bp_onboarded_' + getUid(), '1');
-  renderHome();
-}
-
-// ══════════════════════════════════════════════════
-// SUBSCRIPTION GATING
-// ══════════════════════════════════════════════════
-function isSubscriptionValid() {
-  const p = S.profile;
-  if(!p) return true; // don't block if profile not loaded yet
-  if(p.subscription_status === 'active') return true;
-  if(p.subscription_status === 'trialing') return true; // Stripe-managed trial
-  if(p.subscription_status === 'trial') {
-    // In-app trial fallback (before Stripe subscription created)
-    const start = new Date(p.trial_started_at);
-    const daysUsed = Math.floor((Date.now() - start) / 86400000);
-    return daysUsed < 7;
-  }
-  return false;
-}
-
-function showPaywall() {
-  const existing = document.getElementById('paywallOverlay');
-  if(existing) return;
-  const div = document.createElement('div');
-  div.id = 'paywallOverlay';
-  div.className = 'paywall-overlay';
-  div.innerHTML = `<div class="paywall-box">
-    <div style="font-size:52px;margin-bottom:12px">🔒</div>
-    <div style="font-family:Nunito,sans-serif;font-size:24px;font-weight:900;margin-bottom:8px">Trial ended</div>
-    <div style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6">Your 7-day free trial has ended. Subscribe to keep Rory learning with unlimited lessons, AI marking, and daily challenges.</div>
-    <button class="btn btn-primary btn-full btn-lg" onclick="document.getElementById('paywallOverlay').remove();showSubscribe('single')" style="margin-bottom:10px">🚀 Subscribe — £4.99/month</button>
-    <button class="btn btn-secondary btn-full" onclick="document.getElementById('paywallOverlay').remove();showSubscribe('family')">👨‍👩‍👧‍👦 Family plan — £7.99/month</button>
-    <p style="font-size:12px;color:var(--hint);margin-top:12px">Secure payment via Stripe. Cancel anytime.<br>Questions? <a href="mailto:hello@thebrightpath.uk" style="color:var(--muted)">hello@thebrightpath.uk</a></p>
-  </div>`;
-  document.body.appendChild(div);
-}
-
-// ══════════════════════════════════════════════════
-// DRAFT ANSWERS — persist to localStorage as user types
-// ══════════════════════════════════════════════════
-function draftKey(lessonId) { return 'bp_draft_' + lessonId; }
-
-function saveDraft(lessonId) {
-  const qs = document.querySelectorAll('[id^="ans_"]');
-  if(!qs.length) return;
-  const answers = {};
-  qs.forEach(el => { answers[el.id] = el.value; });
-  localStorage.setItem(draftKey(lessonId), JSON.stringify(answers));
-}
-
-function loadDraft(lessonId) {
-  try {
-    const saved = localStorage.getItem(draftKey(lessonId));
-    if(!saved) return;
-    const answers = JSON.parse(saved);
-    Object.entries(answers).forEach(([id, val]) => {
-      const el = document.getElementById(id);
-      if(el) el.value = val;
-    });
-    if(Object.values(answers).some(v => v)) toast('📝 Draft answers restored');
-  } catch(e) {}
-}
-
-function clearDraft(lessonId) {
-  localStorage.removeItem(draftKey(lessonId));
-}
-
-// ══════════════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════════════
-function extractJSON(text) {
-  try { return JSON.parse(text.trim()); } catch(_){}
-  const fenced=text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if(fenced) try { return JSON.parse(fenced[1].trim()); } catch(_){}
-  const braced=text.match(/\{[\s\S]*\}/);
-  if(braced) try { return JSON.parse(braced[0]); } catch(_){}
-  try { return JSON.parse(text.replace(/[\u201c\u201d]/g,'"').replace(/[\u2018\u2019]/g,"'")); } catch(_){}
-  return {};
-}
-function parseQs(qs) {
-  if(!qs) return [];
-  if(Array.isArray(qs)) return qs;
-  try { return JSON.parse(qs); } catch(_) { return []; }
-}
-function markdownToHtml(md) {
-  if(!md) return '';
-  return md
-    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
-    .replace(/^## (.+)$/gm,'<h2>$1</h2>')
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g,'<em>$1</em>')
-    .replace(/^- (.+)$/gm,'<li>$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>')
-    .replace(/\n{2,}/g,'</p><p>')
-    .replace(/^(?!<[hul])/gm,'')
-    .replace(/^(.+)$/gm,s=>s.startsWith('<')?s:`<p>${s}</p>`);
-}
-function toast(msg, duration=2800) {
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),duration);
-}
-
-// ══════════════════════════════════════════════════
-// BOOT
-// ══════════════════════════════════════════════════
-async function boot() {
-  // Handle Stripe redirect back to app
-  const urlParams = new URLSearchParams(window.location.search);
-  if(urlParams.get('status') === 'success') {
-    // Payment succeeded — reload profile to get updated subscription_status
-    history.replaceState({}, '', window.location.pathname);
-    setTimeout(() => toast('Payment successful! Welcome to BrightPath 🎉'), 1500);
-  } else if(urlParams.get('status') === 'cancelled') {
-    history.replaceState({}, '', window.location.pathname);
-    setTimeout(() => toast('Payment cancelled — no charge made'), 1000);
-  }
-  const saved = localStorage.getItem('bp_session');
-  if(saved) {
-    try {
-      const session = JSON.parse(saved);
-      // Try refresh first if we have a refresh_token
-      if(session.refresh_token) {
-        const r = await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token', {
-          method:'POST',
-          headers:{'Content-Type':'application/json','apikey':SB_KEY},
-          body: JSON.stringify({refresh_token: session.refresh_token})
-        });
-        const refreshed = await r.json();
-        // Must have access_token AND user.id to be a valid session
-        if(refreshed.access_token && refreshed.user && refreshed.user.id) {
-          S.user = refreshed;
-          localStorage.setItem('bp_session', JSON.stringify(refreshed));
-          await ensureProfile();
-          await showApp();
-          return;
-        }
-        console.warn('[boot] refresh failed, response:', JSON.stringify(refreshed));
-      }
-      // Try using access_token directly if it's still valid
-      if(session.access_token && session.user && session.user.id) {
-        S.user = session;
-        await ensureProfile();
-        await showApp();
-        return;
-      }
-    } catch(e){ console.warn('[boot] restore error:', e); }
-    localStorage.removeItem('bp_session');
-  }
-  document.getElementById('authPage').style.display='flex';
-}
-boot();
-</script>
 </body>
 </html>
