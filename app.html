@@ -333,6 +333,9 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 .tts-btn:hover{filter:brightness(1.1)}
 .tts-btn.playing{background:var(--accent2)}
 .tts-btn.paused{background:var(--warning);color:#000}
+.tts-mini-btn{background:rgba(124,106,247,0.15);border:1px solid rgba(124,106,247,0.25);border-radius:6px;padding:3px 7px;font-size:13px;cursor:pointer;line-height:1;transition:all 0.15s;color:var(--text)}
+.tts-mini-btn:hover{background:rgba(124,106,247,0.3)}
+.tts-mini-btn:disabled{opacity:0.5;cursor:not-allowed}
 .tts-speed{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit}
 .tts-label{font-size:12px;color:var(--muted);flex:1}
 .tts-progress{height:3px;background:var(--border);border-radius:2px;flex:1;overflow:hidden}
@@ -1476,8 +1479,8 @@ function renderLessonBody(lesson, marking, subjectId, submission) {
       <div id="draftStatus" style="font-size:12px;color:var(--muted);text-align:right;margin-bottom:6px;min-height:16px"></div>
       <button class="btn btn-primary btn-full btn-lg" style="margin-top:4px" onclick="submitLesson('${lesson.id}')">Submit for marking ✨</button>
     </div>`;
-  // Inject TTS bar above lesson content
-  injectTTSBar('#lessonContent');
+  // Inject per-section TTS buttons
+  injectSectionTTS(lesson);
   // Restore any saved draft
   loadDraft(lesson.id);
   // Autosave on every keystroke
@@ -2713,6 +2716,89 @@ const TTS = {
     this.updateBtn();
   },
 
+  // Speak a specific piece of text inline
+  async speakText(text, btnEl) {
+    if(this.speaking || this.loading) { this.stop(); return; }
+    const clean = text.replace(/#{1,6}\s/g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/---/g,'').trim();
+    if(!clean) return;
+    this.speaking = true;
+    this.loading = true;
+    if(btnEl) { btnEl.innerHTML = '⏳'; btnEl.disabled = true; }
+    try {
+      const url = await this.fetchChunk(clean.substring(0, 800));
+      if(this.audio) { this.audio.pause(); try { URL.revokeObjectURL(this.audio.src); } catch(e) {} }
+      this.audio = new Audio(url);
+      this.audio.onplay = () => { this.loading = false; if(btnEl) { btnEl.innerHTML = '🔊'; btnEl.disabled = false; } };
+      this.audio.onended = () => { this.speaking = false; this.loading = false; if(btnEl) { btnEl.innerHTML = '🔊'; btnEl.disabled = false; } };
+      this.audio.onerror = () => { this.speaking = false; this.loading = false; if(btnEl) { btnEl.innerHTML = '🔊'; btnEl.disabled = false; } };
+      await this.audio.play();
+    } catch(e) {
+      this.speaking = false; this.loading = false;
+      if(btnEl) { btnEl.innerHTML = '🔊'; btnEl.disabled = false; }
+      console.error('TTS speakText error:', e);
+    }
+  },
+
+  chunks: [],
+  chunkIndex: 0,
+
+  splitIntoChunks(text) {
+    // Clean markdown
+    const clean = text.replace(/#{1,6}\s/g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/---/g,'').trim();
+    // Split by double newlines (paragraphs), then group into ~300 char chunks for fast first response
+    const paras = clean.split(/\n\n+/).filter(p => p.trim().length > 20);
+    const chunks = [];
+    let current = '';
+    for(const p of paras) {
+      if(current.length + p.length > 350 && current.length > 0) {
+        chunks.push(current.trim());
+        current = p;
+      } else {
+        current += (current ? ' ' : '') + p;
+      }
+    }
+    if(current.trim()) chunks.push(current.trim());
+    return chunks.length ? chunks : [clean.substring(0, 400)];
+  },
+
+  async fetchChunk(text) {
+    const res = await fetch(TTS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, voice: 'nova', speed: 1.0 })
+    });
+    if(!res.ok) throw new Error('TTS request failed: ' + res.status);
+    const data = await res.json();
+    if(data.error || !data.audio) throw new Error(data.error || 'No audio returned');
+    const binary = atob(data.audio);
+    const bytes = new Uint8Array(binary.length);
+    for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return URL.createObjectURL(new Blob([bytes], { type: 'audio/mpeg' }));
+  },
+
+  async playChunk(index) {
+    if(index >= this.chunks.length || !this.speaking) { 
+      this.speaking = false; this.loading = false; this.updateBtn(); 
+      return; 
+    }
+    try {
+      const url = await this.fetchChunk(this.chunks[index]);
+      if(!this.speaking) { URL.revokeObjectURL(url); return; } // stopped while loading
+      if(this.audio) { this.audio.pause(); try { URL.revokeObjectURL(this.audio.src); } catch(e) {} }
+      this.audio = new Audio(url);
+      this.audio.onplay = () => { this.loading = false; this.updateBtn(); };
+      this.audio.onended = () => { 
+        this.chunkIndex++;
+        this.playChunk(this.chunkIndex); // play next chunk
+      };
+      this.audio.onerror = () => { this.speaking = false; this.loading = false; this.updateBtn(); };
+      await this.audio.play();
+    } catch(e) {
+      this.speaking = false; this.loading = false; this.updateBtn();
+      console.error('TTS chunk error:', e);
+    }
+  },
+
   async speak() {
     if(this.paused && this.audio) {
       this.audio.play();
@@ -2721,41 +2807,18 @@ const TTS = {
       this.updateBtn();
       return;
     }
-    if(this.loading) return;
+    if(this.loading || this.speaking) return;
+    this.chunks = this.splitIntoChunks(this.text);
+    this.chunkIndex = 0;
+    this.speaking = true;
     this.loading = true;
     this.updateBtn();
     try {
-      const voice = document.getElementById('ttsVoice')?.value || 'nova';
-      const speed = parseFloat(document.getElementById('ttsSpeed')?.value || 1.0);
-      // Trim text to lesson content only — strip markdown symbols
-      const cleanText = this.text.replace(/#{1,6}\s/g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/---/g,'').trim();
-      const res = await fetch(TTS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: cleanText, voice, speed })
-      });
-      if(!res.ok) throw new Error('TTS request failed');
-      const data = await res.json();
-      if(data.error || !data.audio) throw new Error(data.error || 'No audio returned');
-      // Decode base64 to blob
-      const binary = atob(data.audio);
-      const bytes = new Uint8Array(binary.length);
-      for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const blob = new Blob([bytes], { type: 'audio/mpeg' });
-      const url = URL.createObjectURL(blob);
-      if(this.audio) { this.audio.pause(); try { URL.revokeObjectURL(this.audio.src); } catch(e) {} }
-      this.audio = new Audio(url);
-      this.audio.onplay = () => { this.speaking = true; this.paused = false; this.loading = false; this.updateBtn(); };
-      this.audio.onpause = () => { if(!this.audio.ended) { this.paused = true; this.speaking = false; } this.updateBtn(); };
-      this.audio.onended = () => { this.speaking = false; this.paused = false; this.loading = false; this.updateBtn(); };
-      this.audio.onerror = () => { this.speaking = false; this.paused = false; this.loading = false; this.updateBtn(); toast('Could not load audio'); };
-      await this.audio.play();
+      await this.playChunk(0);
     } catch(e) {
-      this.loading = false;
-      this.speaking = false;
-      this.updateBtn();
+      this.speaking = false; this.loading = false; this.updateBtn();
       console.error('TTS error:', e);
-      toast('Read aloud unavailable — ' + (e.message || 'please try again'));
+      toast('Read aloud unavailable — please try again');
     }
   },
 
@@ -2763,6 +2826,7 @@ const TTS = {
     if(this.audio) this.audio.pause();
     this.paused = true;
     this.speaking = false;
+    this.loading = false;
     this.updateBtn();
   },
 
@@ -2771,6 +2835,8 @@ const TTS = {
     this.speaking = false;
     this.paused = false;
     this.loading = false;
+    this.chunks = [];
+    this.chunkIndex = 0;
     this.updateBtn();
   },
 
@@ -2802,25 +2868,73 @@ const TTS = {
   }
 };
 
-function injectTTSBar(contentSelector) {
-  const el = document.querySelector(contentSelector);
-  if(!el) return;
-  const text = el.innerText || el.textContent || '';
-  if(!text.trim()) return;
-  TTS.init(text);
-  const bar = document.createElement('div');
-  bar.className = 'tts-bar';
-  bar.id = 'ttsBar';
-  bar.innerHTML = '<button class="tts-btn" id="ttsPrimaryBtn" onclick="TTS.toggle()">🔊 Read aloud</button>' +
-    '<button class="tts-btn" onclick="TTS.stop()" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" title="Stop">■</button>' +
-    '<select class="tts-speed" id="ttsSpeed" title="Speed" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit">' +
-    '<option value="0.8">Slower</option><option value="1.0" selected>Normal</option><option value="1.2">Faster</option><option value="1.4">Fast</option>' +
-    '</select>' +
-    '<select id="ttsVoice" title="Voice" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit">' +
-    '<option value="nova">Nova ✨</option><option value="shimmer">Shimmer 🌟</option><option value="echo">Echo 🎙️</option>' +
-    '</select>' +
-    '<span class="tts-label" style="font-size:11px">🎧 Human voice · powered by AI</span>';
-  el.parentNode.insertBefore(bar, el);
+function makeTTSBtn(text, label) {
+  const btn = document.createElement('button');
+  btn.className = 'tts-mini-btn';
+  btn.innerHTML = '🔊';
+  btn.title = 'Read aloud: ' + label;
+  btn.onclick = (e) => { e.stopPropagation(); TTS.speakText(text, btn); };
+  return btn;
+}
+
+function injectSectionTTS(lesson) {
+  // 1. Add TTS button to each paragraph/section in lesson content
+  const content = document.getElementById('lessonContent');
+  if(content) {
+    // Add a "Read lesson aloud" button at the top of the content
+    const topBtn = document.createElement('div');
+    topBtn.style.cssText = 'margin-bottom:12px';
+    const readAllBtn = document.createElement('button');
+    readAllBtn.className = 'tts-btn';
+    readAllBtn.style.cssText = 'font-size:13px;padding:7px 14px';
+    readAllBtn.innerHTML = '🔊 Read lesson aloud';
+    readAllBtn.onclick = () => {
+      if(TTS.speaking || TTS.loading) { TTS.stop(); readAllBtn.innerHTML = '🔊 Read lesson aloud'; return; }
+      const text = content.innerText || content.textContent || '';
+      TTS.init(text);
+      TTS.speak();
+      // Update button while speaking
+      const interval = setInterval(() => {
+        if(!TTS.speaking && !TTS.loading) { readAllBtn.innerHTML = '🔊 Read lesson aloud'; clearInterval(interval); }
+        else readAllBtn.innerHTML = '⏸ Pause lesson';
+      }, 300);
+    };
+    topBtn.appendChild(readAllBtn);
+    content.parentNode.insertBefore(topBtn, content);
+
+    // Add small inline TTS buttons after each heading
+    content.querySelectorAll('h2, h3, h4').forEach(heading => {
+      // Get text of this section (heading + following paragraphs until next heading)
+      let sectionText = heading.textContent + '. ';
+      let el = heading.nextElementSibling;
+      while(el && !['H2','H3','H4'].includes(el.tagName)) {
+        sectionText += (el.textContent || '') + ' ';
+        el = el.nextElementSibling;
+      }
+      const btn = makeTTSBtn(sectionText.trim(), heading.textContent);
+      btn.style.cssText = 'margin-left:8px;vertical-align:middle';
+      heading.appendChild(btn);
+    });
+  }
+
+  // 2. Add TTS button to each question card
+  document.querySelectorAll('.question-card').forEach((card, i) => {
+    const qText = card.querySelector('.question-text');
+    if(!qText) return;
+    const questionText = qText.textContent || '';
+    const btn = makeTTSBtn(questionText, 'Question ' + (i + 1));
+    btn.style.cssText = 'margin-left:8px;vertical-align:middle;flex-shrink:0';
+    // Insert next to question text
+    const numEl = card.querySelector('.question-num');
+    if(numEl) {
+      numEl.style.display = 'flex';
+      numEl.style.alignItems = 'center';
+      numEl.style.gap = '6px';
+      numEl.appendChild(btn);
+    } else {
+      qText.parentNode.insertBefore(btn, qText.nextSibling);
+    }
+  });
 }
 
 // ══════════════════════════════════════════════════
