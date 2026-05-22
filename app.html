@@ -482,6 +482,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
       <div class="onboard-step active" id="os1"></div>
       <div class="onboard-step" id="os2"></div>
       <div class="onboard-step" id="os3"></div>
+      <div class="onboard-step" id="os4"></div>
     </div>
     <div id="onboardContent"></div>
   </div>
@@ -524,210 +525,29 @@ const YT_CHANNELS = {
   geography:['UCMSRmhRYCx-oInQDcJAabcg','UCsooa4yRKGN_zEE8iknghZA']
 };
 const YT_CURATED = {
-  // MATHS
-  'math:ks1':[
-    'https://www.youtube.com/watch?v=hOWDrSS2tcc',
-    'https://www.youtube.com/watch?v=WT_wvvEvkw0',
-    'https://www.youtube.com/watch?v=GkHJGnXAFoA',
-    'https://www.youtube.com/watch?v=LcMLGxhMNiI',
-    'https://www.youtube.com/watch?v=bkte4GGaUUE',
-  ],
-  'math:ks2':[
-    'https://www.youtube.com/watch?v=4uLAz1G1jy4',
-    'https://www.youtube.com/watch?v=Ih3h_Cl7I5U',
-    'https://www.youtube.com/watch?v=PBLHfHJTMkA',
-    'https://www.youtube.com/watch?v=IqgMNHGkk5M',
-    'https://www.youtube.com/watch?v=OmJ-4B-mS-Y',
-    'https://www.youtube.com/watch?v=VpuN8vCQ--M',
-    'https://www.youtube.com/watch?v=gk4U5Q4ZP5A',
-  ],
-  'math:ks3':[
-    'https://www.youtube.com/watch?v=Cqe-S42J9Sc',
-    'https://www.youtube.com/watch?v=5tpigGhIAwQ',
-    'https://www.youtube.com/watch?v=NybHckSEQBI',
-    'https://www.youtube.com/watch?v=vA-55wZtLeE',
-    'https://www.youtube.com/watch?v=l3iXON1xEC4',
-    'https://www.youtube.com/watch?v=MlMkJ0_OHHI',
-  ],
-  'math:ks4':[
-    'https://www.youtube.com/watch?v=8miBovX8rqs',
-    'https://www.youtube.com/watch?v=Y9lFTxKhPUM',
-    'https://www.youtube.com/watch?v=2-dUHLHeyTY',
-    'https://www.youtube.com/watch?v=dQw4w9WgXhQ',
-    'https://www.youtube.com/watch?v=pTnEG_WGd2Q',
-    'https://www.youtube.com/watch?v=aq8VU5KLmkY',
-  ],
-  // ENGLISH
-  'english:ks1':[
-    'https://www.youtube.com/watch?v=LCFn2zxzp0g',
-    'https://www.youtube.com/watch?v=BELlZKpi1Zs',
-    'https://www.youtube.com/watch?v=AoSW7qhDZXA',
-    'https://www.youtube.com/watch?v=75p-N9YKqNo',
-  ],
-  'english:ks2':[
-    'https://www.youtube.com/watch?v=5q8WmosXy_E',
-    'https://www.youtube.com/watch?v=kQXuCJkEDGs',
-    'https://www.youtube.com/watch?v=RnGvWTLQ9XA',
-    'https://www.youtube.com/watch?v=4qnAFYR5AWE',
-    'https://www.youtube.com/watch?v=oI6OzVB3oQ0',
-  ],
-  'english:ks3':[
-    'https://www.youtube.com/watch?v=6cGLANQiGOI',
-    'https://www.youtube.com/watch?v=mseBPGzBzME',
-    'https://www.youtube.com/watch?v=q7_JyWFnkpM',
-    'https://www.youtube.com/watch?v=VkAbpFfMOBQ',
-    'https://www.youtube.com/watch?v=33AINjKwEvY',
-  ],
-  'english:ks4':[
-    'https://www.youtube.com/watch?v=GaKPOt0GNCY',
-    'https://www.youtube.com/watch?v=zDNP0bCGpJA',
-    'https://www.youtube.com/watch?v=T7sSXBVzigo',
-    'https://www.youtube.com/watch?v=fRr2ZeblkRc',
-    'https://www.youtube.com/watch?v=BXv78sGCOhE',
-  ],
-  // SCIENCE
-  'science:ks1':[
-    'https://www.youtube.com/watch?v=HGRB8JHWZHE',
-    'https://www.youtube.com/watch?v=l3XzepN03KQ',
-    'https://www.youtube.com/watch?v=7R8b2yNBTKU',
-    'https://www.youtube.com/watch?v=cO-_6S0u-uw',
-  ],
-  'science:ks2':[
-    'https://www.youtube.com/watch?v=y9_r5sDfZNQ',
-    'https://www.youtube.com/watch?v=gblHJvGgM1c',
-    'https://www.youtube.com/watch?v=AN4IHswnmrY',
-    'https://www.youtube.com/watch?v=RnNqMKiV7ek',
-    'https://www.youtube.com/watch?v=bkte4GGaUUE',
-    'https://www.youtube.com/watch?v=7R8b2yNBTKU',
-  ],
-  'science:ks3':[
-    'https://www.youtube.com/watch?v=H-MyEOa0TMg',
-    'https://www.youtube.com/watch?v=OmJ-4B-mS-Y',
-    'https://www.youtube.com/watch?v=FMTX1Q9YWII',
-    'https://www.youtube.com/watch?v=_ZNhNlIpjoE',
-    'https://www.youtube.com/watch?v=K2sc_ck5BZU',
-    'https://www.youtube.com/watch?v=mHak9EZjySs',
-  ],
-  'science:ks4':[
-    'https://www.youtube.com/watch?v=QnQnUbCFEro',
-    'https://www.youtube.com/watch?v=rENyyRwxpHo',
-    'https://www.youtube.com/watch?v=0X7Yv7SFCoc',
-    'https://www.youtube.com/watch?v=2S6e11NBwiw',
-    'https://www.youtube.com/watch?v=NI4EoRaBO-M',
-  ],
-  // HISTORY
-  'history:ks1':[
-    'https://www.youtube.com/watch?v=sMtMc_w0tIg',
-    'https://www.youtube.com/watch?v=S-cCFHXS3IM',
-    'https://www.youtube.com/watch?v=EWqeMEO2QAI',
-  ],
-  'history:ks2':[
-    'https://www.youtube.com/watch?v=sMtMc_w0tIg',
-    'https://www.youtube.com/watch?v=S-cCFHXS3IM',
-    'https://www.youtube.com/watch?v=sFBEBPxBf3Y',
-    'https://www.youtube.com/watch?v=3tgGAFBNweA',
-    'https://www.youtube.com/watch?v=Cyz5Hhj2sGg',
-    'https://www.youtube.com/watch?v=evGFQfAIipI',
-  ],
-  'history:ks3':[
-    'https://www.youtube.com/watch?v=UXHIJWVKXLM',
-    'https://www.youtube.com/watch?v=RNHx_B-8BEA',
-    'https://www.youtube.com/watch?v=sWN1PAfDG-4',
-    'https://www.youtube.com/watch?v=kbK_9y2P35Q',
-    'https://www.youtube.com/watch?v=Cr4RFBq-KQg',
-  ],
-  'history:ks4':[
-    'https://www.youtube.com/watch?v=UXHIJWVKXLM',
-    'https://www.youtube.com/watch?v=_HdnHSaMFJw',
-    'https://www.youtube.com/watch?v=Cr4RFBq-KQg',
-    'https://www.youtube.com/watch?v=E3QhHpy4MxI',
-    'https://www.youtube.com/watch?v=DwKPFT-RioU',
-  ],
-  // GEOGRAPHY
-  'geography:ks1':[
-    'https://www.youtube.com/watch?v=oOuGUZUJDvU',
-    'https://www.youtube.com/watch?v=rRgSYSRDOKA',
-    'https://www.youtube.com/watch?v=AS9FnkxkJ5A',
-  ],
-  'geography:ks2':[
-    'https://www.youtube.com/watch?v=oOuGUZUJDvU',
-    'https://www.youtube.com/watch?v=rRgSYSRDOKA',
-    'https://www.youtube.com/watch?v=WN2UBSPECD8',
-    'https://www.youtube.com/watch?v=8I_QpnPMDEA',
-    'https://www.youtube.com/watch?v=2lVDktWK-pc',
-  ],
-  'geography:ks3':[
-    'https://www.youtube.com/watch?v=bTdBSoVaazE',
-    'https://www.youtube.com/watch?v=kIewBmPlEeE',
-    'https://www.youtube.com/watch?v=HNVtjXvqQrE',
-    'https://www.youtube.com/watch?v=VNGi3sczwmc',
-    'https://www.youtube.com/watch?v=vcOLh4-hCQA',
-  ],
-  'geography:ks4':[
-    'https://www.youtube.com/watch?v=bTdBSoVaazE',
-    'https://www.youtube.com/watch?v=FMTX1Q9YWII',
-    'https://www.youtube.com/watch?v=HNVtjXvqQrE',
-    'https://www.youtube.com/watch?v=nI0G5xBBmE4',
-    'https://www.youtube.com/watch?v=kIewBmPlEeE',
-  ],
+  'math:ks1':['https://www.youtube.com/watch?v=hOWDrSS2tcc','https://www.youtube.com/watch?v=WT_wvvEvkw0'],
+  'math:ks2':['https://www.youtube.com/watch?v=4uLAz1G1jy4','https://www.youtube.com/watch?v=Ih3h_Cl7I5U','https://www.youtube.com/watch?v=PBLHfHJTMkA'],
+  'math:ks3':['https://www.youtube.com/watch?v=Cqe-S42J9Sc','https://www.youtube.com/watch?v=5tpigGhIAwQ'],
+  'math:ks4':['https://www.youtube.com/watch?v=8miBovX8rqs','https://www.youtube.com/watch?v=Y9lFTxKhPUM'],
+  'english:ks1':['https://www.youtube.com/watch?v=LCFn2zxzp0g'],
+  'english:ks2':['https://www.youtube.com/watch?v=5q8WmosXy_E','https://www.youtube.com/watch?v=kQXuCJkEDGs'],
+  'english:ks3':['https://www.youtube.com/watch?v=6cGLANQiGOI'],
+  'english:ks4':['https://www.youtube.com/watch?v=GaKPOt0GNCY'],
+  'science:ks1':['https://www.youtube.com/watch?v=HGRB8JHWZHE'],
+  'science:ks2':['https://www.youtube.com/watch?v=y9_r5sDfZNQ','https://www.youtube.com/watch?v=gblHJvGgM1c'],
+  'science:ks3':['https://www.youtube.com/watch?v=H-MyEOa0TMg','https://www.youtube.com/watch?v=4uLAz1G1jy4'],
+  'science:ks4':['https://www.youtube.com/watch?v=QnQnUbCFEro'],
+  'history:ks2':['https://www.youtube.com/watch?v=sMtMc_w0tIg','https://www.youtube.com/watch?v=S-cCFHXS3IM'],
+  'history:ks3':['https://www.youtube.com/watch?v=UXHIJWVKXLM'],
+  'geography:ks2':['https://www.youtube.com/watch?v=oOuGUZUJDvU'],
+  'geography:ks3':['https://www.youtube.com/watch?v=bTdBSoVaazE'],
 };
 
-// Video library cache loaded from Supabase DB
-let VIDEO_CACHE = {};
-let VIDEO_CACHE_LOADED = false;
-
-async function loadVideoLibrary() {
-  if(VIDEO_CACHE_LOADED) return;
-  try {
-    const rows = await sbGet('video_library', 'is_active=eq.true&select=subject,key_stage,youtube_id,title,channel');
-    if(rows && rows.length) {
-      rows.forEach(r => {
-        const key = r.subject.toLowerCase() + ':' + r.key_stage.toLowerCase();
-        if(!VIDEO_CACHE[key]) VIDEO_CACHE[key] = [];
-        VIDEO_CACHE[key].push({ id: r.youtube_id, title: r.title, channel: r.channel });
-      });
-      VIDEO_CACHE_LOADED = true;
-    }
-  } catch(e) {
-    // Fall back to hardcoded list if DB fails
-    Object.entries(YT_CURATED).forEach(([key, urls]) => {
-      VIDEO_CACHE[key] = urls.map(u => ({ id: u.split('v=')[1], title: null, channel: null }));
-    });
-    VIDEO_CACHE_LOADED = true;
-  }
-}
-
 function getCuratedVideo(subject, ks) {
-  const key = subject.toLowerCase() + ':' + ks.toLowerCase();
-  const list = VIDEO_CACHE[key] || VIDEO_CACHE[subject.toLowerCase() + ':ks2'] || [];
-  if(!list.length) {
-    // Hardcoded fallback
-    const fbKey = subject.toLowerCase() + ':' + ks.toLowerCase();
-    const fb = YT_CURATED[fbKey] || YT_CURATED[subject.toLowerCase() + ':ks2'] || [];
-    if(!fb.length) return null;
-    return fb[Math.floor(Math.random() * fb.length)];
-  }
-  const pick = list[Math.floor(Math.random() * list.length)];
-  return 'https://www.youtube.com/watch?v=' + pick.id;
-}
-
-async function reportVideo(youtubeId, subject, ks) {
-  try {
-    await sbFetch('/video_library?youtube_id=eq.' + youtubeId, {
-      method: 'PATCH',
-      body: JSON.stringify({ report_count: 999, is_active: false }),
-      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal',
-        'Authorization': 'Bearer ' + (S.user?.access_token || SB_KEY) }
-    });
-    // Remove from cache
-    const key = subject + ':' + ks;
-    if(VIDEO_CACHE[key]) {
-      VIDEO_CACHE[key] = VIDEO_CACHE[key].filter(v => v.id !== youtubeId);
-    }
-    toast('Thanks — video removed. We will replace it soon.');
-  } catch(e) {
-    toast('Report saved — thank you');
-  }
+  const key = `${subject.toLowerCase()}:${ks.toLowerCase()}`;
+  const list = YT_CURATED[key] || YT_CURATED[`${subject.toLowerCase()}:ks2`] || [];
+  if (!list.length) return null;
+  return list[Math.floor(Math.random() * list.length)];
 }
 
 // ── SUBJECTS CONFIG ──────────────────────────────
@@ -737,6 +557,16 @@ const SUBJECTS = [
   { id:'science',   label:'Science',   emoji:'🔬', cls:'subj-science' },
   { id:'history',   label:'History',   emoji:'🏛️', cls:'subj-history' },
   { id:'geography', label:'Geography', emoji:'🌍', cls:'subj-geography' },
+];
+
+// ── THEMES CONFIG ────────────────────────────────
+const THEMES = [
+  { id:'sport',   emoji:'⚽', label:'Sport',           desc:'Football, F1, gymnastics & more', promptHint:'Use sport-themed examples — football stats, race times, athletic records, team tactics.' },
+  { id:'music',   emoji:'🎵', label:'Music & Artists', desc:'Pop, rap, bands & concerts',       promptHint:'Use music-themed examples — chart positions, lyrics structure, sound waves, music history.' },
+  { id:'gaming',  emoji:'🎮', label:'Gaming',          desc:'Minecraft, Roblox & video games',  promptHint:'Use gaming-themed examples — Minecraft crafting ratios, game scores, map coordinates, quest narratives.' },
+  { id:'animals', emoji:'🦁', label:'Animals & Nature',desc:'Wildlife, oceans & the outdoors',  promptHint:'Use animal and nature-themed examples — habitats, animal statistics, wildlife stories, ecosystems.' },
+  { id:'space',   emoji:'🚀', label:'Space & Adventure',desc:'Rockets, planets & exploration',  promptHint:'Use space-themed examples — planet distances, astronaut missions, rocket physics, sci-fi scenarios.' },
+  { id:'films',   emoji:'🎬', label:'Films & Stories', desc:'Movies, TV shows & characters',    promptHint:'Use film and storytelling examples — plot structures, character arcs, box office numbers, dramatic scenarios.' },
 ];
 
 // ── BADGES CONFIG ────────────────────────────────
@@ -981,7 +811,6 @@ async function showApp() {
   document.getElementById('mainApp').style.display='';
   document.getElementById('topnav').style.display='flex';
   startTokenRefreshTimer();
-  loadVideoLibrary(); // async, don't await — loads in background
   await loadChildren();
   if(!S.children.length) {
     // New user — show onboarding wizard instead of add child modal
@@ -1058,6 +887,27 @@ function renderHome() {
   const finalGreet = hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
   document.getElementById('heroName').textContent = `${finalGreet}, ${c.name}! 👋`;
   document.getElementById('heroSub').textContent = `${c.key_stage} · ${ageLabel(c.age)} · Let's learn something amazing!`;
+  // Show theme badge
+  const themeObj = c.theme ? THEMES.find(t=>t.id===c.theme) : null;
+  const existingBadge = document.getElementById('themeBadge');
+  if(existingBadge) existingBadge.remove();
+  const heroSub = document.getElementById('heroSub');
+  if(themeObj) {
+    const badge = document.createElement('div');
+    badge.id = 'themeBadge';
+    badge.title = 'Change theme';
+    badge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:rgba(124,106,247,0.15);border:1px solid rgba(124,106,247,0.3);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--accent);margin-top:8px;cursor:pointer';
+    badge.innerHTML = `${themeObj.emoji} ${themeObj.label} theme · <span style="text-decoration:underline">change</span>`;
+    badge.onclick = showThemePicker;
+    heroSub.insertAdjacentElement('afterend', badge);
+  } else {
+    const badge = document.createElement('div');
+    badge.id = 'themeBadge';
+    badge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--muted);margin-top:8px;cursor:pointer';
+    badge.innerHTML = `🎨 Pick a fun theme for your lessons`;
+    badge.onclick = showThemePicker;
+    heroSub.insertAdjacentElement('afterend', badge);
+  }
   document.getElementById('navXp').textContent = `⚡ ${c.total_xp||0} XP`;
   document.getElementById('navStreak').textContent = `🔥 ${c.current_streak||0}`;
   document.getElementById('navAvatar').textContent = avatarEmoji(c.avatar);
@@ -1236,7 +1086,9 @@ async function generateLesson(subjectId, part) {
   const subj = SUBJECTS.find(s=>s.id===subjectId);
   const c = S.activeChild;
   const list = document.getElementById('lessonList');
-  list.innerHTML = `<div class="loading-msg"><div class="spinner"></div><p>Professor Hoot is preparing your ${subj.label} lesson…</p></div>`;
+  const themeObj = SUBJECTS.find(s=>s.id===subjectId); // reuse var name carefully
+  const themeHint = S.activeChild?.theme ? ` with a ${THEMES.find(t=>t.id===S.activeChild.theme)?.label||''} twist` : '';
+  list.innerHTML = `<div class="loading-msg"><div class="spinner"></div><p>Professor Hoot is preparing your ${subj.label} lesson${themeHint}…</p></div>`;
   const prompt = buildLessonPrompt(subjectId, part, c);
   try {
     const raw = await callAI(prompt, 1800);
@@ -1286,9 +1138,12 @@ function buildLessonPrompt(subjectId, part, child) {
   let topic;
   if(subjectId==='english') topic = englishType;
   else { const ksTopics=(topicMap[subjectId]||{})[ks]||['general']; topic=ksTopics[Math.floor(Math.random()*ksTopics.length)]; }
+  const themeId = child.theme;
+  const themeObj = themeId ? THEMES.find(t=>t.id===themeId) : null;
+  const themeInstruction = themeObj ? `\nIMPORTANT: ${name} loves ${themeObj.label}. ${themeObj.promptHint} Keep examples, scenarios and characters rooted in this world throughout — it should feel like the whole lesson was made just for them.` : '';
   return `You are an expert UK primary/secondary school teacher creating an interactive lesson for ${name}, age ${age}, ${ks}.
 Subject: ${subjLabel}. Topic: ${topic}. This is ${isL2?'Lesson 2 (deeper, harder)':'Lesson 1 (introduction)'}.
-${subjectId==='english'&&topic.includes('book')?`Books the child has read: ${readBooks}`:''}
+${subjectId==='english'&&topic.includes('book')?`Books the child has read: ${readBooks}`:''}${themeInstruction}
 
 Return ONLY valid JSON (no markdown, no preamble):
 {
@@ -1343,10 +1198,10 @@ function renderLessonBody(lesson, marking, subjectId, submission) {
   const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
   const videoHtml = videoUrl ? `<div class="video-card">
     <div class="video-thumb" onclick="openVideo('${videoUrl}')">
-      ${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">`:''}<div class="video-play-icon">▶️</div>
+      ${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none';this.parentElement.innerHTML='▶️'">`:''}<div class="video-play-icon">▶️</div>
     </div>
     <div class="video-info" style="flex:1">
-      <h4>${lesson.youtube_query||'Educational video'}</h4>
+      <h4>Watch: ${lesson.youtube_query||'Educational video'}</h4>
       <p style="font-size:11px;color:var(--muted)">Curated for ${S.activeChild?.key_stage}</p>
       <div class="video-actions">
         <button class="video-btn" id="watchedBtn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button>
@@ -1354,7 +1209,6 @@ function renderLessonBody(lesson, marking, subjectId, submission) {
       <div class="video-feedback">
         <button class="vf-btn" onclick="videoFeedback(true,'${videoUrl}')">👍 Helpful</button>
         <button class="vf-btn" onclick="videoFeedback(false,'${videoUrl}')">👎 Not helpful</button>
-        <button class="vf-btn" onclick="reportVideo('${thumbId}','${lesson.subject}','${S.activeChild?.key_stage?.toLowerCase()}')">🚩 Broken link</button>
       </div>
     </div>
   </div>` : '';
@@ -1490,6 +1344,7 @@ async function checkBadges(subject, score, maxScore) {
 function renderMarkedView(lesson, marking, qs, score, maxScore, subject, submission) {
   const result = typeof marking.feedback==='string'?JSON.parse(marking.feedback):marking.feedback;
   const videoUrl = lesson.youtube_url || getCuratedVideo(subject, S.activeChild?.key_stage);
+  const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
   const videoHtml = videoUrl ? `<div class="video-card">
     <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
     <div class="video-info" style="flex:1"><h4>${lesson.youtube_query||'Educational video'}</h4><button class="video-btn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button></div>
@@ -1563,6 +1418,7 @@ async function redoLesson(lessonId) {
   })();
   const qs = parseQs(lesson.questions);
   const videoUrl = lesson.youtube_url || getCuratedVideo(lesson.subject, S.activeChild?.key_stage);
+  const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
   const videoHtml = videoUrl ? `<div class="video-card">
     <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
     <div class="video-info" style="flex:1"><h4>${lesson.youtube_query||'Educational video'}</h4><button class="video-btn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button></div>
@@ -2041,7 +1897,26 @@ const ONBOARD_STEPS = [
     `
   },
   {
-    emoji: '🎯',
+    emoji: '🎨',
+    title: 'Pick a theme!',
+    content: (name) => `
+      <span class="onboard-emoji">🎨</span>
+      <div class="onboard-title">What's ${name||'your child'} into?</div>
+      <div class="onboard-sub">Professor Hoot will wrap every lesson around their favourite thing. They can change it anytime.</div>
+      <div id="themeGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+        ${THEMES.map(t => `
+          <button id="th_${t.id}" onclick="obSelectTheme('${t.id}')" style="background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px 10px;cursor:pointer;text-align:left;transition:all 0.15s">
+            <div style="font-size:28px;margin-bottom:6px">${t.emoji}</div>
+            <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:13px;color:var(--text)">${t.label}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4">${t.desc}</div>
+          </button>`).join('')}
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" onclick="obSaveTheme()" id="themeNextBtn">Next →</button>
+      <button class="btn btn-secondary btn-full" onclick="obSaveTheme('none')" style="margin-top:8px;font-size:13px">Skip for now</button>
+    `
+  },
+  {
+    emoji: '🎉',
     title: 'All set!',
     content: (name) => `
       <span class="onboard-emoji">🎉</span>
@@ -2106,10 +1981,93 @@ async function onboardSaveChild() {
   } catch(e) { toast('Could not save, please try again'); }
 }
 
+let obTheme = null;
+function obSelectTheme(id) {
+  obTheme = id;
+  THEMES.forEach(t => {
+    const btn = document.getElementById('th_' + t.id);
+    if(!btn) return;
+    btn.style.borderColor = t.id === id ? 'var(--accent)' : 'var(--border)';
+    btn.style.background = t.id === id ? 'rgba(124,106,247,0.15)' : 'var(--surface2)';
+  });
+}
+async function obSaveTheme(override) {
+  const theme = override || obTheme;
+  if(!theme) { toast('Pick a theme — or skip!'); return; }
+  if(S.activeChild && theme !== 'none') {
+    try {
+      await sbPatch('children', 'id=eq.' + S.activeChild.id, { theme });
+      S.activeChild.theme = theme;
+    } catch(e) { /* non-fatal */ }
+  }
+  obStep++;
+  renderOnboardStep();
+}
+
 function closeOnboarding() {
   document.getElementById('onboardOverlay').style.display = 'none';
   localStorage.setItem('bp_onboarded_' + getUid(), '1');
   renderHome();
+}
+
+// ══════════════════════════════════════════════════
+// THEME PICKER (post-onboarding)
+// ══════════════════════════════════════════════════
+function showThemePicker() {
+  const existing = document.getElementById('themePickerModal');
+  if(existing) existing.remove();
+  const c = S.activeChild;
+  const html = `<div id="themePickerModal" style="position:fixed;inset:0;z-index:900;background:rgba(15,14,23,0.92);display:flex;align-items:center;justify-content:center;padding:20px">
+    <div class="card" style="width:100%;max-width:400px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <h3 style="font-family:Nunito,sans-serif;font-weight:900;font-size:20px">Change theme</h3>
+        <button onclick="document.getElementById('themePickerModal').remove()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">×</button>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Professor Hoot will use your theme in every lesson you generate from now on.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        ${THEMES.map(t => {
+          const active = c?.theme === t.id;
+          return `<button id="tpth_${t.id}" onclick="tpSelectTheme('${t.id}')" style="background:${active?'rgba(124,106,247,0.15)':'var(--surface2)'};border:2px solid ${active?'var(--accent)':'var(--border)'};border-radius:var(--radius-sm);padding:14px 10px;cursor:pointer;text-align:left;transition:all 0.15s">
+            <div style="font-size:26px;margin-bottom:6px">${t.emoji}</div>
+            <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:13px;color:var(--text)">${t.label}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4">${t.desc}</div>
+          </button>`;
+        }).join('')}
+      </div>
+      <button class="btn btn-primary btn-full" onclick="tpSaveTheme()">Save theme →</button>
+      ${c?.theme ? `<button class="btn btn-secondary btn-full" onclick="tpSaveTheme('none')" style="margin-top:8px;font-size:13px">Remove theme</button>` : ''}
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+let tpSelectedTheme = null;
+function tpSelectTheme(id) {
+  tpSelectedTheme = id;
+  THEMES.forEach(t => {
+    const btn = document.getElementById('tpth_' + t.id);
+    if(!btn) return;
+    btn.style.borderColor = t.id === id ? 'var(--accent)' : 'var(--border)';
+    btn.style.background = t.id === id ? 'rgba(124,106,247,0.15)' : 'var(--surface2)';
+  });
+}
+async function tpSaveTheme(override) {
+  const theme = override !== undefined ? override : tpSelectedTheme;
+  if(theme === null) { toast('Pick a theme first!'); return; }
+  const c = S.activeChild;
+  if(!c) return;
+  try {
+    const update = theme === 'none' ? { theme: null } : { theme };
+    await sbPatch('children', 'id=eq.' + c.id, update);
+    S.activeChild.theme = theme === 'none' ? null : theme;
+    // Update in children array too
+    const idx = S.children.findIndex(ch=>ch.id===c.id);
+    if(idx>-1) S.children[idx].theme = S.activeChild.theme;
+    document.getElementById('themePickerModal').remove();
+    tpSelectedTheme = null;
+    renderHome();
+    const themeObj = THEMES.find(t=>t.id===theme);
+    toast(theme === 'none' ? 'Theme removed' : `${themeObj.emoji} ${themeObj.label} theme set!`);
+  } catch(e) { toast('Could not save — try again'); }
 }
 
 // ══════════════════════════════════════════════════
