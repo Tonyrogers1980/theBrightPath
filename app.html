@@ -2884,7 +2884,9 @@ function injectSectionTTS(lesson) {
         btn.innerHTML = '🔊 Read lesson aloud';
         return;
       }
-      const text = content.innerText || content.textContent || '';
+      // Clean text — collapse multiple newlines into single space to avoid long pauses
+      const raw = content.innerText || content.textContent || '';
+      const text = raw.split(/[\r\n]+/).map(function(l){return l.trim();}).filter(function(l){return l.length>0;}).join('. ').trim();
       TTS.init(text);
       TTS.speak();
       const iv = setInterval(() => {
