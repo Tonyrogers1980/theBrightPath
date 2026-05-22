@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrightPath Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0e17;--surface:#1a1825;--surface2:#231f35;
+  --border:rgba(255,255,255,0.08);--text:#fffffe;--muted:rgba(255,255,255,0.55);
+  --hint:rgba(255,255,255,0.25);--accent:#7c6af7;--accent2:#f7596a;
+  --pass:#69f0ae;--pass-bg:rgba(105,240,174,0.1);
+  --fail:#f7596a;--fail-bg:rgba(247,89,106,0.1);
+  --warn:#ffd54f;--warn-bg:rgba(255,213,79,0.1);
+  --radius:16px;--radius-sm:10px;
+}
+body{font-family:'Nunito Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+h1,h2,h3{font-family:'Nunito',sans-serif}
+
+/* LOGIN */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:100%;max-width:380px;text-align:center}
+.login-logo{font-family:Nunito,sans-serif;font-size:28px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+.login-box input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);font-size:15px;margin-bottom:12px;outline:none;font-family:inherit}
+.login-box input:focus{border-color:var(--accent)}
+.btn-login{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:13px;font-family:Nunito,sans-serif;font-weight:800;font-size:15px;cursor:pointer}
+.login-err{font-size:13px;color:var(--fail);margin-top:8px;min-height:18px}
+
+/* ADMIN LAYOUT */
+#adminScreen{display:none;max-width:800px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 0 24px}
+.header-logo{font-family:Nunito,sans-serif;font-weight:900;font-size:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-badge{font-size:12px;font-weight:700;background:rgba(124,106,247,0.15);color:var(--accent);border:1px solid rgba(124,106,247,0.3);border-radius:20px;padding:4px 12px}
+.logout-btn{font-size:12px;color:var(--muted);cursor:pointer;background:none;border:none;font-family:inherit}
+.logout-btn:hover{color:var(--text)}
+
+/* STATS BAR */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center}
+.stat-n{font-family:Nunito,sans-serif;font-size:28px;font-weight:900}
+.stat-l{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* SECTION */
+.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden}
+.section-head{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.section-title{font-family:Nunito,sans-serif;font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px}
+.section-body{padding:16px 20px}
+
+/* RUN BUTTON */
+.run-btn{display:flex;align-items:center;gap:8px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 18px;font-family:Nunito,sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all 0.15s}
+.run-btn:hover{filter:brightness(1.1)}
+.run-btn:disabled{opacity:0.5;cursor:not-allowed}
+.run-btn.running{background:var(--surface2);color:var(--muted)}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SCORE RING */
+.score-display{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.score-ring{width:72px;height:72px;flex-shrink:0;position:relative}
+.score-ring svg{transform:rotate(-90deg)}
+.score-ring-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:Nunito,sans-serif;font-weight:900;font-size:18px}
+.score-info h3{font-family:Nunito,sans-serif;font-size:16px;font-weight:800;margin-bottom:2px}
+.score-info p{font-size:12px;color:var(--muted)}
+
+/* TEST SUITES */
+.suite{margin-bottom:12px}
+.suite-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);cursor:pointer;user-select:none}
+.suite-head:hover{filter:brightness(1.1)}
+.suite-name{font-family:Nunito,sans-serif;font-weight:800;font-size:14px}
+.suite-counts{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.suite-tests{margin-top:2px;border-radius:0 0 var(--radius-sm) var(--radius-sm);overflow:hidden;display:none}
+.suite-tests.open{display:block}
+.test-row{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:13px}
+.test-row:last-child{border:none}
+.test-badge{font-size:11px;font-weight:800;min-width:36px;padding-top:1px;flex-shrink:0}
+.test-name{flex:1;color:var(--text)}
+.test-detail{font-size:11px;color:var(--muted);margin-top:1px}
+
+/* STATUS PILL */
+.pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.pill-pass{background:var(--pass-bg);color:var(--pass)}
+.pill-fail{background:var(--fail-bg);color:var(--fail)}
+.pill-warn{background:var(--warn-bg);color:var(--warn)}
+.pill-idle{background:var(--surface2);color:var(--muted)}
+.pill-running{background:rgba(124,106,247,0.15);color:var(--accent)}
+
+/* PLAYWRIGHT SECTION */
+.playwright-info{background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;font-size:13px;color:var(--muted);line-height:1.6}
+.playwright-info code{background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-size:12px;color:var(--text)}
+.cmd-block{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-family:monospace;font-size:13px;color:var(--pass);margin-top:8px;line-height:1.8}
+.copy-btn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit}
+.copy-btn:hover{color:var(--text)}
+
+/* LAST RUN */
+.last-run{font-size:12px;color:var(--hint);margin-top:6px}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:28px;color:var(--muted);font-size:13px}
+.empty-state div{font-size:32px;margin-bottom:8px}
+
+/* DB STATS */
+.db-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.db-stat{background:var(--surface2);border-radius:var(--radius-sm);padding:12px;text-align:center}
+.db-stat-n{font-family:Nunito,sans-serif;font-size:22px;font-weight:900;color:var(--accent)}
+.db-stat-l{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* LOG */
+.log-wrap{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;max-height:200px;overflow-y:auto;font-family:monospace;font-size:12px;line-height:1.8;color:var(--muted)}
+.log-wrap .log-ok{color:var(--pass)}
+.log-wrap .log-err{color:var(--fail)}
+.log-wrap .log-info{color:var(--accent)}
+
+@media(max-width:480px){.stats-bar{grid-template-columns:repeat(2,1fr)}.db-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">✨ BrightPath</div>
+    <div class="login-sub">Admin Dashboard</div>
+    <input type="password" id="adminPass" placeholder="Admin password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-login" onclick="doLogin()">Sign in →</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminScreen">
+  <header>
+    <div>
+      <div class="header-logo">✨ BrightPath Admin</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="header-badge" id="envBadge">PRODUCTION</span>
+      <button class="logout-btn" onclick="doLogout()">Sign out</button>
+    </div>
+  </header>
+
+  <!-- LIVE STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-n" id="statUsers">—</div><div class="stat-l">Total users</div></div>
+    <div class="stat"><div class="stat-n" id="statChildren">—</div><div class="stat-l">Child profiles</div></div>
+    <div class="stat"><div class="stat-n" id="statLessons">—</div><div class="stat-l">Lessons generated</div></div>
+    <div class="stat"><div class="stat-n" id="statSubs" style="color:var(--pass)">—</div><div class="stat-l">Active subscribers</div></div>
+  </div>
+
+  <!-- INFRASTRUCTURE TESTS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">
+        🔧 Infrastructure tests
+        <span class="pill pill-idle" id="infraPill">Not run</span>
+      </div>
+      <button class="run-btn" id="infraBtn" onclick="runInfraTests()">
+        <span>▶ Run now</span>
+      </button>
+    </div>
+    <div class="section-body">
+      <div id="infraResults">
+        <div class="empty-state"><div>🔧</div>Tests not yet run. Click "Run now" to check all systems.</div>
+      </div>
+      <div class="last-run" id="infraLastRun"></div>
+    </div>
+  </div>
+
+  <!-- UI / PLAYWRIGHT TESTS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">
+        🖥️ UI tests (Playwright)
+        <span class="pill pill-idle" id="uiPill">Local only</span>
+      </div>
+      <button class="copy-btn" onclick="copyCommand()" id="copyBtn">Copy command</button>
+    </div>
+    <div class="section-body">
+      <div class="playwright-info">
+        UI tests use Playwright and run on your local machine — they open a real browser, log in, click buttons, and check every screen. Run after every deployment.<br><br>
+        <strong style="color:var(--text)">Setup (one time):</strong>
+        <div class="cmd-block">npm install playwright<br>npx playwright install chromium</div>
+        <strong style="color:var(--text)" style="margin-top:12px;display:block">Run after each deploy:</strong>
+        <div class="cmd-block" id="playwrightCmd">node brightpath-tests.js --report</div>
+      </div>
+      <div id="uiResults">
+        <div class="empty-state"><div>🖥️</div>Paste your last test output here or run with <code>--report</code> to auto-email results.</div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Paste test output from terminal to visualise:</div>
+        <textarea id="playwrightPaste" rows="4" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;color:var(--text);font-family:monospace;font-size:12px;resize:vertical" placeholder="Paste node brightpath-tests.js output here..."></textarea>
+        <button class="run-btn" style="margin-top:8px;background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="parsePastedOutput()">Parse & visualise →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DB HEALTH -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">🗄️ Database health</div>
+      <button class="run-btn" id="dbBtn" onclick="loadDbHealth()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)">Refresh</button>
+    </div>
+    <div class="section-body">
+      <div class="db-grid" id="dbGrid">
+        <div class="db-stat"><div class="db-stat-n">—</div><div class="db-stat-l">Users</div></div>
+        <div class="db-stat"><div class="db-stat-n">—</div><div class="db-stat-l">Children</div></div>
+        <div class="db-stat"><div class="db-stat-n">—</div><div class="db-stat-l">Lessons</div></div>
+        <div class="db-stat"><div class="db-stat-n">—</div><div class="db-stat-l">Submissions</div></div>
+        <div class="db-stat"><div class="db-stat-n">—</div><div class="db-stat-l">Markings</div></div>
+        <div class="db-stat"><div class="db-stat-n">—</div><div class="db-stat-l">Active videos</div></div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Subscription breakdown</div>
+        <div id="subBreakdown" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVITY LOG -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">📋 Activity log</div>
+      <button class="run-btn" onclick="clearLog()" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border);font-size:12px;padding:6px 12px">Clear</button>
+    </div>
+    <div class="section-body" style="padding:12px 16px">
+      <div class="log-wrap" id="activityLog"><span class="log-info">BrightPath Admin ready.</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────
+const ADMIN_PASS = 'BrightPath2025!';
+const N8N_RUN_TESTS = 'https://sehomeservices.app.n8n.cloud/webhook/run-tests';
+const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
+const SB_SVC = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZ3JnY2Joa3BpaHhxc2prbWx2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODU3NjA5NCwiZXhwIjoyMDk0MTUyMDk0fQ.ENyNxF4gzXedXdSyBwaQz_ML5A7DGIBwoU1H37c8BAo';
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────
+function doLogin() {
+  const pass = document.getElementById('adminPass').value;
+  if (pass === ADMIN_PASS) {
+    sessionStorage.setItem('bp_admin', '1');
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminScreen').style.display = 'block';
+    log('info', 'Admin session started');
+    loadStats();
+    loadDbHealth();
+  } else {
+    document.getElementById('loginErr').textContent = 'Incorrect password';
+    document.getElementById('adminPass').value = '';
+  }
+}
+function doLogout() {
+  sessionStorage.removeItem('bp_admin');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminScreen').style.display = 'none';
+  document.getElementById('adminPass').value = '';
+}
+// Check session on load
+if (sessionStorage.getItem('bp_admin') === '1') {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminScreen').style.display = 'block';
+  loadStats();
+  loadDbHealth();
+}
+
+// ── LOGGING ───────────────────────────────────────────────────────────────
+function log(type, msg) {
+  const el = document.getElementById('activityLog');
+  const time = new Date().toLocaleTimeString('en-GB');
+  const cls = type === 'ok' ? 'log-ok' : type === 'err' ? 'log-err' : 'log-info';
+  el.innerHTML += `\n<span class="${cls}">[${time}] ${msg}</span>`;
+  el.scrollTop = el.scrollHeight;
+}
+function clearLog() {
+  document.getElementById('activityLog').innerHTML = '<span class="log-info">Log cleared.</span>';
+}
+
+// ── SB FETCH ──────────────────────────────────────────────────────────────
+async function sbGet(path) {
+  const r = await fetch(SB_URL + '/rest/v1/' + path, {
+    headers: { apikey: SB_SVC, Authorization: 'Bearer ' + SB_SVC }
+  });
+  return r.json();
+}
+
+// ── LIVE STATS ────────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const [users, children, lessons, subs] = await Promise.all([
+      fetch(SB_URL + '/auth/v1/admin/users?per_page=1', { headers: { apikey: SB_SVC, Authorization: 'Bearer ' + SB_SVC } }).then(r => r.json()),
+      sbGet('children?select=id'),
+      sbGet('lessons?select=id'),
+      sbGet('profiles?subscription_status=eq.active&select=id'),
+    ]);
+    document.getElementById('statUsers').textContent = users.total || users.users?.length || '—';
+    document.getElementById('statChildren').textContent = Array.isArray(children) ? children.length : '—';
+    document.getElementById('statLessons').textContent = Array.isArray(lessons) ? lessons.length : '—';
+    document.getElementById('statSubs').textContent = Array.isArray(subs) ? subs.length : '—';
+    log('ok', 'Stats loaded');
+  } catch(e) {
+    log('err', 'Stats load failed: ' + e.message);
+  }
+}
+
+// ── DB HEALTH ─────────────────────────────────────────────────────────────
+async function loadDbHealth() {
+  const btn = document.getElementById('dbBtn');
+  btn.disabled = true;
+  try {
+    const [children, lessons, submissions, markings, videos, profiles] = await Promise.all([
+      sbGet('children?select=id'),
+      sbGet('lessons?select=id'),
+      sbGet('submissions?select=id'),
+      sbGet('markings?select=id'),
+      sbGet('video_library?is_active=eq.true&select=id'),
+      sbGet('profiles?select=subscription_status'),
+    ]);
+
+    // Get user count differently since auth admin may need special handling
+    let userCount = '—';
+    try {
+      const ur = await fetch(SB_URL + '/auth/v1/admin/users', { headers: { apikey: SB_SVC, Authorization: 'Bearer ' + SB_SVC } });
+      const ud = await ur.json();
+      userCount = ud.total || (ud.users && ud.users.length) || '—';
+    } catch(e) {}
+
+    const grid = document.getElementById('dbGrid');
+    const vals = [
+      [userCount, 'Users'],
+      [Array.isArray(children) ? children.length : '?', 'Children'],
+      [Array.isArray(lessons) ? lessons.length : '?', 'Lessons'],
+      [Array.isArray(submissions) ? submissions.length : '?', 'Submissions'],
+      [Array.isArray(markings) ? markings.length : '?', 'Markings'],
+      [Array.isArray(videos) ? videos.length : '?', 'Active videos'],
+    ];
+    grid.innerHTML = vals.map(([n,l]) => `<div class="db-stat"><div class="db-stat-n">${n}</div><div class="db-stat-l">${l}</div></div>`).join('');
+
+    // Subscription breakdown
+    if (Array.isArray(profiles)) {
+      const counts = {};
+      profiles.forEach(p => { counts[p.subscription_status] = (counts[p.subscription_status]||0)+1; });
+      const colors = { active:'var(--pass)', trialing:'#4fc3f7', trial:'var(--warn)', expired:'var(--fail)', cancelled:'var(--muted)' };
+      document.getElementById('subBreakdown').innerHTML = Object.entries(counts)
+        .map(([s,n]) => `<span style="background:var(--surface2);border-radius:6px;padding:5px 10px;font-size:12px;color:${colors[s]||'var(--muted)'}">${s}: <strong>${n}</strong></span>`)
+        .join('');
+    }
+    log('ok', 'DB health loaded');
+  } catch(e) {
+    log('err', 'DB health failed: ' + e.message);
+  }
+  btn.disabled = false;
+}
+
+// ── INFRA TESTS ───────────────────────────────────────────────────────────
+async function runInfraTests() {
+  const btn = document.getElementById('infraBtn');
+  const pill = document.getElementById('infraPill');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div><span>Running…</span>';
+  pill.className = 'pill pill-running';
+  pill.textContent = 'Running';
+  log('info', 'Running infrastructure tests…');
+
+  document.getElementById('infraResults').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;padding:20px;color:var(--muted);font-size:13px">
+      <div class="spinner" style="border-color:rgba(124,106,247,0.3);border-top-color:var(--accent)"></div>
+      Running 15 tests across 6 suites…
+    </div>`;
+
+  try {
+    const res = await fetch(N8N_RUN_TESTS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trigger: 'admin-dashboard', ts: Date.now() })
+    });
+    const data = await res.json();
+    renderInfraResults(data);
+    log(data.failed === 0 ? 'ok' : 'err', `Tests complete: ${data.score}% — ${data.passed}P ${data.failed}F ${data.warned}W in ${data.duration}s`);
+  } catch(e) {
+    log('err', 'Test run failed: ' + e.message);
+    document.getElementById('infraResults').innerHTML = `<div class="empty-state"><div>❌</div>Could not reach test endpoint. Check n8n is running.</div>`;
+    pill.className = 'pill pill-fail';
+    pill.textContent = 'Error';
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>▶ Run again</span>';
+}
+
+function renderInfraResults(data) {
+  const pill = document.getElementById('infraPill');
+  const score = data.score || 0;
+  pill.className = score >= 90 ? 'pill pill-pass' : score >= 70 ? 'pill pill-warn' : 'pill pill-fail';
+  pill.textContent = score + '%';
+
+  // Score ring
+  const sc = score >= 90 ? 'var(--pass)' : score >= 70 ? 'var(--warn)' : 'var(--fail)';
+  const sl = score >= 90 ? 'All systems operational' : score >= 70 ? 'Issues found — check below' : 'Critical failures detected';
+  const r = 28, c = 36, circ = 2 * Math.PI * r;
+  const dash = circ * (score / 100);
+
+  // Group results by suite — we don't have the full list here just the summary
+  // Show score ring + summary stats
+  let html = `
+    <div class="score-display">
+      <div class="score-ring">
+        <svg width="72" height="72" viewBox="0 0 72 72">
+          <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="var(--border)" stroke-width="6"/>
+          <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${sc}" stroke-width="6"
+            stroke-dasharray="${dash} ${circ}" stroke-linecap="round" style="transition:all 0.8s"/>
+        </svg>
+        <div class="score-ring-text" style="color:${sc}">${score}%</div>
+      </div>
+      <div class="score-info">
+        <h3>${sl}</h3>
+        <p>${data.passed || 0} passed · ${data.failed || 0} failed · ${data.warned || 0} warnings · ${data.total || 0} total · ${data.duration || '?'}s</p>
+      </div>
+    </div>`;
+
+  document.getElementById('infraResults').innerHTML = html;
+  document.getElementById('infraLastRun').textContent = 'Last run: ' + new Date().toLocaleString('en-GB');
+}
+
+// ── PLAYWRIGHT PASTE PARSER ───────────────────────────────────────────────
+function parsePastedOutput() {
+  const text = document.getElementById('playwrightPaste').value.trim();
+  if (!text) return;
+
+  const results = [];
+  const lines = text.split('\n');
+  let currentSuite = 'General';
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('📋') || trimmed.startsWith('🔐') || trimmed.startsWith('🚀') ||
+        trimmed.startsWith('📚') || trimmed.startsWith('🔒') || trimmed.startsWith('📱') ||
+        trimmed.startsWith('⚡')) {
+      currentSuite = trimmed.replace(/^[^\s]+\s+Suite \d+:\s*/,'').trim();
+    } else if (trimmed.startsWith('✅')) {
+      const detail = trimmed.replace('✅ ', '');
+      const [test, ...rest] = detail.split(' — ');
+      results.push({ suite: currentSuite, test: test.trim(), status: 'PASS', detail: rest.join(' — ') });
+    } else if (trimmed.startsWith('❌')) {
+      const detail = trimmed.replace('❌ ', '');
+      const [test, ...rest] = detail.split(' — ');
+      results.push({ suite: currentSuite, test: test.trim(), status: 'FAIL', detail: rest.join(' — ') });
+    } else if (trimmed.startsWith('⚠️')) {
+      const detail = trimmed.replace('⚠️  ', '').replace('⚠️ ', '');
+      const [test, ...rest] = detail.split(' — ');
+      results.push({ suite: currentSuite, test: test.trim(), status: 'WARN', detail: rest.join(' — ') });
+    }
+  }
+
+  if (results.length === 0) {
+    document.getElementById('uiResults').innerHTML = '<div class="empty-state"><div>🤔</div>Could not parse output. Make sure you copy the full terminal output.</div>';
+    return;
+  }
+
+  // Extract score from SCORE: line
+  const scoreLine = lines.find(l => l.includes('SCORE:'));
+  let score = 0;
+  if (scoreLine) {
+    const m = scoreLine.match(/(\d+)%/);
+    if (m) score = parseInt(m[1]);
+  } else {
+    const passed = results.filter(r => r.status === 'PASS').length;
+    score = Math.round(passed / results.length * 100);
+  }
+
+  renderTestResults('ui', results, score);
+  document.getElementById('playwrightPaste').value = '';
+  log('ok', `Parsed ${results.length} UI test results — ${score}%`);
+}
+
+function renderTestResults(prefix, results, score) {
+  const pill = document.getElementById(prefix === 'ui' ? 'uiPill' : 'infraPill');
+  const sc = score >= 90 ? 'var(--pass)' : score >= 70 ? 'var(--warn)' : 'var(--fail)';
+  const sl = score >= 90 ? 'All clear' : score >= 70 ? 'Issues found' : 'Critical failures';
+
+  if (pill) {
+    pill.className = score >= 90 ? 'pill pill-pass' : score >= 70 ? 'pill pill-warn' : 'pill pill-fail';
+    pill.textContent = score + '%';
+  }
+
+  const passed = results.filter(r => r.status === 'PASS').length;
+  const failed = results.filter(r => r.status === 'FAIL').length;
+  const warned = results.filter(r => r.status === 'WARN').length;
+
+  const r = 28, c = 36, circ = 2 * Math.PI * r;
+  const dash = circ * (score / 100);
+
+  // Group by suite
+  const suites = {};
+  results.forEach(r => { if (!suites[r.suite]) suites[r.suite] = []; suites[r.suite].push(r); });
+
+  let suitesHtml = '';
+  for (const [sname, tests] of Object.entries(suites)) {
+    const sp = tests.filter(t => t.status === 'PASS').length;
+    const sf = tests.filter(t => t.status === 'FAIL').length;
+    const sw = tests.filter(t => t.status === 'WARN').length;
+    const sid = prefix + '_suite_' + sname.replace(/\W/g,'');
+    suitesHtml += `
+      <div class="suite">
+        <div class="suite-head" onclick="toggleSuite('${sid}')">
+          <div class="suite-name">${sname}</div>
+          <div class="suite-counts">
+            <span style="color:var(--pass)">${sp}P</span>
+            ${sf ? `<span style="color:var(--fail)">${sf}F</span>` : ''}
+            ${sw ? `<span style="color:var(--warn)">${sw}W</span>` : ''}
+            <span style="color:var(--hint);font-size:16px">${(sf > 0 || sw > 0) ? '▼' : '▸'}</span>
+          </div>
+        </div>
+        <div class="suite-tests ${sf > 0 || sw > 0 ? 'open' : ''}" id="${sid}">
+          ${tests.map(t => {
+            const c2 = t.status === 'PASS' ? 'var(--pass)' : t.status === 'FAIL' ? 'var(--fail)' : 'var(--warn)';
+            const bg = t.status === 'PASS' ? 'var(--pass-bg)' : t.status === 'FAIL' ? 'var(--fail-bg)' : 'var(--warn-bg)';
+            return `<div class="test-row" style="background:${bg}">
+              <span class="test-badge" style="color:${c2}">${t.status}</span>
+              <div><div class="test-name">${t.test}</div>${t.detail ? `<div class="test-detail">${t.detail}</div>` : ''}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  const html = `
+    <div class="score-display" style="margin-bottom:16px">
+      <div class="score-ring">
+        <svg width="72" height="72" viewBox="0 0 72 72">
+          <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="var(--border)" stroke-width="6"/>
+          <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${sc}" stroke-width="6"
+            stroke-dasharray="${dash} ${circ}" stroke-linecap="round"/>
+        </svg>
+        <div class="score-ring-text" style="color:${sc}">${score}%</div>
+      </div>
+      <div class="score-info">
+        <h3>${sl}</h3>
+        <p>${passed} passed · ${failed} failed · ${warned} warnings · ${results.length} total</p>
+      </div>
+    </div>
+    ${suitesHtml}`;
+
+  document.getElementById(prefix + 'Results').innerHTML = html;
+}
+
+function toggleSuite(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+// ── PLAYWRIGHT COMMAND ────────────────────────────────────────────────────
+function copyCommand() {
+  const cmd = 'node brightpath-tests.js --report';
+  navigator.clipboard.writeText(cmd).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy command', 2000);
+  });
+}
+
+// ── KEYBOARD SHORTCUT ─────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'r' && e.metaKey && sessionStorage.getItem('bp_admin')) {
+    e.preventDefault();
+    runInfraTests();
+  }
+});
+</script>
+</body>
+</html>
