@@ -264,6 +264,51 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 .paywall-overlay{position:fixed;inset:0;z-index:700;background:rgba(15,14,23,0.97);display:flex;align-items:center;justify-content:center;padding:20px}
 .paywall-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:100%;max-width:400px;text-align:center}
 
+/* ── ADMIN CONSOLE ── */
+.admin-suite{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.admin-suite-header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.admin-suite-header:hover{background:var(--surface2)}
+.admin-suite-title{font-family:Nunito,sans-serif;font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px}
+.admin-suite-body{border-top:1px solid var(--border);display:none}
+.admin-suite-body.open{display:block}
+.admin-test-row{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;font-size:13px}
+.admin-test-row:last-child{border:none}
+.admin-status{font-size:11px;font-weight:800;min-width:36px;padding-top:1px;flex-shrink:0}
+.admin-status.pass{color:var(--success)}
+.admin-status.fail{color:var(--accent2)}
+.admin-status.warn{color:var(--warning)}
+.admin-status.pending{color:var(--muted)}
+.admin-test-name{font-weight:600;margin-bottom:2px}
+.admin-test-detail{font-size:12px;color:var(--muted)}
+.admin-score-bar{height:6px;border-radius:3px;background:var(--border);margin:0 16px 12px;overflow:hidden}
+.admin-score-fill{height:100%;border-radius:3px;transition:width 0.8s ease}
+.admin-run-btn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:12px 20px;font-family:Nunito,sans-serif;font-weight:800;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.15s}
+.admin-run-btn:hover{filter:brightness(1.1)}
+.admin-run-btn:disabled{opacity:0.5;cursor:not-allowed}
+.admin-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none}
+.admin-spinner.running{display:block}
+.admin-metric{background:var(--surface2);border-radius:var(--radius-sm);padding:12px;text-align:center}
+.admin-metric-num{font-family:Nunito,sans-serif;font-size:28px;font-weight:900}
+.admin-metric-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+.admin-log{font-family:monospace;font-size:11px;color:var(--muted);background:var(--surface2);border-radius:var(--radius-sm);padding:12px;max-height:200px;overflow-y:auto;line-height:1.6}
+.admin-log-line.pass{color:var(--success)}
+.admin-log-line.fail{color:var(--accent2)}
+.admin-log-line.warn{color:var(--warning)}
+.admin-log-line.info{color:var(--muted)}
+.pulse{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* ── TEXT TO SPEECH ── */
+.tts-bar{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px}
+.tts-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-family:Nunito,sans-serif;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s;flex-shrink:0}
+.tts-btn:hover{filter:brightness(1.1)}
+.tts-btn.playing{background:var(--accent2)}
+.tts-btn.paused{background:var(--warning);color:#000}
+.tts-speed{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit}
+.tts-label{font-size:12px;color:var(--muted);flex:1}
+.tts-progress{height:3px;background:var(--border);border-radius:2px;flex:1;overflow:hidden}
+.tts-progress-fill{height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 0.3s}
+
 /* ── TOAST ── */
 #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 18px; font-size: 14px; font-weight: 600; z-index: 500; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -450,9 +495,20 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
     </div>
 
     <!-- PARENT PAGE -->
+    <div id="adminPage" class="page">
+      <div class="page-header" style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="back-btn" onclick="goPage('parent')">←</button>
+        <div>
+          <h2 style="font-family:Nunito,sans-serif;font-size:20px;font-weight:900">Admin Console</h2>
+          <p style="font-size:12px;color:var(--muted)">BrightPath infrastructure & UI test runner</p>
+        </div>
+      </div>
+      <div id="adminContent"></div>
+    </div>
+
     <div id="parentPage" class="page">
       <div class="prog-header">
-        <h2>⚙️ Settings & Parent</h2>
+        <h2 onclick="adminTap()" style="cursor:default;user-select:none">⚙️ Settings & Parent</h2>
       </div>
       <div id="parentBody"></div>
     </div>
@@ -482,7 +538,6 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
       <div class="onboard-step active" id="os1"></div>
       <div class="onboard-step" id="os2"></div>
       <div class="onboard-step" id="os3"></div>
-      <div class="onboard-step" id="os4"></div>
     </div>
     <div id="onboardContent"></div>
   </div>
@@ -525,29 +580,210 @@ const YT_CHANNELS = {
   geography:['UCMSRmhRYCx-oInQDcJAabcg','UCsooa4yRKGN_zEE8iknghZA']
 };
 const YT_CURATED = {
-  'math:ks1':['https://www.youtube.com/watch?v=hOWDrSS2tcc','https://www.youtube.com/watch?v=WT_wvvEvkw0'],
-  'math:ks2':['https://www.youtube.com/watch?v=4uLAz1G1jy4','https://www.youtube.com/watch?v=Ih3h_Cl7I5U','https://www.youtube.com/watch?v=PBLHfHJTMkA'],
-  'math:ks3':['https://www.youtube.com/watch?v=Cqe-S42J9Sc','https://www.youtube.com/watch?v=5tpigGhIAwQ'],
-  'math:ks4':['https://www.youtube.com/watch?v=8miBovX8rqs','https://www.youtube.com/watch?v=Y9lFTxKhPUM'],
-  'english:ks1':['https://www.youtube.com/watch?v=LCFn2zxzp0g'],
-  'english:ks2':['https://www.youtube.com/watch?v=5q8WmosXy_E','https://www.youtube.com/watch?v=kQXuCJkEDGs'],
-  'english:ks3':['https://www.youtube.com/watch?v=6cGLANQiGOI'],
-  'english:ks4':['https://www.youtube.com/watch?v=GaKPOt0GNCY'],
-  'science:ks1':['https://www.youtube.com/watch?v=HGRB8JHWZHE'],
-  'science:ks2':['https://www.youtube.com/watch?v=y9_r5sDfZNQ','https://www.youtube.com/watch?v=gblHJvGgM1c'],
-  'science:ks3':['https://www.youtube.com/watch?v=H-MyEOa0TMg','https://www.youtube.com/watch?v=4uLAz1G1jy4'],
-  'science:ks4':['https://www.youtube.com/watch?v=QnQnUbCFEro'],
-  'history:ks2':['https://www.youtube.com/watch?v=sMtMc_w0tIg','https://www.youtube.com/watch?v=S-cCFHXS3IM'],
-  'history:ks3':['https://www.youtube.com/watch?v=UXHIJWVKXLM'],
-  'geography:ks2':['https://www.youtube.com/watch?v=oOuGUZUJDvU'],
-  'geography:ks3':['https://www.youtube.com/watch?v=bTdBSoVaazE'],
+  // MATHS
+  'math:ks1':[
+    'https://www.youtube.com/watch?v=hOWDrSS2tcc',
+    'https://www.youtube.com/watch?v=WT_wvvEvkw0',
+    'https://www.youtube.com/watch?v=GkHJGnXAFoA',
+    'https://www.youtube.com/watch?v=LcMLGxhMNiI',
+    'https://www.youtube.com/watch?v=bkte4GGaUUE',
+  ],
+  'math:ks2':[
+    'https://www.youtube.com/watch?v=4uLAz1G1jy4',
+    'https://www.youtube.com/watch?v=Ih3h_Cl7I5U',
+    'https://www.youtube.com/watch?v=PBLHfHJTMkA',
+    'https://www.youtube.com/watch?v=IqgMNHGkk5M',
+    'https://www.youtube.com/watch?v=OmJ-4B-mS-Y',
+    'https://www.youtube.com/watch?v=VpuN8vCQ--M',
+    'https://www.youtube.com/watch?v=gk4U5Q4ZP5A',
+  ],
+  'math:ks3':[
+    'https://www.youtube.com/watch?v=Cqe-S42J9Sc',
+    'https://www.youtube.com/watch?v=5tpigGhIAwQ',
+    'https://www.youtube.com/watch?v=NybHckSEQBI',
+    'https://www.youtube.com/watch?v=vA-55wZtLeE',
+    'https://www.youtube.com/watch?v=l3iXON1xEC4',
+    'https://www.youtube.com/watch?v=MlMkJ0_OHHI',
+  ],
+  'math:ks4':[
+    'https://www.youtube.com/watch?v=8miBovX8rqs',
+    'https://www.youtube.com/watch?v=Y9lFTxKhPUM',
+    'https://www.youtube.com/watch?v=2-dUHLHeyTY',
+    'https://www.youtube.com/watch?v=dQw4w9WgXhQ',
+    'https://www.youtube.com/watch?v=pTnEG_WGd2Q',
+    'https://www.youtube.com/watch?v=aq8VU5KLmkY',
+  ],
+  // ENGLISH
+  'english:ks1':[
+    'https://www.youtube.com/watch?v=LCFn2zxzp0g',
+    'https://www.youtube.com/watch?v=BELlZKpi1Zs',
+    'https://www.youtube.com/watch?v=AoSW7qhDZXA',
+    'https://www.youtube.com/watch?v=75p-N9YKqNo',
+  ],
+  'english:ks2':[
+    'https://www.youtube.com/watch?v=5q8WmosXy_E',
+    'https://www.youtube.com/watch?v=kQXuCJkEDGs',
+    'https://www.youtube.com/watch?v=RnGvWTLQ9XA',
+    'https://www.youtube.com/watch?v=4qnAFYR5AWE',
+    'https://www.youtube.com/watch?v=oI6OzVB3oQ0',
+  ],
+  'english:ks3':[
+    'https://www.youtube.com/watch?v=6cGLANQiGOI',
+    'https://www.youtube.com/watch?v=mseBPGzBzME',
+    'https://www.youtube.com/watch?v=q7_JyWFnkpM',
+    'https://www.youtube.com/watch?v=VkAbpFfMOBQ',
+    'https://www.youtube.com/watch?v=33AINjKwEvY',
+  ],
+  'english:ks4':[
+    'https://www.youtube.com/watch?v=GaKPOt0GNCY',
+    'https://www.youtube.com/watch?v=zDNP0bCGpJA',
+    'https://www.youtube.com/watch?v=T7sSXBVzigo',
+    'https://www.youtube.com/watch?v=fRr2ZeblkRc',
+    'https://www.youtube.com/watch?v=BXv78sGCOhE',
+  ],
+  // SCIENCE
+  'science:ks1':[
+    'https://www.youtube.com/watch?v=HGRB8JHWZHE',
+    'https://www.youtube.com/watch?v=l3XzepN03KQ',
+    'https://www.youtube.com/watch?v=7R8b2yNBTKU',
+    'https://www.youtube.com/watch?v=cO-_6S0u-uw',
+  ],
+  'science:ks2':[
+    'https://www.youtube.com/watch?v=y9_r5sDfZNQ',
+    'https://www.youtube.com/watch?v=gblHJvGgM1c',
+    'https://www.youtube.com/watch?v=AN4IHswnmrY',
+    'https://www.youtube.com/watch?v=RnNqMKiV7ek',
+    'https://www.youtube.com/watch?v=bkte4GGaUUE',
+    'https://www.youtube.com/watch?v=7R8b2yNBTKU',
+  ],
+  'science:ks3':[
+    'https://www.youtube.com/watch?v=H-MyEOa0TMg',
+    'https://www.youtube.com/watch?v=OmJ-4B-mS-Y',
+    'https://www.youtube.com/watch?v=FMTX1Q9YWII',
+    'https://www.youtube.com/watch?v=_ZNhNlIpjoE',
+    'https://www.youtube.com/watch?v=K2sc_ck5BZU',
+    'https://www.youtube.com/watch?v=mHak9EZjySs',
+  ],
+  'science:ks4':[
+    'https://www.youtube.com/watch?v=QnQnUbCFEro',
+    'https://www.youtube.com/watch?v=rENyyRwxpHo',
+    'https://www.youtube.com/watch?v=0X7Yv7SFCoc',
+    'https://www.youtube.com/watch?v=2S6e11NBwiw',
+    'https://www.youtube.com/watch?v=NI4EoRaBO-M',
+  ],
+  // HISTORY
+  'history:ks1':[
+    'https://www.youtube.com/watch?v=sMtMc_w0tIg',
+    'https://www.youtube.com/watch?v=S-cCFHXS3IM',
+    'https://www.youtube.com/watch?v=EWqeMEO2QAI',
+  ],
+  'history:ks2':[
+    'https://www.youtube.com/watch?v=sMtMc_w0tIg',
+    'https://www.youtube.com/watch?v=S-cCFHXS3IM',
+    'https://www.youtube.com/watch?v=sFBEBPxBf3Y',
+    'https://www.youtube.com/watch?v=3tgGAFBNweA',
+    'https://www.youtube.com/watch?v=Cyz5Hhj2sGg',
+    'https://www.youtube.com/watch?v=evGFQfAIipI',
+  ],
+  'history:ks3':[
+    'https://www.youtube.com/watch?v=UXHIJWVKXLM',
+    'https://www.youtube.com/watch?v=RNHx_B-8BEA',
+    'https://www.youtube.com/watch?v=sWN1PAfDG-4',
+    'https://www.youtube.com/watch?v=kbK_9y2P35Q',
+    'https://www.youtube.com/watch?v=Cr4RFBq-KQg',
+  ],
+  'history:ks4':[
+    'https://www.youtube.com/watch?v=UXHIJWVKXLM',
+    'https://www.youtube.com/watch?v=_HdnHSaMFJw',
+    'https://www.youtube.com/watch?v=Cr4RFBq-KQg',
+    'https://www.youtube.com/watch?v=E3QhHpy4MxI',
+    'https://www.youtube.com/watch?v=DwKPFT-RioU',
+  ],
+  // GEOGRAPHY
+  'geography:ks1':[
+    'https://www.youtube.com/watch?v=oOuGUZUJDvU',
+    'https://www.youtube.com/watch?v=rRgSYSRDOKA',
+    'https://www.youtube.com/watch?v=AS9FnkxkJ5A',
+  ],
+  'geography:ks2':[
+    'https://www.youtube.com/watch?v=oOuGUZUJDvU',
+    'https://www.youtube.com/watch?v=rRgSYSRDOKA',
+    'https://www.youtube.com/watch?v=WN2UBSPECD8',
+    'https://www.youtube.com/watch?v=8I_QpnPMDEA',
+    'https://www.youtube.com/watch?v=2lVDktWK-pc',
+  ],
+  'geography:ks3':[
+    'https://www.youtube.com/watch?v=bTdBSoVaazE',
+    'https://www.youtube.com/watch?v=kIewBmPlEeE',
+    'https://www.youtube.com/watch?v=HNVtjXvqQrE',
+    'https://www.youtube.com/watch?v=VNGi3sczwmc',
+    'https://www.youtube.com/watch?v=vcOLh4-hCQA',
+  ],
+  'geography:ks4':[
+    'https://www.youtube.com/watch?v=bTdBSoVaazE',
+    'https://www.youtube.com/watch?v=FMTX1Q9YWII',
+    'https://www.youtube.com/watch?v=HNVtjXvqQrE',
+    'https://www.youtube.com/watch?v=nI0G5xBBmE4',
+    'https://www.youtube.com/watch?v=kIewBmPlEeE',
+  ],
 };
 
+// Video library cache loaded from Supabase DB
+let VIDEO_CACHE = {};
+let VIDEO_CACHE_LOADED = false;
+
+async function loadVideoLibrary() {
+  if(VIDEO_CACHE_LOADED) return;
+  try {
+    const rows = await sbGet('video_library', 'is_active=eq.true&select=subject,key_stage,youtube_id,title,channel');
+    if(rows && rows.length) {
+      rows.forEach(r => {
+        const key = r.subject.toLowerCase() + ':' + r.key_stage.toLowerCase();
+        if(!VIDEO_CACHE[key]) VIDEO_CACHE[key] = [];
+        VIDEO_CACHE[key].push({ id: r.youtube_id, title: r.title, channel: r.channel });
+      });
+      VIDEO_CACHE_LOADED = true;
+    }
+  } catch(e) {
+    // Fall back to hardcoded list if DB fails
+    Object.entries(YT_CURATED).forEach(([key, urls]) => {
+      VIDEO_CACHE[key] = urls.map(u => ({ id: u.split('v=')[1], title: null, channel: null }));
+    });
+    VIDEO_CACHE_LOADED = true;
+  }
+}
+
 function getCuratedVideo(subject, ks) {
-  const key = `${subject.toLowerCase()}:${ks.toLowerCase()}`;
-  const list = YT_CURATED[key] || YT_CURATED[`${subject.toLowerCase()}:ks2`] || [];
-  if (!list.length) return null;
-  return list[Math.floor(Math.random() * list.length)];
+  const key = subject.toLowerCase() + ':' + ks.toLowerCase();
+  const list = VIDEO_CACHE[key] || VIDEO_CACHE[subject.toLowerCase() + ':ks2'] || [];
+  if(!list.length) {
+    // Hardcoded fallback
+    const fbKey = subject.toLowerCase() + ':' + ks.toLowerCase();
+    const fb = YT_CURATED[fbKey] || YT_CURATED[subject.toLowerCase() + ':ks2'] || [];
+    if(!fb.length) return null;
+    return fb[Math.floor(Math.random() * fb.length)];
+  }
+  const pick = list[Math.floor(Math.random() * list.length)];
+  return 'https://www.youtube.com/watch?v=' + pick.id;
+}
+
+async function reportVideo(youtubeId, subject, ks) {
+  try {
+    await sbFetch('/video_library?youtube_id=eq.' + youtubeId, {
+      method: 'PATCH',
+      body: JSON.stringify({ report_count: 999, is_active: false }),
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal',
+        'Authorization': 'Bearer ' + (S.user?.access_token || SB_KEY) }
+    });
+    // Remove from cache
+    const key = subject + ':' + ks;
+    if(VIDEO_CACHE[key]) {
+      VIDEO_CACHE[key] = VIDEO_CACHE[key].filter(v => v.id !== youtubeId);
+    }
+    toast('Thanks — video removed. We will replace it soon.');
+  } catch(e) {
+    toast('Report saved — thank you');
+  }
 }
 
 // ── SUBJECTS CONFIG ──────────────────────────────
@@ -557,16 +793,6 @@ const SUBJECTS = [
   { id:'science',   label:'Science',   emoji:'🔬', cls:'subj-science' },
   { id:'history',   label:'History',   emoji:'🏛️', cls:'subj-history' },
   { id:'geography', label:'Geography', emoji:'🌍', cls:'subj-geography' },
-];
-
-// ── THEMES CONFIG ────────────────────────────────
-const THEMES = [
-  { id:'sport',   emoji:'⚽', label:'Sport',           desc:'Football, F1, gymnastics & more', promptHint:'Use sport-themed examples — football stats, race times, athletic records, team tactics.' },
-  { id:'music',   emoji:'🎵', label:'Music & Artists', desc:'Pop, rap, bands & concerts',       promptHint:'Use music-themed examples — chart positions, lyrics structure, sound waves, music history.' },
-  { id:'gaming',  emoji:'🎮', label:'Gaming',          desc:'Minecraft, Roblox & video games',  promptHint:'Use gaming-themed examples — Minecraft crafting ratios, game scores, map coordinates, quest narratives.' },
-  { id:'animals', emoji:'🦁', label:'Animals & Nature',desc:'Wildlife, oceans & the outdoors',  promptHint:'Use animal and nature-themed examples — habitats, animal statistics, wildlife stories, ecosystems.' },
-  { id:'space',   emoji:'🚀', label:'Space & Adventure',desc:'Rockets, planets & exploration',  promptHint:'Use space-themed examples — planet distances, astronaut missions, rocket physics, sci-fi scenarios.' },
-  { id:'films',   emoji:'🎬', label:'Films & Stories', desc:'Movies, TV shows & characters',    promptHint:'Use film and storytelling examples — plot structures, character arcs, box office numbers, dramatic scenarios.' },
 ];
 
 // ── BADGES CONFIG ────────────────────────────────
@@ -811,6 +1037,7 @@ async function showApp() {
   document.getElementById('mainApp').style.display='';
   document.getElementById('topnav').style.display='flex';
   startTokenRefreshTimer();
+  loadVideoLibrary(); // async, don't await — loads in background
   await loadChildren();
   if(!S.children.length) {
     // New user — show onboarding wizard instead of add child modal
@@ -867,8 +1094,10 @@ async function getMarkings(lessonIds) {
 // NAVIGATION
 // ══════════════════════════════════════════════════
 function goPage(name) {
+  if(name !== 'lesson') TTS.stop();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(name+'Page').classList.add('active');
+  const pageEl = document.getElementById(name+'Page');
+  if(pageEl) pageEl.classList.add('active');
   document.querySelectorAll('.bnav-item').forEach(b=>b.classList.toggle('active', b.dataset.page===name));
   if(name==='home') renderHome();
   if(name==='progress') renderProgress();
@@ -887,27 +1116,6 @@ function renderHome() {
   const finalGreet = hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
   document.getElementById('heroName').textContent = `${finalGreet}, ${c.name}! 👋`;
   document.getElementById('heroSub').textContent = `${c.key_stage} · ${ageLabel(c.age)} · Let's learn something amazing!`;
-  // Show theme badge
-  const themeObj = c.theme ? THEMES.find(t=>t.id===c.theme) : null;
-  const existingBadge = document.getElementById('themeBadge');
-  if(existingBadge) existingBadge.remove();
-  const heroSub = document.getElementById('heroSub');
-  if(themeObj) {
-    const badge = document.createElement('div');
-    badge.id = 'themeBadge';
-    badge.title = 'Change theme';
-    badge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:rgba(124,106,247,0.15);border:1px solid rgba(124,106,247,0.3);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--accent);margin-top:8px;cursor:pointer';
-    badge.innerHTML = `${themeObj.emoji} ${themeObj.label} theme · <span style="text-decoration:underline">change</span>`;
-    badge.onclick = showThemePicker;
-    heroSub.insertAdjacentElement('afterend', badge);
-  } else {
-    const badge = document.createElement('div');
-    badge.id = 'themeBadge';
-    badge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--muted);margin-top:8px;cursor:pointer';
-    badge.innerHTML = `🎨 Pick a fun theme for your lessons`;
-    badge.onclick = showThemePicker;
-    heroSub.insertAdjacentElement('afterend', badge);
-  }
   document.getElementById('navXp').textContent = `⚡ ${c.total_xp||0} XP`;
   document.getElementById('navStreak').textContent = `🔥 ${c.current_streak||0}`;
   document.getElementById('navAvatar').textContent = avatarEmoji(c.avatar);
@@ -1086,9 +1294,7 @@ async function generateLesson(subjectId, part) {
   const subj = SUBJECTS.find(s=>s.id===subjectId);
   const c = S.activeChild;
   const list = document.getElementById('lessonList');
-  const themeObj = SUBJECTS.find(s=>s.id===subjectId); // reuse var name carefully
-  const themeHint = S.activeChild?.theme ? ` with a ${THEMES.find(t=>t.id===S.activeChild.theme)?.label||''} twist` : '';
-  list.innerHTML = `<div class="loading-msg"><div class="spinner"></div><p>Professor Hoot is preparing your ${subj.label} lesson${themeHint}…</p></div>`;
+  list.innerHTML = `<div class="loading-msg"><div class="spinner"></div><p>Professor Hoot is preparing your ${subj.label} lesson…</p></div>`;
   const prompt = buildLessonPrompt(subjectId, part, c);
   try {
     const raw = await callAI(prompt, 1800);
@@ -1138,12 +1344,9 @@ function buildLessonPrompt(subjectId, part, child) {
   let topic;
   if(subjectId==='english') topic = englishType;
   else { const ksTopics=(topicMap[subjectId]||{})[ks]||['general']; topic=ksTopics[Math.floor(Math.random()*ksTopics.length)]; }
-  const themeId = child.theme;
-  const themeObj = themeId ? THEMES.find(t=>t.id===themeId) : null;
-  const themeInstruction = themeObj ? `\nIMPORTANT: ${name} loves ${themeObj.label}. ${themeObj.promptHint} Keep examples, scenarios and characters rooted in this world throughout — it should feel like the whole lesson was made just for them.` : '';
   return `You are an expert UK primary/secondary school teacher creating an interactive lesson for ${name}, age ${age}, ${ks}.
 Subject: ${subjLabel}. Topic: ${topic}. This is ${isL2?'Lesson 2 (deeper, harder)':'Lesson 1 (introduction)'}.
-${subjectId==='english'&&topic.includes('book')?`Books the child has read: ${readBooks}`:''}${themeInstruction}
+${subjectId==='english'&&topic.includes('book')?`Books the child has read: ${readBooks}`:''}
 
 Return ONLY valid JSON (no markdown, no preamble):
 {
@@ -1198,10 +1401,10 @@ function renderLessonBody(lesson, marking, subjectId, submission) {
   const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
   const videoHtml = videoUrl ? `<div class="video-card">
     <div class="video-thumb" onclick="openVideo('${videoUrl}')">
-      ${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none';this.parentElement.innerHTML='▶️'">`:''}<div class="video-play-icon">▶️</div>
+      ${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">`:''}<div class="video-play-icon">▶️</div>
     </div>
     <div class="video-info" style="flex:1">
-      <h4>Watch: ${lesson.youtube_query||'Educational video'}</h4>
+      <h4>${lesson.youtube_query||'Educational video'}</h4>
       <p style="font-size:11px;color:var(--muted)">Curated for ${S.activeChild?.key_stage}</p>
       <div class="video-actions">
         <button class="video-btn" id="watchedBtn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button>
@@ -1209,6 +1412,7 @@ function renderLessonBody(lesson, marking, subjectId, submission) {
       <div class="video-feedback">
         <button class="vf-btn" onclick="videoFeedback(true,'${videoUrl}')">👍 Helpful</button>
         <button class="vf-btn" onclick="videoFeedback(false,'${videoUrl}')">👎 Not helpful</button>
+        <button class="vf-btn" onclick="reportVideo('${thumbId}','${lesson.subject}','${S.activeChild?.key_stage?.toLowerCase()}')">🚩 Broken link</button>
       </div>
     </div>
   </div>` : '';
@@ -1231,6 +1435,8 @@ function renderLessonBody(lesson, marking, subjectId, submission) {
       <div id="draftStatus" style="font-size:12px;color:var(--muted);text-align:right;margin-bottom:6px;min-height:16px"></div>
       <button class="btn btn-primary btn-full btn-lg" style="margin-top:4px" onclick="submitLesson('${lesson.id}')">Submit for marking ✨</button>
     </div>`;
+  // Inject TTS bar above lesson content
+  injectTTSBar('#lessonContent');
   // Restore any saved draft
   loadDraft(lesson.id);
   // Autosave on every keystroke
@@ -1344,7 +1550,6 @@ async function checkBadges(subject, score, maxScore) {
 function renderMarkedView(lesson, marking, qs, score, maxScore, subject, submission) {
   const result = typeof marking.feedback==='string'?JSON.parse(marking.feedback):marking.feedback;
   const videoUrl = lesson.youtube_url || getCuratedVideo(subject, S.activeChild?.key_stage);
-  const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
   const videoHtml = videoUrl ? `<div class="video-card">
     <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
     <div class="video-info" style="flex:1"><h4>${lesson.youtube_query||'Educational video'}</h4><button class="video-btn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button></div>
@@ -1418,7 +1623,6 @@ async function redoLesson(lessonId) {
   })();
   const qs = parseQs(lesson.questions);
   const videoUrl = lesson.youtube_url || getCuratedVideo(lesson.subject, S.activeChild?.key_stage);
-  const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
   const videoHtml = videoUrl ? `<div class="video-card">
     <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
     <div class="video-info" style="flex:1"><h4>${lesson.youtube_query||'Educational video'}</h4><button class="video-btn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button></div>
@@ -1634,6 +1838,10 @@ function renderParent() {
   const c=S.activeChild;
   const p=S.profile;
   body.innerHTML=`
+  ${checkAdminAccess() ? `<div class="card-sm" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="goPage('admin');renderAdminPage()">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">🛠️</span><div><div style="font-family:Nunito,sans-serif;font-weight:800;font-size:14px">Admin Console</div><div style="font-size:12px;color:var(--muted)">Test suite, monitoring, stats</div></div></div>
+    <span style="color:var(--muted)">→</span>
+  </div>` : ''}
   <div class="parent-section">
     <h3>Subscription</h3>
     ${p?renderSubStatus(p):'<div class="card-sm" style="color:var(--muted)">Loading…</div>'}
@@ -1856,6 +2064,494 @@ async function callAI(prompt, maxTokens=1000, attempt=1) {
 }
 
 // ══════════════════════════════════════════════════
+// ADMIN CONSOLE
+// ══════════════════════════════════════════════════
+const ADMIN_EMAILS = ['roryr3049@gmail.com']; // Add your email here
+const INFRA_WEBHOOK = 'https://sehomeservices.app.n8n.cloud/webhook/run-tests';
+
+let adminTapCount = 0;
+let adminTapTimer = null;
+let lastInfraResults = null;
+let lastUiResults = null;
+
+function checkAdminAccess() {
+  const email = S.profile?.email || S.user?.user?.email || '';
+  return ADMIN_EMAILS.includes(email);
+}
+
+// Secret tap sequence: tap the parent page title 5 times quickly
+function adminTap() {
+  adminTapCount++;
+  clearTimeout(adminTapTimer);
+  if (adminTapCount >= 5) {
+    adminTapCount = 0;
+    if (checkAdminAccess()) {
+      goPage('admin');
+      renderAdminPage();
+    } else {
+      toast('Admin access not available for this account');
+    }
+    return;
+  }
+  adminTapTimer = setTimeout(() => { adminTapCount = 0; }, 1500);
+}
+
+function renderAdminPage() {
+  const el = document.getElementById('adminContent');
+  if (!el) return;
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <button class="admin-run-btn" id="runInfraBtn" onclick="runInfraTests()">
+        <div class="admin-spinner" id="infraSpinner"></div>
+        <span id="infraBtnText">▶ Run infra tests</span>
+      </button>
+      <button class="admin-run-btn" id="runUiBtn" onclick="runUiTests()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text)">
+        <div class="admin-spinner" id="uiSpinner"></div>
+        <span id="uiBtnText">▶ Run UI tests</span>
+      </button>
+    </div>
+
+    <div id="infraResults"></div>
+    <div id="uiResults"></div>
+
+    <div style="margin-top:16px;background:var(--surface2);border-radius:var(--radius-sm);padding:14px">
+      <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:13px;margin-bottom:8px;color:var(--muted)">QUICK STATS</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="adminStats">
+        <div class="admin-metric"><div class="admin-metric-num" id="statUsers">—</div><div class="admin-metric-lbl">Users</div></div>
+        <div class="admin-metric"><div class="admin-metric-num" id="statLessons">—</div><div class="admin-metric-lbl">Lessons</div></div>
+        <div class="admin-metric"><div class="admin-metric-num" id="statSubs">—</div><div class="admin-metric-lbl">Active subs</div></div>
+      </div>
+    </div>
+  `;
+
+  loadAdminStats();
+}
+
+async function loadAdminStats() {
+  try {
+    const [profiles, lessons, active] = await Promise.all([
+      sbGet('profiles', 'select=id'),
+      sbGet('lessons', 'select=id&limit=1000'),
+      sbGet('profiles', 'subscription_status=in.(active,trialing)&select=id'),
+    ]);
+    document.getElementById('statUsers').textContent = profiles?.length || 0;
+    document.getElementById('statLessons').textContent = lessons?.length || 0;
+    document.getElementById('statSubs').textContent = active?.length || 0;
+  } catch(e) {}
+}
+
+async function runInfraTests() {
+  const btn = document.getElementById('runInfraBtn');
+  const spinner = document.getElementById('infraSpinner');
+  const btnText = document.getElementById('infraBtnText');
+  const resultsEl = document.getElementById('infraResults');
+
+  btn.disabled = true;
+  spinner.classList.add('running');
+  btnText.textContent = 'Running…';
+
+  resultsEl.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div class="pulse" style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0"></div>
+        <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:14px">Infrastructure tests running…</div>
+      </div>
+      <div class="admin-log" id="infraLog">
+        <div class="admin-log-line info">Connecting to n8n test agent…</div>
+      </div>
+    </div>`;
+
+  const log = document.getElementById('infraLog');
+  const addLog = (msg, cls='info') => {
+    const line = document.createElement('div');
+    line.className = 'admin-log-line ' + cls;
+    line.textContent = msg;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  };
+
+  try {
+    addLog('POST ' + INFRA_WEBHOOK + ' …');
+    const r = await fetch(INFRA_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trigger: 'admin-console' })
+    });
+    const data = await r.json();
+    lastInfraResults = data;
+
+    addLog('Response received in ' + data.duration + 's', 'info');
+    addLog(data.passed + '/' + data.total + ' tests passed', data.score >= 90 ? 'pass' : data.score >= 70 ? 'warn' : 'fail');
+
+    renderInfraResults(data);
+  } catch(e) {
+    addLog('Error: ' + e.message, 'fail');
+    resultsEl.innerHTML += `<div style="color:var(--accent2);font-size:13px;padding:8px 0">Failed to reach test agent: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    spinner.classList.remove('running');
+    btnText.textContent = '↺ Re-run infra tests';
+  }
+}
+
+function renderInfraResults(data) {
+  const el = document.getElementById('infraResults');
+  const score = data.score || 0;
+  const scoreColor = score >= 90 ? 'var(--success)' : score >= 70 ? 'var(--warning)' : 'var(--accent2)';
+  const statusLabel = score >= 90 ? 'All Systems OK' : score >= 70 ? 'Issues Found' : 'Critical Failures';
+
+  // Group by suite
+  const suites = {};
+  (data.results || []).forEach(r => {
+    if (!suites[r.suite]) suites[r.suite] = [];
+    suites[r.suite].push(r);
+  });
+
+  let suitesHtml = '';
+  for (const [name, tests] of Object.entries(suites)) {
+    const fp = tests.filter(t => t.status==='PASS').length;
+    const ff = tests.filter(t => t.status==='FAIL').length;
+    const fw = tests.filter(t => t.status==='WARN').length;
+    const allPass = ff === 0 && fw === 0;
+    suitesHtml += `
+      <div class="admin-suite">
+        <div class="admin-suite-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          <div class="admin-suite-title">
+            <span>${allPass ? '✅' : ff > 0 ? '❌' : '⚠️'}</span>
+            <span>${name}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">${fp}P${ff ? ' · <span style="color:var(--accent2)">' + ff + 'F</span>' : ''}${fw ? ' · <span style="color:var(--warning)">' + fw + 'W</span>' : ''}</div>
+        </div>
+        <div class="admin-suite-body ${ff > 0 ? 'open' : ''}">
+          ${tests.map(t => `
+            <div class="admin-test-row">
+              <div class="admin-status ${t.status.toLowerCase()}">${t.status}</div>
+              <div>
+                <div class="admin-test-name">${t.test}</div>
+                ${t.detail ? `<div class="admin-test-detail">${t.detail}</div>` : ''}
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-family:Nunito,sans-serif;font-weight:900;font-size:18px">Infrastructure Tests</div>
+          <div style="font-size:12px;color:var(--muted)">${new Date().toLocaleString('en-GB')} · ${data.duration}s</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:Nunito,sans-serif;font-size:32px;font-weight:900;color:${scoreColor}">${score}%</div>
+          <div style="font-size:11px;color:${scoreColor}">${statusLabel}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+        <div class="admin-metric"><div class="admin-metric-num" style="color:var(--success)">${data.passed}</div><div class="admin-metric-lbl">Passed</div></div>
+        <div class="admin-metric"><div class="admin-metric-num" style="color:var(--accent2)">${data.failed}</div><div class="admin-metric-lbl">Failed</div></div>
+        <div class="admin-metric"><div class="admin-metric-num" style="color:var(--warning)">${data.warned}</div><div class="admin-metric-lbl">Warnings</div></div>
+      </div>
+      <div class="admin-score-bar">
+        <div class="admin-score-fill" style="width:${score}%;background:${scoreColor}"></div>
+      </div>
+      ${suitesHtml}
+    </div>`;
+}
+
+async function runUiTests() {
+  const btn = document.getElementById('runUiBtn');
+  const spinner = document.getElementById('uiSpinner');
+  const btnText = document.getElementById('uiBtnText');
+  const resultsEl = document.getElementById('uiResults');
+
+  btn.disabled = true;
+  spinner.classList.add('running');
+  btnText.textContent = 'Running…';
+
+  // The UI tests run via Playwright locally - show instructions + what we can check in-browser
+  resultsEl.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-family:Nunito,sans-serif;font-weight:900;font-size:16px;margin-bottom:12px">🎭 UI Test Suite</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">
+        The full Playwright browser automation suite runs locally. Running in-browser checks now…
+      </div>
+      <div id="uiLog" class="admin-log">
+        <div class="admin-log-line info">Starting in-browser checks…</div>
+      </div>
+    </div>`;
+
+  const log = document.getElementById('uiLog');
+  const addLog = (msg, cls='info') => {
+    const line = document.createElement('div');
+    line.className = 'admin-log-line ' + cls;
+    line.textContent = msg;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  };
+
+  const uiResults = [];
+  function uiPass(suite, test, detail='') { uiResults.push({suite,test,status:'PASS',detail}); addLog('PASS  ' + suite + ': ' + test + (detail?' — '+detail:''), 'pass'); }
+  function uiFail(suite, test, detail='') { uiResults.push({suite,test,status:'FAIL',detail}); addLog('FAIL  ' + suite + ': ' + test + (detail?' — '+detail:''), 'fail'); }
+  function uiWarn(suite, test, detail='') { uiResults.push({suite,test,status:'WARN',detail}); addLog('WARN  ' + suite + ': ' + test + (detail?' — '+detail:''), 'warn'); }
+
+  await new Promise(r => setTimeout(r, 100));
+
+  // Run browser-side checks
+  try {
+    // DOM structure checks
+    addLog('Checking DOM structure…', 'info');
+    const checks = [
+      ['App', 'Auth page exists', !!document.getElementById('authPage')],
+      ['App', 'Main app exists', !!document.getElementById('mainApp')],
+      ['App', 'Home page exists', !!document.getElementById('homePage')],
+      ['App', 'Progress page exists', !!document.getElementById('progressPage')],
+      ['App', 'Parent page exists', !!document.getElementById('parentPage')],
+      ['App', 'Admin page exists', !!document.getElementById('adminPage')],
+      ['App', 'Lesson page exists', !!document.getElementById('lessonPage')],
+      ['App', 'Subject page exists', !!document.getElementById('subjectPage')],
+      ['App', 'Top nav exists', !!document.getElementById('topnav')],
+      ['App', 'Bottom nav exists', !!document.querySelector('.bnav')],
+    ];
+    checks.forEach(([suite, test, ok]) => ok ? uiPass(suite, test) : uiFail(suite, test));
+
+    // JS functions exist
+    addLog('Checking core functions…', 'info');
+    const fns = [
+      ['Functions', 'generateLesson', typeof generateLesson === 'function'],
+      ['Functions', 'submitLesson', typeof submitLesson === 'function'],
+      ['Functions', 'renderHome', typeof renderHome === 'function'],
+      ['Functions', 'showSubscribe', typeof showSubscribe === 'function'],
+      ['Functions', 'showPrivacyPolicy', typeof showPrivacyPolicy === 'function'],
+      ['Functions', 'showTerms', typeof showTerms === 'function'],
+      ['Functions', 'isSubscriptionValid', typeof isSubscriptionValid === 'function'],
+      ['Functions', 'refreshSession', typeof refreshSession === 'function'],
+      ['Functions', 'loadVideoLibrary', typeof loadVideoLibrary === 'function'],
+      ['Functions', 'saveDraft', typeof saveDraft === 'function'],
+      ['Functions', 'redoLesson', typeof redoLesson === 'function'],
+    ];
+    fns.forEach(([suite, test, ok]) => ok ? uiPass(suite, test) : uiFail(suite, test));
+
+    // Config constants
+    addLog('Checking config…', 'info');
+    const SB_OK = typeof SB_URL === 'string' && SB_URL.includes('supabase.co');
+    const AI_OK = typeof AI_URL === 'string' && AI_URL.includes('n8n');
+    const SK_OK = typeof SB_KEY === 'string' && SB_KEY.length > 20;
+    SB_OK ? uiPass('Config', 'Supabase URL configured', SB_URL) : uiFail('Config', 'Supabase URL configured');
+    AI_OK ? uiPass('Config', 'AI proxy URL configured', AI_URL) : uiFail('Config', 'AI proxy URL configured');
+    SK_OK ? uiPass('Config', 'Supabase key configured') : uiFail('Config', 'Supabase key configured');
+
+    // Session state
+    addLog('Checking session state…', 'info');
+    const hasUser = !!(S && S.user && S.user.user && S.user.user.id);
+    const hasProfile = !!(S && S.profile);
+    const hasChildren = !!(S && S.children && S.children.length > 0);
+    hasUser ? uiPass('Session', 'User authenticated', S.user.user.email) : uiWarn('Session', 'User authenticated', 'No active session');
+    hasProfile ? uiPass('Session', 'Profile loaded', 'Status: ' + S.profile?.subscription_status) : uiWarn('Session', 'Profile loaded', 'No profile');
+    hasChildren ? uiPass('Session', 'Children loaded', S.children.map(c=>c.name).join(', ')) : uiWarn('Session', 'Children loaded', 'None found');
+
+    // Video cache
+    addLog('Checking video library…', 'info');
+    const vidCount = Object.values(VIDEO_CACHE || {}).reduce((a,b)=>a+b.length, 0);
+    vidCount > 0 ? uiPass('Videos', 'Video cache loaded', vidCount + ' videos') : uiWarn('Videos', 'Video cache loaded', 'Cache empty — may still be loading');
+
+    // Local storage
+    addLog('Checking local storage…', 'info');
+    try {
+      localStorage.setItem('bp_test', '1');
+      localStorage.removeItem('bp_test');
+      uiPass('Storage', 'localStorage available');
+    } catch(e) { uiFail('Storage', 'localStorage available', e.message); }
+
+    // Network — ping Supabase
+    addLog('Checking network connectivity…', 'info');
+    try {
+      const r = await fetch(SB_URL + '/rest/v1/video_library?limit=1', {
+        headers: { 'apikey': SB_KEY }
+      });
+      r.ok || r.status === 200 ? uiPass('Network', 'Supabase reachable', 'HTTP ' + r.status) : uiWarn('Network', 'Supabase reachable', 'HTTP ' + r.status);
+    } catch(e) { uiFail('Network', 'Supabase reachable', e.message); }
+
+    try {
+      const r = await fetch(AI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: 'ping', max_tokens: 5 })
+      });
+      r.status < 500 ? uiPass('Network', 'AI proxy reachable', 'HTTP ' + r.status) : uiFail('Network', 'AI proxy reachable', 'HTTP ' + r.status);
+    } catch(e) { uiFail('Network', 'AI proxy reachable', e.message); }
+
+    addLog('All checks complete!', 'pass');
+
+  } catch(e) {
+    uiFail('System', 'In-browser checks', e.message);
+  }
+
+  // Render results
+  lastUiResults = uiResults;
+  const total = uiResults.length;
+  const passed = uiResults.filter(r=>r.status==='PASS').length;
+  const failed = uiResults.filter(r=>r.status==='FAIL').length;
+  const warned = uiResults.filter(r=>r.status==='WARN').length;
+  const score = Math.round(passed/total*100);
+  const scoreColor = score>=90?'var(--success)':score>=70?'var(--warning)':'var(--accent2)';
+  const statusLabel = score>=90?'All Systems OK':score>=70?'Issues Found':'Critical Failures';
+
+  const suites = {};
+  uiResults.forEach(r => { if(!suites[r.suite])suites[r.suite]=[]; suites[r.suite].push(r); });
+
+  let suitesHtml = '';
+  for (const [name, tests] of Object.entries(suites)) {
+    const fp=tests.filter(t=>t.status==='PASS').length;
+    const ff=tests.filter(t=>t.status==='FAIL').length;
+    const fw=tests.filter(t=>t.status==='WARN').length;
+    const allPass = ff===0&&fw===0;
+    suitesHtml += `
+      <div class="admin-suite">
+        <div class="admin-suite-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          <div class="admin-suite-title">
+            <span>${allPass?'✅':ff>0?'❌':'⚠️'}</span><span>${name}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">${fp}P${ff?' · <span style="color:var(--accent2)">'+ff+'F</span>':''}${fw?' · <span style="color:var(--warning)">'+fw+'W</span>':''}</div>
+        </div>
+        <div class="admin-suite-body ${ff>0?'open':''}">
+          ${tests.map(t=>`
+            <div class="admin-test-row">
+              <div class="admin-status ${t.status.toLowerCase()}">${t.status}</div>
+              <div><div class="admin-test-name">${t.test}</div>${t.detail?`<div class="admin-test-detail">${t.detail}</div>`:''}</div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  resultsEl.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-family:Nunito,sans-serif;font-weight:900;font-size:18px">In-Browser UI Tests</div>
+          <div style="font-size:12px;color:var(--muted)">${new Date().toLocaleString('en-GB')}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:Nunito,sans-serif;font-size:32px;font-weight:900;color:${scoreColor}">${score}%</div>
+          <div style="font-size:11px;color:${scoreColor}">${statusLabel}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+        <div class="admin-metric"><div class="admin-metric-num" style="color:var(--success)">${passed}</div><div class="admin-metric-lbl">Passed</div></div>
+        <div class="admin-metric"><div class="admin-metric-num" style="color:var(--accent2)">${failed}</div><div class="admin-metric-lbl">Failed</div></div>
+        <div class="admin-metric"><div class="admin-metric-num" style="color:var(--warning)">${warned}</div><div class="admin-metric-lbl">Warnings</div></div>
+      </div>
+      <div class="admin-score-bar">
+        <div class="admin-score-fill" style="width:${score}%;background:${scoreColor}"></div>
+      </div>
+      ${suitesHtml}
+      <div style="margin-top:14px;background:var(--surface2);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:var(--muted);line-height:1.7">
+        💡 For full browser automation (click testing, form submission, mobile layout), run the Playwright suite locally:<br>
+        <code style="color:var(--accent)">node brightpath-tests.js --headed --report</code>
+      </div>
+    </div>`;
+
+  btn.disabled = false;
+  spinner.classList.remove('running');
+  btnText.textContent = '↺ Re-run UI tests';
+}
+
+// ══════════════════════════════════════════════════
+// TEXT TO SPEECH
+// ══════════════════════════════════════════════════
+const TTS = {
+  utterance: null,
+  speaking: false,
+  paused: false,
+  text: '',
+
+  init(text) {
+    window.speechSynthesis.cancel();
+    this.text = text;
+    this.speaking = false;
+    this.paused = false;
+    this.updateBtn();
+  },
+
+  speak() {
+    if(!('speechSynthesis' in window)) { toast('Text-to-speech not supported in this browser'); return; }
+    if(this.paused && this.utterance) {
+      window.speechSynthesis.resume();
+      this.paused = false;
+      this.speaking = true;
+      this.updateBtn();
+      return;
+    }
+    window.speechSynthesis.cancel();
+    this.utterance = new SpeechSynthesisUtterance(this.text);
+    this.utterance.rate = parseFloat(document.getElementById('ttsSpeed')?.value || 0.9);
+    this.utterance.pitch = 1;
+    this.utterance.lang = 'en-GB';
+    // Prefer a UK voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const ukVoice = voices.find(v => v.lang === 'en-GB') || voices.find(v => v.lang.startsWith('en'));
+    if(ukVoice) this.utterance.voice = ukVoice;
+    this.utterance.onstart = () => { this.speaking = true; this.paused = false; this.updateBtn(); };
+    this.utterance.onend = () => { this.speaking = false; this.paused = false; this.updateBtn(); };
+    this.utterance.onerror = () => { this.speaking = false; this.paused = false; this.updateBtn(); };
+    window.speechSynthesis.speak(this.utterance);
+  },
+
+  pause() {
+    window.speechSynthesis.pause();
+    this.paused = true;
+    this.speaking = false;
+    this.updateBtn();
+  },
+
+  stop() {
+    window.speechSynthesis.cancel();
+    this.speaking = false;
+    this.paused = false;
+    this.updateBtn();
+  },
+
+  toggle() {
+    if(this.speaking) this.pause();
+    else this.speak();
+  },
+
+  updateBtn() {
+    const btn = document.getElementById('ttsPrimaryBtn');
+    if(!btn) return;
+    if(this.speaking) {
+      btn.innerHTML = '⏸ Pause';
+      btn.className = 'tts-btn playing';
+    } else if(this.paused) {
+      btn.innerHTML = '▶ Resume';
+      btn.className = 'tts-btn paused';
+    } else {
+      btn.innerHTML = '🔊 Read aloud';
+      btn.className = 'tts-btn';
+    }
+  }
+};
+
+function injectTTSBar(contentSelector) {
+  const el = document.querySelector(contentSelector);
+  if(!el) return;
+  const text = el.innerText || el.textContent || '';
+  if(!text.trim()) return;
+  TTS.init(text);
+  const bar = document.createElement('div');
+  bar.className = 'tts-bar';
+  bar.id = 'ttsBar';
+  bar.innerHTML = '<button class="tts-btn" id="ttsPrimaryBtn" onclick="TTS.toggle()">🔊 Read aloud</button>' +
+    '<button class="tts-btn" onclick="TTS.stop()" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" title="Stop">■</button>' +
+    '<select class="tts-speed" id="ttsSpeed" onchange="if(TTS.speaking){TTS.stop();TTS.speak()}" title="Reading speed">' +
+    '<option value="0.7">Slower</option><option value="0.9" selected>Normal</option><option value="1.1">Faster</option><option value="1.3">Fast</option>' +
+    '</select>' +
+    '<span class="tts-label">🎧 Tap to hear the lesson read aloud</span>';
+  el.parentNode.insertBefore(bar, el);
+}
+
+// ══════════════════════════════════════════════════
 // ONBOARDING WIZARD
 // ══════════════════════════════════════════════════
 const ONBOARD_STEPS = [
@@ -1897,26 +2593,7 @@ const ONBOARD_STEPS = [
     `
   },
   {
-    emoji: '🎨',
-    title: 'Pick a theme!',
-    content: (name) => `
-      <span class="onboard-emoji">🎨</span>
-      <div class="onboard-title">What's ${name||'your child'} into?</div>
-      <div class="onboard-sub">Professor Hoot will wrap every lesson around their favourite thing. They can change it anytime.</div>
-      <div id="themeGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
-        ${THEMES.map(t => `
-          <button id="th_${t.id}" onclick="obSelectTheme('${t.id}')" style="background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px 10px;cursor:pointer;text-align:left;transition:all 0.15s">
-            <div style="font-size:28px;margin-bottom:6px">${t.emoji}</div>
-            <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:13px;color:var(--text)">${t.label}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4">${t.desc}</div>
-          </button>`).join('')}
-      </div>
-      <button class="btn btn-primary btn-full btn-lg" onclick="obSaveTheme()" id="themeNextBtn">Next →</button>
-      <button class="btn btn-secondary btn-full" onclick="obSaveTheme('none')" style="margin-top:8px;font-size:13px">Skip for now</button>
-    `
-  },
-  {
-    emoji: '🎉',
+    emoji: '🎯',
     title: 'All set!',
     content: (name) => `
       <span class="onboard-emoji">🎉</span>
@@ -1981,93 +2658,10 @@ async function onboardSaveChild() {
   } catch(e) { toast('Could not save, please try again'); }
 }
 
-let obTheme = null;
-function obSelectTheme(id) {
-  obTheme = id;
-  THEMES.forEach(t => {
-    const btn = document.getElementById('th_' + t.id);
-    if(!btn) return;
-    btn.style.borderColor = t.id === id ? 'var(--accent)' : 'var(--border)';
-    btn.style.background = t.id === id ? 'rgba(124,106,247,0.15)' : 'var(--surface2)';
-  });
-}
-async function obSaveTheme(override) {
-  const theme = override || obTheme;
-  if(!theme) { toast('Pick a theme — or skip!'); return; }
-  if(S.activeChild && theme !== 'none') {
-    try {
-      await sbPatch('children', 'id=eq.' + S.activeChild.id, { theme });
-      S.activeChild.theme = theme;
-    } catch(e) { /* non-fatal */ }
-  }
-  obStep++;
-  renderOnboardStep();
-}
-
 function closeOnboarding() {
   document.getElementById('onboardOverlay').style.display = 'none';
   localStorage.setItem('bp_onboarded_' + getUid(), '1');
   renderHome();
-}
-
-// ══════════════════════════════════════════════════
-// THEME PICKER (post-onboarding)
-// ══════════════════════════════════════════════════
-function showThemePicker() {
-  const existing = document.getElementById('themePickerModal');
-  if(existing) existing.remove();
-  const c = S.activeChild;
-  const html = `<div id="themePickerModal" style="position:fixed;inset:0;z-index:900;background:rgba(15,14,23,0.92);display:flex;align-items:center;justify-content:center;padding:20px">
-    <div class="card" style="width:100%;max-width:400px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <h3 style="font-family:Nunito,sans-serif;font-weight:900;font-size:20px">Change theme</h3>
-        <button onclick="document.getElementById('themePickerModal').remove()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">×</button>
-      </div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Professor Hoot will use your theme in every lesson you generate from now on.</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-        ${THEMES.map(t => {
-          const active = c?.theme === t.id;
-          return `<button id="tpth_${t.id}" onclick="tpSelectTheme('${t.id}')" style="background:${active?'rgba(124,106,247,0.15)':'var(--surface2)'};border:2px solid ${active?'var(--accent)':'var(--border)'};border-radius:var(--radius-sm);padding:14px 10px;cursor:pointer;text-align:left;transition:all 0.15s">
-            <div style="font-size:26px;margin-bottom:6px">${t.emoji}</div>
-            <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:13px;color:var(--text)">${t.label}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4">${t.desc}</div>
-          </button>`;
-        }).join('')}
-      </div>
-      <button class="btn btn-primary btn-full" onclick="tpSaveTheme()">Save theme →</button>
-      ${c?.theme ? `<button class="btn btn-secondary btn-full" onclick="tpSaveTheme('none')" style="margin-top:8px;font-size:13px">Remove theme</button>` : ''}
-    </div>
-  </div>`;
-  document.body.insertAdjacentHTML('beforeend', html);
-}
-let tpSelectedTheme = null;
-function tpSelectTheme(id) {
-  tpSelectedTheme = id;
-  THEMES.forEach(t => {
-    const btn = document.getElementById('tpth_' + t.id);
-    if(!btn) return;
-    btn.style.borderColor = t.id === id ? 'var(--accent)' : 'var(--border)';
-    btn.style.background = t.id === id ? 'rgba(124,106,247,0.15)' : 'var(--surface2)';
-  });
-}
-async function tpSaveTheme(override) {
-  const theme = override !== undefined ? override : tpSelectedTheme;
-  if(theme === null) { toast('Pick a theme first!'); return; }
-  const c = S.activeChild;
-  if(!c) return;
-  try {
-    const update = theme === 'none' ? { theme: null } : { theme };
-    await sbPatch('children', 'id=eq.' + c.id, update);
-    S.activeChild.theme = theme === 'none' ? null : theme;
-    // Update in children array too
-    const idx = S.children.findIndex(ch=>ch.id===c.id);
-    if(idx>-1) S.children[idx].theme = S.activeChild.theme;
-    document.getElementById('themePickerModal').remove();
-    tpSelectedTheme = null;
-    renderHome();
-    const themeObj = THEMES.find(t=>t.id===theme);
-    toast(theme === 'none' ? 'Theme removed' : `${themeObj.emoji} ${themeObj.label} theme set!`);
-  } catch(e) { toast('Could not save — try again'); }
 }
 
 // ══════════════════════════════════════════════════
