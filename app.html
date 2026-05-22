@@ -298,6 +298,35 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 .pulse{animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
+/* ── LEADERBOARD ── */
+.lb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.lb-code-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.lb-code{font-family:monospace;font-size:22px;font-weight:900;color:var(--accent);letter-spacing:3px}
+.lb-copy-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-family:Nunito,sans-serif;font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0}
+.lb-copy-btn:hover{filter:brightness(1.1)}
+.lb-add{display:flex;gap:8px;margin-bottom:20px}
+.lb-add input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:14px;font-family:inherit;letter-spacing:2px;text-transform:uppercase}
+.lb-add input:focus{outline:none;border-color:var(--accent)}
+.lb-add input::placeholder{letter-spacing:0;text-transform:none}
+.lb-add-btn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 16px;font-family:Nunito,sans-serif;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0}
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;transition:all 0.2s}
+.lb-row.me{background:rgba(124,106,247,0.12);border-color:rgba(124,106,247,0.4)}
+.lb-row.top{background:rgba(255,213,79,0.08);border-color:rgba(255,213,79,0.3)}
+.lb-rank{font-family:Nunito,sans-serif;font-size:18px;font-weight:900;min-width:32px;text-align:center}
+.lb-avatar{font-size:28px;flex-shrink:0}
+.lb-info{flex:1}
+.lb-name{font-family:Nunito,sans-serif;font-weight:800;font-size:15px}
+.lb-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.lb-xp{font-family:Nunito,sans-serif;font-size:15px;font-weight:900;color:var(--xp)}
+.lb-empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:14px}
+.lb-empty-icon{font-size:40px;margin-bottom:10px}
+.lb-section-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px}
+.lb-tab{display:flex;gap:8px;margin-bottom:16px}
+.lb-tab-btn{flex:1;padding:9px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:Nunito,sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all 0.15s}
+.lb-tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.overtaken-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#f7596a;color:#fff;border-radius:var(--radius-sm);padding:12px 18px;font-family:Nunito,sans-serif;font-weight:700;font-size:14px;z-index:999;animation:slideUp 0.3s ease;text-align:center;max-width:320px;box-shadow:0 4px 20px rgba(247,89,106,0.4)}
+@keyframes slideUp{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+
 /* ── TEXT TO SPEECH ── */
 .tts-bar{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px}
 .tts-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-family:Nunito,sans-serif;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s;flex-shrink:0}
@@ -384,6 +413,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
     <div class="nav-right">
       <div class="xp-badge" id="navXp">⚡ 0 XP</div>
       <div class="streak-badge" id="navStreak">🔥 0</div>
+      <button onclick="openLeaderboard()" style="background:rgba(255,213,79,0.12);border:1px solid rgba(255,213,79,0.25);border-radius:8px;padding:5px 9px;font-size:16px;cursor:pointer;line-height:1;flex-shrink:0" title="Leaderboard">🏆</button>
       <div class="avatar-btn" id="navAvatar" onclick="goPage('parent')">👤</div>
     </div>
   </nav>
@@ -529,6 +559,15 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
       Parent
     </div>
   </nav>
+</div>
+
+<!-- LEADERBOARD PAGE -->
+<div id="leaderboardPage" class="page" style="padding-bottom:20px">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <button class="btn btn-secondary btn-sm" onclick="goPage('home')" id="lbBackBtn">← Back</button>
+    <h2 style="font-size:20px;font-weight:900">🏆 Leaderboard</h2>
+  </div>
+  <div id="leaderboardContent"></div>
 </div>
 
 <!-- ONBOARDING WIZARD -->
@@ -1039,6 +1078,8 @@ async function showApp() {
   startTokenRefreshTimer();
   loadVideoLibrary(); // async, don't await — loads in background
   await loadChildren();
+  // Check if any friends have overtaken since last visit
+  setTimeout(checkOvertaken, 3000);
   if(!S.children.length) {
     // New user — show onboarding wizard instead of add child modal
     showOnboarding();
@@ -2458,57 +2499,277 @@ async function runUiTests() {
 }
 
 // ══════════════════════════════════════════════════
-// TEXT TO SPEECH
+// LEADERBOARD & FRIENDS
 // ══════════════════════════════════════════════════
+const AVATAR_MAP = {rocket:'🚀',dragon:'🐉',star:'⭐',wizard:'🧙',robot:'🤖',cat:'🐱',unicorn:'🦄',fox:'🦊'};
+const RANK_LABELS = ['','🥇','🥈','🥉','4th','5th','6th','7th','8th','9th','10th'];
+
+async function openLeaderboard() {
+  goPage('leaderboard');
+  await renderLeaderboard();
+}
+
+async function renderLeaderboard() {
+  const c = S.activeChild;
+  if(!c) return;
+  const el = document.getElementById('leaderboardContent');
+  el.innerHTML = '<div class="loading-msg"><div class="spinner"></div><p>Loading leaderboard…</p></div>';
+
+  // Fetch friends
+  let friends = [];
+  try {
+    const rows = await sbGet('friendships', `child_id=eq.${c.id}&select=friend_child_id`);
+    const ids = (Array.isArray(rows) ? rows : [rows].filter(Boolean)).map(r => r.friend_child_id).filter(Boolean);
+    if(ids.length) {
+      const fr = await sbGet('children', `id=in.(${ids.join(',')})&select=id,name,avatar,total_xp,current_streak,key_stage`);
+      friends = Array.isArray(fr) ? fr : [fr].filter(f => f && f.id);
+    }
+  } catch(e) {}
+
+  // Build leaderboard entries — self + friends
+  const me = { id: c.id, name: c.name, avatar: c.avatar, total_xp: c.total_xp || 0, current_streak: c.current_streak || 0, key_stage: c.key_stage, isMe: true };
+  const entries = [me, ...friends].sort((a, b) => (b.total_xp || 0) - (a.total_xp || 0));
+
+  const myRank = entries.findIndex(e => e.isMe) + 1;
+
+  // Check for overtaken nudge
+  const prevRank = parseInt(localStorage.getItem('bp_lb_rank_' + c.id) || '0');
+  if(prevRank > 0 && myRank > prevRank && friends.length > 0) {
+    const overtaker = entries[myRank - 2];
+    if(overtaker) showOvertakenToast(overtaker.name);
+  }
+  localStorage.setItem('bp_lb_rank_' + c.id, myRank);
+
+  // Render
+  const rankMedals = ['🥇','🥈','🥉'];
+  const lbRows = entries.map((e, i) => {
+    const rank = i + 1;
+    const avatar = AVATAR_MAP[e.avatar] || '🌟';
+    const medal = rank <= 3 ? rankMedals[rank-1] : `<span style="font-size:14px;color:var(--muted)">${rank}</span>`;
+    const isTop = rank === 1;
+    return `<div class="lb-row${e.isMe ? ' me' : ''}${isTop ? ' top' : ''}">
+      <div class="lb-rank">${medal}</div>
+      <div class="lb-avatar">${avatar}</div>
+      <div class="lb-info">
+        <div class="lb-name">${e.name}${e.isMe ? ' <span style="font-size:11px;color:var(--accent);font-weight:700">(you)</span>' : ''}</div>
+        <div class="lb-sub">${e.key_stage} · 🔥 ${e.current_streak || 0} streak</div>
+      </div>
+      <div class="lb-xp">⚡ ${(e.total_xp || 0).toLocaleString()}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="lb-section-title">Your friend code</div>
+    <div class="lb-code-box">
+      <div>
+        <div class="lb-code">${c.friend_code || 'BP-????'}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Share this with friends to connect</div>
+      </div>
+      <button class="lb-copy-btn" onclick="copyFriendCode('${c.friend_code}')">📋 Copy</button>
+    </div>
+
+    <div class="lb-section-title">Add a friend</div>
+    <div class="lb-add">
+      <input type="text" id="friendCodeInput" placeholder="Enter friend's code e.g. BP-X7K2" maxlength="7">
+      <button class="lb-add-btn" onclick="addFriend()">Add</button>
+    </div>
+
+    <div class="lb-section-title">Leaderboard${entries.length > 1 ? ' · ' + entries.length + ' players' : ''}</div>
+    ${entries.length > 1 ? lbRows : `
+      <div class="lb-empty">
+        <div class="lb-empty-icon">🏆</div>
+        <div style="font-weight:700;margin-bottom:6px">No friends yet!</div>
+        <div>Share your code above and enter a friend's code to start competing.</div>
+      </div>`}
+    ${friends.length > 0 ? `<div style="margin-top:12px;text-align:center"><button class="btn btn-secondary btn-sm" onclick="manageFreinds()">Manage friends</button></div>` : ''}
+  `;
+}
+
+async function addFriend() {
+  const input = document.getElementById('friendCodeInput');
+  const code = (input?.value || '').trim().toUpperCase();
+  if(!code || code.length < 5) { toast('Please enter a valid friend code'); return; }
+  const c = S.activeChild;
+  if(!c) return;
+
+  // Check friend limit
+  try {
+    const existing = await sbGet('friendships', `child_id=eq.${c.id}&select=id`);
+    const count = Array.isArray(existing) ? existing.length : (existing && existing.id ? 1 : 0);
+    if(count >= 10) { toast('Maximum 10 friends reached'); return; }
+
+    // Find the child with this code
+    const found = await sbGet('children', `friend_code=eq.${code}&select=id,name`);
+    const friend = Array.isArray(found) ? found[0] : found;
+    if(!friend || !friend.id) { toast('Friend code not found — check it and try again'); return; }
+    if(friend.id === c.id) { toast('That is your own code!'); return; }
+
+    // Create friendship (both directions)
+    await sbPost('friendships', { child_id: c.id, friend_child_id: friend.id });
+    try { await sbPost('friendships', { child_id: friend.id, friend_child_id: c.id }); } catch(e) {}
+
+    if(input) input.value = '';
+    toast('🎉 ' + friend.name + ' added to your leaderboard!');
+    await renderLeaderboard();
+  } catch(e) {
+    if(e.message && e.message.includes('duplicate')) { toast('Already friends!'); }
+    else { toast('Could not add friend — try again'); }
+  }
+}
+
+async function manageFreinds() {
+  const c = S.activeChild;
+  if(!c) return;
+  try {
+    const rows = await sbGet('friendships', `child_id=eq.${c.id}&select=id,friend_child_id`);
+    const friendships = Array.isArray(rows) ? rows : [rows].filter(r => r && r.id);
+    if(!friendships.length) { toast('No friends to manage'); return; }
+    const ids = friendships.map(r => r.friend_child_id);
+    const fr = await sbGet('children', `id=in.(${ids.join(',')})&select=id,name,avatar`);
+    const friends = Array.isArray(fr) ? fr : [fr].filter(f => f && f.id);
+    const list = friends.map(f => {
+      const fs = friendships.find(r => r.friend_child_id === f.id);
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:14px">${AVATAR_MAP[f.avatar]||'🌟'} ${f.name}</span>
+        <button class="btn btn-secondary btn-sm" onclick="removeFriend('${fs.id}','${f.name}');this.closest('.modal-overlay').remove()">Remove</button>
+      </div>`;
+    }).join('');
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.style.cssText = 'position:fixed;inset:0;z-index:900;background:rgba(15,14,23,0.95);display:flex;align-items:center;justify-content:center;padding:20px';
+    div.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:100%;max-width:380px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:900">Friends</h3>
+        <button class="btn btn-secondary btn-sm" onclick="this.closest('.modal-overlay').remove()">✕</button>
+      </div>
+      ${list}
+    </div>`;
+    document.body.appendChild(div);
+  } catch(e) { toast('Could not load friends'); }
+}
+
+async function removeFriend(friendshipId, name) {
+  try {
+    await sbFetch('/friendships?id=eq.' + friendshipId, { method: 'DELETE' });
+    toast(name + ' removed');
+    await renderLeaderboard();
+  } catch(e) { toast('Could not remove friend'); }
+}
+
+function copyFriendCode(code) {
+  navigator.clipboard.writeText(code).then(() => {
+    toast('📋 Friend code copied! Share it with ' + S.activeChild?.name + "'s friends");
+  }).catch(() => {
+    toast('Your code is: ' + code);
+  });
+}
+
+function showOvertakenToast(name) {
+  const div = document.createElement('div');
+  div.className = 'overtaken-toast';
+  div.innerHTML = '🔥 ' + name + ' just passed you on the leaderboard!<br><small style="opacity:0.85">Can you catch up?</small>';
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 5000);
+}
+
+// Check for overtaken on app load
+async function checkOvertaken() {
+  const c = S.activeChild;
+  if(!c) return;
+  try {
+    const rows = await sbGet('friendships', `child_id=eq.${c.id}&select=friend_child_id`);
+    const ids = (Array.isArray(rows) ? rows : [rows].filter(Boolean)).map(r => r.friend_child_id).filter(Boolean);
+    if(!ids.length) return;
+    const fr = await sbGet('children', `id=in.(${ids.join(',')})&select=id,name,total_xp`);
+    const friends = Array.isArray(fr) ? fr : [fr].filter(f => f && f.id);
+    const myXp = c.total_xp || 0;
+    const prevRank = parseInt(localStorage.getItem('bp_lb_rank_' + c.id) || '0');
+    const all = [{ total_xp: myXp, isMe: true }, ...friends].sort((a, b) => b.total_xp - a.total_xp);
+    const myRank = all.findIndex(e => e.isMe) + 1;
+    if(prevRank > 0 && myRank > prevRank) {
+      const overtaker = all[myRank - 2];
+      if(overtaker && !overtaker.isMe) setTimeout(() => showOvertakenToast(overtaker.name), 2000);
+    }
+    localStorage.setItem('bp_lb_rank_' + c.id, myRank);
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════
+// TEXT TO SPEECH — OpenAI TTS (human voice)
+// ══════════════════════════════════════════════════
+const TTS_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co/functions/v1/tts';
+const TTS_VOICES = { nova: 'nova', shimmer: 'shimmer', echo: 'echo' };
+
 const TTS = {
-  utterance: null,
+  audio: null,
   speaking: false,
   paused: false,
   text: '',
+  loading: false,
 
   init(text) {
-    window.speechSynthesis.cancel();
+    this.stop();
     this.text = text;
-    this.speaking = false;
-    this.paused = false;
     this.updateBtn();
   },
 
-  speak() {
-    if(!('speechSynthesis' in window)) { toast('Text-to-speech not supported in this browser'); return; }
-    if(this.paused && this.utterance) {
-      window.speechSynthesis.resume();
+  async speak() {
+    if(this.paused && this.audio) {
+      this.audio.play();
       this.paused = false;
       this.speaking = true;
       this.updateBtn();
       return;
     }
-    window.speechSynthesis.cancel();
-    this.utterance = new SpeechSynthesisUtterance(this.text);
-    this.utterance.rate = parseFloat(document.getElementById('ttsSpeed')?.value || 0.9);
-    this.utterance.pitch = 1;
-    this.utterance.lang = 'en-GB';
-    // Prefer a UK voice if available
-    const voices = window.speechSynthesis.getVoices();
-    const ukVoice = voices.find(v => v.lang === 'en-GB') || voices.find(v => v.lang.startsWith('en'));
-    if(ukVoice) this.utterance.voice = ukVoice;
-    this.utterance.onstart = () => { this.speaking = true; this.paused = false; this.updateBtn(); };
-    this.utterance.onend = () => { this.speaking = false; this.paused = false; this.updateBtn(); };
-    this.utterance.onerror = () => { this.speaking = false; this.paused = false; this.updateBtn(); };
-    window.speechSynthesis.speak(this.utterance);
+    if(this.loading) return;
+    this.loading = true;
+    this.updateBtn();
+    try {
+      const voice = document.getElementById('ttsVoice')?.value || 'nova';
+      const speed = parseFloat(document.getElementById('ttsSpeed')?.value || 1.0);
+      // Trim text to lesson content only — strip markdown symbols
+      const cleanText = this.text.replace(/#{1,6}\s/g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/---/g,'').trim();
+      const res = await fetch(TTS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: cleanText, voice, speed })
+      });
+      if(!res.ok) throw new Error('TTS request failed');
+      const data = await res.json();
+      if(data.error || !data.audio) throw new Error(data.error || 'No audio returned');
+      // Decode base64 to blob
+      const binary = atob(data.audio);
+      const bytes = new Uint8Array(binary.length);
+      for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: 'audio/mpeg' });
+      const url = URL.createObjectURL(blob);
+      if(this.audio) { this.audio.pause(); try { URL.revokeObjectURL(this.audio.src); } catch(e) {} }
+      this.audio = new Audio(url);
+      this.audio.onplay = () => { this.speaking = true; this.paused = false; this.loading = false; this.updateBtn(); };
+      this.audio.onpause = () => { if(!this.audio.ended) { this.paused = true; this.speaking = false; } this.updateBtn(); };
+      this.audio.onended = () => { this.speaking = false; this.paused = false; this.loading = false; this.updateBtn(); };
+      this.audio.onerror = () => { this.speaking = false; this.paused = false; this.loading = false; this.updateBtn(); toast('Could not load audio'); };
+      await this.audio.play();
+    } catch(e) {
+      this.loading = false;
+      this.speaking = false;
+      this.updateBtn();
+      toast('Read aloud unavailable — please try again');
+    }
   },
 
   pause() {
-    window.speechSynthesis.pause();
+    if(this.audio) this.audio.pause();
     this.paused = true;
     this.speaking = false;
     this.updateBtn();
   },
 
   stop() {
-    window.speechSynthesis.cancel();
+    if(this.audio) { this.audio.pause(); try { URL.revokeObjectURL(this.audio.src); } catch(e) {} this.audio = null; }
     this.speaking = false;
     this.paused = false;
+    this.loading = false;
     this.updateBtn();
   },
 
@@ -2520,15 +2781,22 @@ const TTS = {
   updateBtn() {
     const btn = document.getElementById('ttsPrimaryBtn');
     if(!btn) return;
-    if(this.speaking) {
+    if(this.loading) {
+      btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:4px"></span> Loading…';
+      btn.className = 'tts-btn';
+      btn.disabled = true;
+    } else if(this.speaking) {
       btn.innerHTML = '⏸ Pause';
       btn.className = 'tts-btn playing';
+      btn.disabled = false;
     } else if(this.paused) {
       btn.innerHTML = '▶ Resume';
       btn.className = 'tts-btn paused';
+      btn.disabled = false;
     } else {
       btn.innerHTML = '🔊 Read aloud';
       btn.className = 'tts-btn';
+      btn.disabled = false;
     }
   }
 };
@@ -2544,10 +2812,13 @@ function injectTTSBar(contentSelector) {
   bar.id = 'ttsBar';
   bar.innerHTML = '<button class="tts-btn" id="ttsPrimaryBtn" onclick="TTS.toggle()">🔊 Read aloud</button>' +
     '<button class="tts-btn" onclick="TTS.stop()" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" title="Stop">■</button>' +
-    '<select class="tts-speed" id="ttsSpeed" onchange="if(TTS.speaking){TTS.stop();TTS.speak()}" title="Reading speed">' +
-    '<option value="0.7">Slower</option><option value="0.9" selected>Normal</option><option value="1.1">Faster</option><option value="1.3">Fast</option>' +
+    '<select class="tts-speed" id="ttsSpeed" title="Speed" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit">' +
+    '<option value="0.8">Slower</option><option value="1.0" selected>Normal</option><option value="1.2">Faster</option><option value="1.4">Fast</option>' +
     '</select>' +
-    '<span class="tts-label">🎧 Tap to hear the lesson read aloud</span>';
+    '<select id="ttsVoice" title="Voice" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit">' +
+    '<option value="nova">Nova ✨</option><option value="shimmer">Shimmer 🌟</option><option value="echo">Echo 🎙️</option>' +
+    '</select>' +
+    '<span class="tts-label" style="font-size:11px">🎧 Human voice · powered by AI</span>';
   el.parentNode.insertBefore(bar, el);
 }
 
