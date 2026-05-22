@@ -2754,7 +2754,8 @@ const TTS = {
       this.loading = false;
       this.speaking = false;
       this.updateBtn();
-      toast('Read aloud unavailable — please try again');
+      console.error('TTS error:', e);
+      toast('Read aloud unavailable — ' + (e.message || 'please try again'));
     }
   },
 
