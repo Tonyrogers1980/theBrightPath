@@ -2868,72 +2868,54 @@ const TTS = {
   }
 };
 
-function makeTTSBtn(text, label) {
-  const btn = document.createElement('button');
-  btn.className = 'tts-mini-btn';
-  btn.innerHTML = '🔊';
-  btn.title = 'Read aloud: ' + label;
-  btn.onclick = (e) => { e.stopPropagation(); TTS.speakText(text, btn); };
-  return btn;
-}
-
 function injectSectionTTS(lesson) {
-  // 1. Add TTS button to each paragraph/section in lesson content
+  // 1. One button for the whole lesson content
   const content = document.getElementById('lessonContent');
   if(content) {
-    // Add a "Read lesson aloud" button at the top of the content
-    const topBtn = document.createElement('div');
-    topBtn.style.cssText = 'margin-bottom:12px';
-    const readAllBtn = document.createElement('button');
-    readAllBtn.className = 'tts-btn';
-    readAllBtn.style.cssText = 'font-size:13px;padding:7px 14px';
-    readAllBtn.innerHTML = '🔊 Read lesson aloud';
-    readAllBtn.onclick = () => {
-      if(TTS.speaking || TTS.loading) { TTS.stop(); readAllBtn.innerHTML = '🔊 Read lesson aloud'; return; }
+    const bar = document.createElement('div');
+    bar.style.cssText = 'margin-bottom:14px';
+    const btn = document.createElement('button');
+    btn.className = 'tts-btn';
+    btn.style.cssText = 'font-size:13px;padding:8px 16px';
+    btn.innerHTML = '🔊 Read lesson aloud';
+    btn.onclick = () => {
+      if(TTS.speaking || TTS.loading) {
+        TTS.stop();
+        btn.innerHTML = '🔊 Read lesson aloud';
+        return;
+      }
       const text = content.innerText || content.textContent || '';
       TTS.init(text);
       TTS.speak();
-      // Update button while speaking
-      const interval = setInterval(() => {
-        if(!TTS.speaking && !TTS.loading) { readAllBtn.innerHTML = '🔊 Read lesson aloud'; clearInterval(interval); }
-        else readAllBtn.innerHTML = '⏸ Pause lesson';
+      const iv = setInterval(() => {
+        if(!TTS.speaking && !TTS.loading) { btn.innerHTML = '🔊 Read lesson aloud'; clearInterval(iv); }
+        else btn.innerHTML = '⏸ Pause';
       }, 300);
     };
-    topBtn.appendChild(readAllBtn);
-    content.parentNode.insertBefore(topBtn, content);
-
-    // Add small inline TTS buttons after each heading
-    content.querySelectorAll('h2, h3, h4').forEach(heading => {
-      // Get text of this section (heading + following paragraphs until next heading)
-      let sectionText = heading.textContent + '. ';
-      let el = heading.nextElementSibling;
-      while(el && !['H2','H3','H4'].includes(el.tagName)) {
-        sectionText += (el.textContent || '') + ' ';
-        el = el.nextElementSibling;
-      }
-      const btn = makeTTSBtn(sectionText.trim(), heading.textContent);
-      btn.style.cssText = 'margin-left:8px;vertical-align:middle';
-      heading.appendChild(btn);
-    });
+    bar.appendChild(btn);
+    content.parentNode.insertBefore(bar, content);
   }
 
-  // 2. Add TTS button to each question card
+  // 2. One small button per question
   document.querySelectorAll('.question-card').forEach((card, i) => {
     const qText = card.querySelector('.question-text');
     if(!qText) return;
     const questionText = qText.textContent || '';
-    const btn = makeTTSBtn(questionText, 'Question ' + (i + 1));
-    btn.style.cssText = 'margin-left:8px;vertical-align:middle;flex-shrink:0';
-    // Insert next to question text
-    const numEl = card.querySelector('.question-num');
-    if(numEl) {
-      numEl.style.display = 'flex';
-      numEl.style.alignItems = 'center';
-      numEl.style.gap = '6px';
-      numEl.appendChild(btn);
-    } else {
-      qText.parentNode.insertBefore(btn, qText.nextSibling);
-    }
+    const btn = document.createElement('button');
+    btn.className = 'tts-mini-btn';
+    btn.innerHTML = '🔊';
+    btn.title = 'Read question aloud';
+    btn.onclick = (e) => { e.stopPropagation(); TTS.speakText(questionText, btn); };
+    // Place button after the question text
+    qText.style.display = 'flex';
+    qText.style.alignItems = 'flex-start';
+    qText.style.gap = '8px';
+    qText.style.justifyContent = 'space-between';
+    const textSpan = document.createElement('span');
+    textSpan.textContent = qText.textContent;
+    qText.textContent = '';
+    qText.appendChild(textSpan);
+    qText.appendChild(btn);
   });
 }
 
