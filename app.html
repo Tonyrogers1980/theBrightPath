@@ -119,6 +119,21 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 .subject-prog-fill { height: 100%; background: var(--sc); border-radius: 2px; transition: width 0.4s; }
 .lock-overlay { position: absolute; inset: 0; background: rgba(15,14,23,0.6); display: flex; align-items: center; justify-content: center; border-radius: var(--radius); font-size: 22px; }
 
+/* ── THEME PICKER ── */
+.theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+.theme-card { background: var(--surface2); border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 14px 12px; cursor: pointer; transition: all 0.15s; text-align: center; }
+.theme-card:hover { border-color: rgba(124,106,247,0.5); transform: translateY(-1px); }
+.theme-card.selected { border-color: var(--accent); background: rgba(124,106,247,0.12); }
+.theme-card-emoji { font-size: 28px; display: block; margin-bottom: 6px; }
+.theme-card-label { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px; }
+.theme-card-desc { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.theme-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(124,106,247,0.12); border: 1px solid rgba(124,106,247,0.25); border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: 700; color: var(--accent); cursor: pointer; transition: all 0.15s; margin-top: 6px; }
+.theme-badge:hover { background: rgba(124,106,247,0.2); }
+.theme-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: flex-end; justify-content: center; z-index: 200; }
+.theme-modal-box { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; padding: 24px 20px 36px; width: 100%; max-width: 480px; }
+.theme-modal-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 20px; margin-bottom: 4px; }
+.theme-modal-sub { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
+
 /* ── MASCOT ── */
 .mascot { text-align: center; margin: 16px 0; }
 .mascot-face { font-size: 52px; transition: all 0.3s; display: inline-block; }
@@ -427,6 +442,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
       <div class="hero-greeting">
         <div class="hero-name" id="heroName">Hello! 👋</div>
         <div class="hero-sub" id="heroSub">Ready to practise something today?</div>
+        <div id="themeBadgeWrap"></div>
       </div>
 
       <!-- Trial/subscription banner -->
@@ -580,6 +596,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
       <div class="onboard-step active" id="os1"></div>
       <div class="onboard-step" id="os2"></div>
       <div class="onboard-step" id="os3"></div>
+      <div class="onboard-step" id="os4"></div>
     </div>
     <div id="onboardContent"></div>
   </div>
@@ -835,6 +852,16 @@ const SUBJECTS = [
   { id:'science',   label:'Science',   emoji:'🔬', cls:'subj-science' },
   { id:'history',   label:'History',   emoji:'🏛️', cls:'subj-history' },
   { id:'geography', label:'Geography', emoji:'🌍', cls:'subj-geography' },
+];
+
+// ── THEMES CONFIG ────────────────────────────────
+const THEMES = [
+  { id:'sport',   emoji:'⚽', label:'Sport',            desc:'Football, F1, gymnastics & more',    promptHint:'Use sport-themed examples and scenarios throughout — football stats, race times, athletic records, team tactics, sporting events.' },
+  { id:'music',   emoji:'🎵', label:'Music & Artists',  desc:'Pop, rap, bands & concerts',         promptHint:'Use music-themed examples throughout — chart positions, lyrics structure, sound waves in physics, music history, concert maths.' },
+  { id:'gaming',  emoji:'🎮', label:'Gaming',           desc:'Minecraft, Roblox & video games',    promptHint:'Use gaming-themed examples throughout — Minecraft crafting ratios, game scores, map coordinates, quest narratives, game design.' },
+  { id:'animals', emoji:'🦁', label:'Animals & Nature', desc:'Wildlife, oceans & the outdoors',    promptHint:'Use animal and nature-themed examples throughout — habitats, animal statistics, wildlife stories, ecosystems, animal behaviour.' },
+  { id:'space',   emoji:'🚀', label:'Space & Adventure',desc:'Rockets, planets & exploration',     promptHint:'Use space-themed examples throughout — planet distances, astronaut missions, rocket physics, sci-fi scenarios, space exploration.' },
+  { id:'films',   emoji:'🎬', label:'Films & Stories',  desc:'Movies, TV shows & characters',      promptHint:'Use film and storytelling examples throughout — plot structures, character arcs, box office numbers, dramatic scenarios, screenwriting.' },
 ];
 
 // ── BADGES CONFIG ────────────────────────────────
@@ -1160,6 +1187,7 @@ function renderHome() {
   const finalGreet = hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
   document.getElementById('heroName').textContent = `${finalGreet}, ${c.name}! 👋`;
   document.getElementById('heroSub').textContent = `${c.key_stage} · ${ageLabel(c.age)} · Let's learn something amazing!`;
+  document.getElementById('themeBadgeWrap').innerHTML = getThemeBadgeHtml(S.activeChild);
   document.getElementById('navXp').textContent = `⚡ ${c.total_xp||0} XP`;
   document.getElementById('navStreak').textContent = `🔥 ${c.current_streak||0}`;
   document.getElementById('navAvatar').textContent = avatarEmoji(c.avatar);
@@ -1338,7 +1366,7 @@ async function generateLesson(subjectId, part) {
   const subj = SUBJECTS.find(s=>s.id===subjectId);
   const c = S.activeChild;
   const list = document.getElementById('lessonList');
-  list.innerHTML = `<div class="loading-msg"><div class="spinner"></div><p>Professor Hoot is preparing your ${subj.label} lesson…</p></div>`;
+  list.innerHTML = `<div class="loading-msg"><div class="spinner"></div><p>Professor Hoot is preparing your ${subj.label} lesson${S.activeChild?.theme ? ' with a ' + (THEMES.find(t=>t.id===S.activeChild.theme)?.label||'') + ' twist' : ''}… 🦉</p></div>`;
   const prompt = buildLessonPrompt(subjectId, part, c);
   try {
     const raw = await callAI(prompt, 1800);
@@ -1388,9 +1416,13 @@ function buildLessonPrompt(subjectId, part, child) {
   let topic;
   if(subjectId==='english') topic = englishType;
   else { const ksTopics=(topicMap[subjectId]||{})[ks]||['general']; topic=ksTopics[Math.floor(Math.random()*ksTopics.length)]; }
+  const themeObj = THEMES.find(t => t.id === child.theme);
+  const themeHint = themeObj ? `IMPORTANT THEME INSTRUCTION: ${themeObj.promptHint} The child loves ${themeObj.label} — make every example, scenario and question feel relevant to this interest. This is what makes BrightPath special for this child.` : '';
   return `You are an expert UK primary/secondary school teacher creating an interactive lesson for ${name}, age ${age}, ${ks}.
 Subject: ${subjLabel}. Topic: ${topic}. This is ${isL2?'Lesson 2 (deeper, harder)':'Lesson 1 (introduction)'}.
 ${subjectId==='english'&&topic.includes('book')?`Books the child has read: ${readBooks}`:''}
+
+${themeHint}
 
 Return ONLY valid JSON (no markdown, no preamble):
 {
@@ -2963,6 +2995,26 @@ const ONBOARD_STEPS = [
     `
   },
   {
+    emoji: '🎨',
+    title: 'Pick a theme',
+    content: (name) => {
+      const n = name || 'your child';
+      return `
+      <span class="onboard-emoji">🎨</span>
+      <div class="onboard-title">What is ${n} into?</div>
+      <div class="onboard-sub">We'll wrap lessons in their favourite themes — making every subject feel personal and fun. You can change this any time.</div>
+      <div class="theme-grid">
+        ${THEMES.map(t => `<div class="theme-card" id="obtheme_${t.id}" onclick="obSelectTheme('${t.id}',this)">
+          <span class="theme-card-emoji">${t.emoji}</span>
+          <div class="theme-card-label">${t.label}</div>
+          <div class="theme-card-desc">${t.desc}</div>
+        </div>`).join('')}
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" onclick="onboardSaveTheme()" style="margin-top:8px">Next →</button>
+      <button class="btn btn-secondary btn-full btn-sm" onclick="onboardNext()" style="margin-top:8px">Skip for now</button>
+    `;}
+  },
+  {
     emoji: '🎯',
     title: 'All set!',
     content: (name) => `
@@ -3132,6 +3184,75 @@ function toast(msg, duration=2800) {
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),duration);
+}
+
+
+// ══════════════════════════════════════════════════
+// THEME FUNCTIONS
+// ══════════════════════════════════════════════════
+let obThemeSelected = null;
+
+function obSelectTheme(id, el) {
+  obThemeSelected = id;
+  document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function onboardSaveTheme() {
+  if(obThemeSelected && S.activeChild?.id) {
+    try {
+      await sbFetch(`/rest/v1/children?id=eq.${S.activeChild.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ theme: obThemeSelected })
+      });
+      S.activeChild.theme = obThemeSelected;
+    } catch(e) { console.warn('theme save failed', e); }
+  }
+  onboardNext();
+}
+
+function showThemeModal() {
+  const existing = document.getElementById('themeModal');
+  if(existing) existing.remove();
+  const div = document.createElement('div');
+  div.id = 'themeModal';
+  div.className = 'theme-modal';
+  div.onclick = (e) => { if(e.target === div) div.remove(); };
+  const current = S.activeChild?.theme;
+  div.innerHTML = `<div class="theme-modal-box">
+    <div class="theme-modal-title">Change ${S.activeChild?.name || 'your child'}'s theme</div>
+    <div class="theme-modal-sub">Lessons will be wrapped in their favourite interest — making every subject feel personal.</div>
+    <div class="theme-grid">
+      ${THEMES.map(t => `<div class="theme-card ${t.id === current ? 'selected' : ''}" onclick="saveTheme('${t.id}',this)">
+        <span class="theme-card-emoji">${t.emoji}</span>
+        <div class="theme-card-label">${t.label}</div>
+        <div class="theme-card-desc">${t.desc}</div>
+      </div>`).join('')}
+    </div>
+    <button class="btn btn-secondary btn-full btn-sm" style="margin-top:8px" onclick="saveTheme(null,null)">Remove theme</button>
+  </div>`;
+  document.body.appendChild(div);
+}
+
+async function saveTheme(themeId, el) {
+  if(!S.activeChild?.id) return;
+  try {
+    await sbFetch(`/rest/v1/children?id=eq.${S.activeChild.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ theme: themeId })
+    });
+    S.activeChild.theme = themeId;
+    document.getElementById('themeModal')?.remove();
+    renderHome();
+    toast(themeId ? `${THEMES.find(t=>t.id===themeId)?.emoji} Theme updated!` : '🎨 Theme removed');
+  } catch(e) { toast('Could not save theme'); }
+}
+
+function getThemeBadgeHtml(child) {
+  if(!child) return '';
+  const t = THEMES.find(th => th.id === child.theme);
+  if(t) return `<div class="theme-badge" onclick="showThemeModal()">${t.emoji} ${t.label} theme <span style="opacity:0.6;font-size:11px">· change</span></div>`;
+  return `<div class="theme-badge" onclick="showThemeModal()">🎨 Add a fun theme for lessons</div>`;
 }
 
 // ══════════════════════════════════════════════════
