@@ -129,7 +129,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 .theme-card-desc { font-size: 12px; color: var(--muted); margin-top: 3px; }
 .theme-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(124,106,247,0.12); border: 1px solid rgba(124,106,247,0.25); border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: 700; color: var(--accent); cursor: pointer; transition: all 0.15s; margin-top: 6px; }
 .theme-badge:hover { background: rgba(124,106,247,0.2); }
-.theme-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: flex-end; justify-content: center; z-index: 200; }
+.theme-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: flex-end; justify-content: center; z-index: 500; padding-bottom: env(safe-area-inset-bottom, 0); }
 .theme-modal-box { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; padding: 24px 20px 36px; width: 100%; max-width: 480px; }
 .theme-modal-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 20px; margin-bottom: 4px; }
 .theme-modal-sub { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
@@ -2808,26 +2808,53 @@ const TTS = {
     return URL.createObjectURL(new Blob([bytes], { type: 'audio/mpeg' }));
   },
 
+  nextChunkUrl: null, // pre-fetched URL for next chunk
+
+  async prefetchNext(index) {
+    // Pre-fetch the next chunk in the background while current is playing
+    const next = index + 1;
+    if(next < this.chunks.length && this.speaking) {
+      try {
+        this.nextChunkUrl = await this.fetchChunk(this.chunks[next]);
+      } catch(e) {
+        this.nextChunkUrl = null;
+      }
+    }
+  },
+
   async playChunk(index) {
-    if(index >= this.chunks.length || !this.speaking) { 
-      this.speaking = false; this.loading = false; this.updateBtn(); 
-      return; 
+    if(index >= this.chunks.length || !this.speaking) {
+      this.speaking = false; this.loading = false; this.updateBtn();
+      return;
     }
     try {
-      const url = await this.fetchChunk(this.chunks[index]);
-      if(!this.speaking) { URL.revokeObjectURL(url); return; } // stopped while loading
+      // Use pre-fetched URL if available, otherwise fetch now
+      let url;
+      if(this.nextChunkUrl && index > 0) {
+        url = this.nextChunkUrl;
+        this.nextChunkUrl = null;
+      } else {
+        url = await this.fetchChunk(this.chunks[index]);
+      }
+      if(!this.speaking) { URL.revokeObjectURL(url); return; }
       if(this.audio) { this.audio.pause(); try { URL.revokeObjectURL(this.audio.src); } catch(e) {} }
       this.audio = new Audio(url);
-      this.audio.onplay = () => { this.loading = false; this.updateBtn(); };
-      this.audio.onended = () => { 
+      this.audio.onplay = () => {
+        this.loading = false;
+        this.updateBtn();
+        // Start pre-fetching next chunk as soon as current starts playing
+        this.prefetchNext(index);
+      };
+      this.audio.onended = () => {
         this.chunkIndex++;
-        this.playChunk(this.chunkIndex); // play next chunk
+        this.playChunk(this.chunkIndex);
       };
       this.audio.onerror = () => { this.speaking = false; this.loading = false; this.updateBtn(); };
       await this.audio.play();
     } catch(e) {
       this.speaking = false; this.loading = false; this.updateBtn();
       console.error('TTS chunk error:', e);
+      toast('Read aloud unavailable — please try again');
     }
   },
 
@@ -2864,6 +2891,7 @@ const TTS = {
 
   stop() {
     if(this.audio) { this.audio.pause(); try { URL.revokeObjectURL(this.audio.src); } catch(e) {} this.audio = null; }
+    if(this.nextChunkUrl) { try { URL.revokeObjectURL(this.nextChunkUrl); } catch(e) {} this.nextChunkUrl = null; }
     this.speaking = false;
     this.paused = false;
     this.loading = false;
@@ -3214,38 +3242,56 @@ async function onboardSaveTheme() {
 function showThemeModal() {
   const existing = document.getElementById('themeModal');
   if(existing) existing.remove();
+  const current = S.activeChild?.theme;
   const div = document.createElement('div');
   div.id = 'themeModal';
   div.className = 'theme-modal';
-  div.onclick = (e) => { if(e.target === div) div.remove(); };
-  const current = S.activeChild?.theme;
+  div.addEventListener('click', (e) => { if(e.target === div) closeThemeModal(); });
   div.innerHTML = `<div class="theme-modal-box">
-    <div class="theme-modal-title">Change ${S.activeChild?.name || 'your child'}'s theme</div>
-    <div class="theme-modal-sub">Lessons will be wrapped in their favourite interest — making every subject feel personal.</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="theme-modal-title">Pick a theme for ${S.activeChild?.name || 'your child'}</div>
+      <button onclick="closeThemeModal()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;padding:0 4px">×</button>
+    </div>
+    <div class="theme-modal-sub">Lessons will use their favourite interest as the backdrop — making every subject feel personal.</div>
     <div class="theme-grid">
-      ${THEMES.map(t => `<div class="theme-card ${t.id === current ? 'selected' : ''}" onclick="saveTheme('${t.id}',this)">
+      ${THEMES.map(t => `<div class="theme-card ${t.id === current ? 'selected' : ''}" onclick="saveTheme('${t.id}')">
         <span class="theme-card-emoji">${t.emoji}</span>
         <div class="theme-card-label">${t.label}</div>
         <div class="theme-card-desc">${t.desc}</div>
       </div>`).join('')}
     </div>
-    <button class="btn btn-secondary btn-full btn-sm" style="margin-top:8px" onclick="saveTheme(null,null)">Remove theme</button>
+    ${current ? `<button class="btn btn-secondary btn-full btn-sm" style="margin-top:12px" onclick="saveTheme(null)">✕ Remove theme</button>` : ''}
   </div>`;
   document.body.appendChild(div);
+  requestAnimationFrame(() => div.style.opacity = '1');
 }
 
-async function saveTheme(themeId, el) {
+function closeThemeModal() {
+  const m = document.getElementById('themeModal');
+  if(m) m.remove();
+}
+
+async function saveTheme(themeId) {
   if(!S.activeChild?.id) return;
+  // Visual feedback immediately
+  document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
+  if(themeId) {
+    const card = document.querySelector(`[onclick="saveTheme('${themeId}')"]`);
+    if(card) card.classList.add('selected');
+  }
   try {
     await sbFetch(`/rest/v1/children?id=eq.${S.activeChild.id}`, {
       method: 'PATCH',
       body: JSON.stringify({ theme: themeId })
     });
     S.activeChild.theme = themeId;
-    document.getElementById('themeModal')?.remove();
-    renderHome();
+    closeThemeModal();
+    document.getElementById('themeBadgeWrap').innerHTML = getThemeBadgeHtml(S.activeChild);
     toast(themeId ? `${THEMES.find(t=>t.id===themeId)?.emoji} Theme updated!` : '🎨 Theme removed');
-  } catch(e) { toast('Could not save theme'); }
+  } catch(e) {
+    console.error('saveTheme error:', e);
+    toast('Could not save theme — please try again');
+  }
 }
 
 function getThemeBadgeHtml(child) {
