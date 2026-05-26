@@ -134,6 +134,14 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 .theme-modal-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 20px; margin-bottom: 4px; }
 .theme-modal-sub { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
 
+/* ── TODAY'S PLAN ── */
+.todays-plan { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
+.todays-plan-title { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+.todays-plan-subjects { display: flex; gap: 8px; flex-wrap: wrap; }
+.todays-plan-subject { display: flex; align-items: center; gap: 6px; background: var(--surface2); border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); }
+.todays-plan-subject:hover { border-color: var(--accent); transform: translateY(-1px); }
+.todays-plan-empty { font-size: 13px; color: var(--muted); font-style: italic; }
+
 /* ── MASCOT ── */
 .mascot { text-align: center; margin: 16px 0; }
 .mascot-face { font-size: 52px; transition: all 0.3s; display: inline-block; }
@@ -257,6 +265,14 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 .auth-divider { text-align: center; color: var(--hint); font-size: 12px; margin: 12px 0; }
 .trust-badges { display: flex; justify-content: center; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
 .trust-badge { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 11px; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+
+/* ── REFERRAL ── */
+.referral-card { background: linear-gradient(135deg, rgba(124,106,247,0.15), rgba(247,89,106,0.1)); border: 1px solid rgba(124,106,247,0.3); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; }
+.referral-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 17px; margin-bottom: 6px; }
+.referral-sub { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+.referral-link-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.referral-link-text { font-size: 13px; color: var(--muted); word-break: break-all; flex: 1; }
+.referral-copy-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: 'Nunito', sans-serif; }
 
 /* ── TIMETABLE ── */
 .timetable-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
@@ -452,6 +468,9 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
         <div class="trial-progress"><div class="trial-fill" id="trialBar" style="width:100%"></div></div>
         <button class="btn btn-primary btn-sm" onclick="showSubscribe('single')">Subscribe — £4.99/month</button>
       </div>
+
+      <!-- Today's plan from timetable -->
+      <div id="todaysPlan" style="display:none"></div>
 
       <!-- Daily challenge -->
       <div class="challenge-banner" onclick="goPage('challenge')" id="challengeBanner">
@@ -1172,7 +1191,7 @@ function goPage(name) {
   document.querySelectorAll('.bnav-item').forEach(b=>b.classList.toggle('active', b.dataset.page===name));
   if(name==='home') renderHome();
   if(name==='progress') renderProgress();
-  if(name==='parent') renderParent();
+  if(name==='parent') { renderParent(); renderReferralCard(); }
   if(name==='challenge') renderChallenge();
   window.scrollTo(0,0);
 }
@@ -1196,8 +1215,35 @@ function renderHome() {
   document.getElementById('statAvg').textContent = '—';
   document.getElementById('mascotMsg').textContent = mascotMsg('home');
   renderSubscriptionBanner();
+  renderTodaysPlan();
   renderSubjectGrid();
   renderChildSwitcher();
+}
+
+function renderTodaysPlan() {
+  const c = S.activeChild;
+  const wrap = document.getElementById('todaysPlan');
+  if(!wrap || !c) return;
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const todayKey = days[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
+  const tt = c.timetable || {};
+  const scheduled = tt[todayKey] || [];
+  if(!scheduled.length) { wrap.style.display = 'none'; return; }
+  const subjMap = {};
+  SUBJECTS.forEach(s => subjMap[s.id] = s);
+  wrap.style.display = '';
+  wrap.innerHTML = `<div class="todays-plan">
+    <div class="todays-plan-title">📅 Today's plan</div>
+    <div class="todays-plan-subjects">
+      ${scheduled.map(id => {
+        const s = subjMap[id];
+        if(!s) return '';
+        return `<div class="todays-plan-subject ${s.cls}" onclick="openSubject('${s.id}')" style="color:var(--sc);border-color:var(--scbg)">
+          <span>${s.emoji}</span><span>${s.label}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
 }
 function ageLabel(age) { return `Age ${age}`; }
 function avatarEmoji(av) {
@@ -1937,6 +1983,17 @@ function renderParent() {
     ${c?renderBookPicker(c):'<p style="color:var(--muted);font-size:13px">Select a child first</p>'}
   </div>
   <div class="parent-section">
+    <!-- Referral -->
+    <div class="referral-card" id="referralCard">
+      <div class="referral-title">🎁 Give a month, get a month</div>
+      <div class="referral-sub">Share BrightPath with another parent. When they subscribe, you both get one month free automatically.</div>
+      <div class="referral-link-box">
+        <span class="referral-link-text" id="referralLinkText">Loading your link…</span>
+        <button class="referral-copy-btn" onclick="copyReferralLink()">Copy</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">Share this link with friends — works on WhatsApp, email, or any group.</div>
+    </div>
+
     <h3>Weekly timetable</h3>
     <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Set which subjects to do each day.</p>
     ${c?renderTimetable(c):''}
@@ -2810,6 +2867,18 @@ const TTS = {
 
   nextChunkUrl: null, // pre-fetched URL for next chunk
 
+  async pregenerateFirst() {
+    // Called when lesson loads — silently fetch chunk 0 so button tap is instant
+    if(this.nextChunkUrl || this.speaking || this.loading) return;
+    try {
+      this.chunks = this.splitIntoChunks(this.text);
+      if(!this.chunks.length) return;
+      this.nextChunkUrl = await this.fetchChunk(this.chunks[0]);
+    } catch(e) {
+      this.nextChunkUrl = null;
+    }
+  },
+
   async prefetchNext(index) {
     // Pre-fetch the next chunk in the background while current is playing
     const next = index + 1;
@@ -2828,9 +2897,9 @@ const TTS = {
       return;
     }
     try {
-      // Use pre-fetched URL if available, otherwise fetch now
+      // Use pre-fetched URL if available (chunk 0 pre-fetched on load, others pre-fetched while playing)
       let url;
-      if(this.nextChunkUrl && index > 0) {
+      if(this.nextChunkUrl) {
         url = this.nextChunkUrl;
         this.nextChunkUrl = null;
       } else {
@@ -2867,7 +2936,10 @@ const TTS = {
       return;
     }
     if(this.loading || this.speaking) return;
-    this.chunks = this.splitIntoChunks(this.text);
+    // Only re-split if not already done by pregenerateFirst
+    if(!this.chunks || !this.chunks.length) {
+      this.chunks = this.splitIntoChunks(this.text);
+    }
     this.chunkIndex = 0;
     this.speaking = true;
     this.loading = true;
@@ -2938,21 +3010,28 @@ function injectSectionTTS(lesson) {
     btn.className = 'tts-btn';
     btn.style.cssText = 'font-size:13px;padding:8px 16px';
     btn.innerHTML = '🔊 Read lesson aloud';
+
+    // Extract and pre-chunk the lesson text immediately
+    const raw = content.innerText || content.textContent || '';
+    const lessonText = raw.split(/[\r\n]+/).map(l=>l.trim()).filter(l=>l.length>0).join('. ').trim();
+    TTS.init(lessonText);
+
+    // Silently pre-fetch chunk 0 in the background — so the button feels instant
+    TTS.pregenerateFirst();
+
     btn.onclick = () => {
       if(TTS.speaking || TTS.loading) {
         TTS.stop();
         btn.innerHTML = '🔊 Read lesson aloud';
+        btn.disabled = false;
         return;
       }
-      // Clean text — collapse multiple newlines into single space to avoid long pauses
-      const raw = content.innerText || content.textContent || '';
-      const text = raw.split(/[\r\n]+/).map(function(l){return l.trim();}).filter(function(l){return l.length>0;}).join('. ').trim();
-      TTS.init(text);
       TTS.speak();
       const iv = setInterval(() => {
-        if(!TTS.speaking && !TTS.loading) { btn.innerHTML = '🔊 Read lesson aloud'; clearInterval(iv); }
-        else btn.innerHTML = '⏸ Pause';
-      }, 300);
+        if(!TTS.speaking && !TTS.loading) { btn.innerHTML = '🔊 Read lesson aloud'; btn.disabled = false; clearInterval(iv); }
+        else if(TTS.loading) { btn.innerHTML = '⏳ Loading…'; btn.disabled = true; }
+        else { btn.innerHTML = '⏸ Pause'; btn.disabled = false; }
+      }, 200);
     };
     bar.appendChild(btn);
     content.parentNode.insertBefore(bar, content);
@@ -3299,6 +3378,31 @@ function getThemeBadgeHtml(child) {
   const t = THEMES.find(th => th.id === child.theme);
   if(t) return `<div class="theme-badge" onclick="showThemeModal()">${t.emoji} ${t.label} theme <span style="opacity:0.6;font-size:11px">· change</span></div>`;
   return `<div class="theme-badge" onclick="showThemeModal()">🎨 Add a fun theme for lessons</div>`;
+}
+
+// ══════════════════════════════════════════════════
+// REFERRAL
+// ══════════════════════════════════════════════════
+function getReferralLink() {
+  const uid = S.user?.user?.id || S.user?.id;
+  if(!uid) return 'https://thebrightpath.uk';
+  // Use first 8 chars of user ID as referral code
+  const code = uid.replace(/-/g,'').substring(0, 8).toUpperCase();
+  return `https://thebrightpath.uk/app.html?ref=${code}`;
+}
+
+function renderReferralCard() {
+  const el = document.getElementById('referralLinkText');
+  if(el) el.textContent = getReferralLink();
+}
+
+function copyReferralLink() {
+  const link = getReferralLink();
+  navigator.clipboard.writeText(link).then(() => {
+    toast('📋 Referral link copied! Share it with other parents');
+  }).catch(() => {
+    toast('Your link: ' + link);
+  });
 }
 
 // ══════════════════════════════════════════════════
