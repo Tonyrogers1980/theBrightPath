@@ -1627,30 +1627,27 @@ function openVideo(url) { window.open(url,'_blank'); }
 // ══════════════════════════════════════════════════
 
 async function showMoodCheckin(subjectId, part) {
-  // Fetch recent scores in background while showing checkin
+  // Fetch recent scores in the background while showing checkin
   fetchRecentScores();
-  const page = document.getElementById('lessonPage');
+  // Render into lessonList which lives on the subject page (already visible)
   const list = document.getElementById('lessonList');
-  const subj = SUBJECTS.find(s => s.id === subjectId);
   const name = S.activeChild?.name || 'you';
-
-  // Swap lesson list for mood checkin
   list.innerHTML = `<div class="mood-checkin">
     <div class="mood-checkin-title">Before we start — how are you feeling today, ${name}?</div>
     <div class="mood-options">
-      <button class="mood-btn" onclick="setMood('great','${subjectId}','${part}',this)">
-        😄 <span>Great!</span>
+      <button class="mood-btn" id="moodBtn_great" onclick="setMood('great','${subjectId}','${part}',this)">
+        😄<span>Great!</span>
       </button>
-      <button class="mood-btn" onclick="setMood('okay','${subjectId}','${part}',this)">
-        😐 <span>Okay</span>
+      <button class="mood-btn" id="moodBtn_okay" onclick="setMood('okay','${subjectId}','${part}',this)">
+        😐<span>Okay</span>
       </button>
-      <button class="mood-btn" onclick="setMood('tired','${subjectId}','${part}',this)">
-        😔 <span>Tired</span>
+      <button class="mood-btn" id="moodBtn_tired" onclick="setMood('tired','${subjectId}','${part}',this)">
+        😔<span>Tired</span>
       </button>
     </div>
-    <button class="btn btn-secondary" style="margin-top:16px;font-size:13px" onclick="setMood('okay','${subjectId}','${part}',null)">Skip</button>
+    <button class="btn btn-secondary" style="margin-top:16px;font-size:13px;width:100%" onclick="setMood('okay','${subjectId}','${part}',null)">Skip for now</button>
   </div>`;
-  goPage('lesson');
+  // Stay on subject page — mood checkin renders inline where the lesson cards were
 }
 
 async function setMood(mood, subjectId, part, btnEl) {
@@ -1667,11 +1664,18 @@ async function setMood(mood, subjectId, part, btnEl) {
 }
 
 async function fetchRecentScores() {
-  // Pull last 3 markings for this child to detect struggle patterns
+  // Pull last 3 lesson scores for this child to detect struggle patterns
   if(!S.activeChild?.id) return;
   try {
+    // Step 1: get recent lesson IDs for this child
+    const lessons = await sbGet('lessons',
+      `child_id=eq.${S.activeChild.id}&order=created_at.desc&limit=5&select=id`
+    );
+    if(!Array.isArray(lessons) || !lessons.length) return;
+    const ids = lessons.map(l => l.id).join(',');
+    // Step 2: get markings for those lessons
     const rows = await sbGet('markings',
-      `lesson_id=in.(select id from lessons where child_id='${S.activeChild.id}')&order=created_at.desc&limit=3&select=score,max_score`
+      `lesson_id=in.(${ids})&order=created_at.desc&limit=3&select=score,max_score`
     );
     if(!Array.isArray(rows) || !rows.length) return;
     const pcts = rows.map(r => r.max_score > 0 ? Math.round((r.score / r.max_score) * 100) : 50);
@@ -3465,10 +3469,7 @@ function obSelectTheme(id, el) {
 async function onboardSaveTheme() {
   if(obThemeSelected && S.activeChild?.id) {
     try {
-      await sbFetch(`/rest/v1/children?id=eq.${S.activeChild.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ theme: obThemeSelected })
-      });
+      await sbPatch('children', `id=eq.${S.activeChild.id}`, { theme: obThemeSelected });
       S.activeChild.theme = obThemeSelected;
     } catch(e) { console.warn('theme save failed', e); }
   }
@@ -3516,10 +3517,7 @@ async function saveTheme(themeId) {
     if(card) card.classList.add('selected');
   }
   try {
-    await sbFetch(`/rest/v1/children?id=eq.${S.activeChild.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ theme: themeId })
-    });
+    await sbPatch('children', `id=eq.${S.activeChild.id}`, { theme: themeId });
     S.activeChild.theme = themeId;
     closeThemeModal();
     document.getElementById('themeBadgeWrap').innerHTML = getThemeBadgeHtml(S.activeChild);
