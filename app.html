@@ -185,6 +185,22 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 .question-text { font-size: 15px; line-height: 1.5; margin-bottom: 10px; font-weight: 600; }
 .marks-badge { font-size: 11px; background: rgba(124,106,247,0.15); color: var(--accent); border: 1px solid rgba(124,106,247,0.3); border-radius: 10px; padding: 2px 8px; margin-bottom: 10px; display: inline-block; }
 
+/* ── MOOD CHECK-IN ── */
+.mood-checkin { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; text-align: center; }
+.mood-checkin-title { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 16px; margin-bottom: 16px; }
+.mood-options { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.mood-btn { background: var(--surface2); border: 2px solid var(--border); border-radius: 12px; padding: 12px 18px; cursor: pointer; transition: all 0.15s; font-size: 28px; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 80px; }
+.mood-btn span { font-size: 12px; font-weight: 700; color: var(--muted); }
+.mood-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+.mood-btn.selected { border-color: var(--accent); background: rgba(124,106,247,0.12); }
+
+/* ── ADAPTIVE FEEDBACK ── */
+.hoot-feedback-wrap { padding: 16px; border-radius: var(--radius-sm); margin-top: 12px; font-size: 14px; line-height: 1.7; }
+.hoot-feedback-wrap.struggling { background: rgba(91,240,200,0.06); border: 1px solid rgba(91,240,200,0.15); }
+.hoot-feedback-wrap.middle { background: rgba(124,106,247,0.08); border: 1px solid rgba(124,106,247,0.2); }
+.hoot-feedback-wrap.strong { background: rgba(255,213,79,0.08); border: 1px solid rgba(255,213,79,0.2); }
+.hoot-feedback-wrap.excellent { background: rgba(255,213,79,0.12); border: 1px solid rgba(255,213,79,0.3); }
+
 /* ── MARKING RESULT ── */
 .marking-result { border-radius: var(--radius); overflow: hidden; margin-bottom: 14px; }
 .score-banner { padding: 20px; text-align: center; }
@@ -928,7 +944,9 @@ function mascotMsg(key) {
 // ── APP STATE ────────────────────────────────────
 let S = {
   user: null, profile: null, children: [], activeChild: null,
-  todayLessons: {}, activeLessonId: null, activeSubject: null,
+  todayLessons: {},
+  sessionMood: null,       // 'great' | 'okay' | 'tired'
+  recentScorePct: null,    // rolling average of last 3 lessons (0–100) activeLessonId: null, activeSubject: null,
   dbMode: 'live'
 };
 const LDB = { profiles:{}, children:{}, lessons:{}, submissions:{}, markings:{} };
@@ -1409,6 +1427,12 @@ function renderLessonList(subjectId, l1, l2, markings) {
 async function generateLesson(subjectId, part) {
   // Check subscription before generating
   if(!isSubscriptionValid()) { showPaywall(); return; }
+  // Show mood check-in once per session (first lesson of the day only)
+  const todayKey = 'bp_mood_' + (S.activeChild?.id||'') + '_' + new Date().toISOString().split('T')[0];
+  if(!S.sessionMood && !localStorage.getItem(todayKey)) {
+    await showMoodCheckin(subjectId, part);
+    return;
+  }
   const subj = SUBJECTS.find(s=>s.id===subjectId);
   const c = S.activeChild;
   const list = document.getElementById('lessonList');
@@ -1464,11 +1488,26 @@ function buildLessonPrompt(subjectId, part, child) {
   else { const ksTopics=(topicMap[subjectId]||{})[ks]||['general']; topic=ksTopics[Math.floor(Math.random()*ksTopics.length)]; }
   const themeObj = THEMES.find(t => t.id === child.theme);
   const themeHint = themeObj ? `IMPORTANT THEME INSTRUCTION: ${themeObj.promptHint} The child loves ${themeObj.label} — make every example, scenario and question feel relevant to this interest. This is what makes BrightPath special for this child.` : '';
+  // Inject adaptive context into lesson generation
+  const adaptCtx = getAdaptiveContext();
+  const lessonMoodHint = adaptCtx.mood === 'tired'
+    ? 'IMPORTANT: The child is tired today. Keep the lesson introduction shorter than usual. Use simple, clear language. Start with an easier warm-up question to build confidence before the main questions.'
+    : adaptCtx.mood === 'great'
+    ? 'The child is feeling great today — you can be upbeat and slightly stretch them.'
+    : '';
+  const lessonPerfHint = adaptCtx.recent !== null && adaptCtx.recent < 50
+    ? `IMPORTANT: This child has been finding things difficult recently (average score ${adaptCtx.recent}%). Make the questions slightly more accessible. Prioritise building confidence over testing difficulty. Ensure at least 2 questions feel very achievable.`
+    : adaptCtx.recent !== null && adaptCtx.recent >= 85
+    ? `This child is excelling (average score ${adaptCtx.recent}%). Feel free to include a stretch question at the end.`
+    : '';
+
   return `You are an expert UK primary/secondary school teacher creating an interactive lesson for ${name}, age ${age}, ${ks}.
 Subject: ${subjLabel}. Topic: ${topic}. This is ${isL2?'Lesson 2 (deeper, harder)':'Lesson 1 (introduction)'}.
 ${subjectId==='english'&&topic.includes('book')?`Books the child has read: ${readBooks}`:''}
 
 ${themeHint}
+${lessonMoodHint}
+${lessonPerfHint}
 
 Return ONLY valid JSON (no markdown, no preamble):
 {
@@ -1583,6 +1622,98 @@ async function videoFeedback(helpful, url) {
 function openVideo(url) { window.open(url,'_blank'); }
 
 // ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// ADAPTIVE ENCOURAGEMENT SYSTEM
+// ══════════════════════════════════════════════════
+
+async function showMoodCheckin(subjectId, part) {
+  // Fetch recent scores in background while showing checkin
+  fetchRecentScores();
+  const page = document.getElementById('lessonPage');
+  const list = document.getElementById('lessonList');
+  const subj = SUBJECTS.find(s => s.id === subjectId);
+  const name = S.activeChild?.name || 'you';
+
+  // Swap lesson list for mood checkin
+  list.innerHTML = `<div class="mood-checkin">
+    <div class="mood-checkin-title">Before we start — how are you feeling today, ${name}?</div>
+    <div class="mood-options">
+      <button class="mood-btn" onclick="setMood('great','${subjectId}','${part}',this)">
+        😄 <span>Great!</span>
+      </button>
+      <button class="mood-btn" onclick="setMood('okay','${subjectId}','${part}',this)">
+        😐 <span>Okay</span>
+      </button>
+      <button class="mood-btn" onclick="setMood('tired','${subjectId}','${part}',this)">
+        😔 <span>Tired</span>
+      </button>
+    </div>
+    <button class="btn btn-secondary" style="margin-top:16px;font-size:13px" onclick="setMood('okay','${subjectId}','${part}',null)">Skip</button>
+  </div>`;
+  goPage('lesson');
+}
+
+async function setMood(mood, subjectId, part, btnEl) {
+  S.sessionMood = mood;
+  const todayKey = 'bp_mood_' + S.activeChild?.id + '_' + new Date().toISOString().split('T')[0];
+  localStorage.setItem(todayKey, mood);
+  if(btnEl) {
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+    btnEl.classList.add('selected');
+  }
+  // Brief pause so child sees their selection, then generate
+  await new Promise(r => setTimeout(r, 400));
+  await generateLesson(subjectId, part);
+}
+
+async function fetchRecentScores() {
+  // Pull last 3 markings for this child to detect struggle patterns
+  if(!S.activeChild?.id) return;
+  try {
+    const rows = await sbGet('markings',
+      `lesson_id=in.(select id from lessons where child_id='${S.activeChild.id}')&order=created_at.desc&limit=3&select=score,max_score`
+    );
+    if(!Array.isArray(rows) || !rows.length) return;
+    const pcts = rows.map(r => r.max_score > 0 ? Math.round((r.score / r.max_score) * 100) : 50);
+    S.recentScorePct = Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length);
+  } catch(e) {
+    S.recentScorePct = null;
+  }
+}
+
+function getAdaptiveContext() {
+  // Returns a descriptor of the child's current emotional/performance context
+  // Used to tune both lesson generation and marking prompts
+  const mood = S.sessionMood;
+  const recent = S.recentScorePct;
+  const child = S.activeChild;
+
+  let performanceCtx = '';
+  if(recent !== null) {
+    if(recent < 45) performanceCtx = 'struggling (recent average score ' + recent + '%)';
+    else if(recent < 65) performanceCtx = 'developing (recent average score ' + recent + '%)';
+    else if(recent < 80) performanceCtx = 'performing well (recent average score ' + recent + '%)';
+    else performanceCtx = 'excelling (recent average score ' + recent + '%)';
+  }
+
+  let moodCtx = '';
+  if(mood === 'tired') moodCtx = 'The child said they are feeling tired today.';
+  else if(mood === 'okay') moodCtx = 'The child said they are feeling okay today.';
+  else if(mood === 'great') moodCtx = 'The child said they are feeling great today.';
+
+  return { performanceCtx, moodCtx, recent, mood };
+}
+
+function getHootTone(scorePct) {
+  // Returns tone descriptor and CSS class based on this lesson's score
+  if(scorePct < 40) return { tone: 'struggling', cls: 'struggling', label: 'struggling' };
+  if(scorePct < 60) return { tone: 'developing', cls: 'middle', label: 'developing' };
+  if(scorePct < 80) return { tone: 'performing well', cls: 'middle', label: 'good' };
+  if(scorePct < 95) return { tone: 'doing really well', cls: 'strong', label: 'strong' };
+  return { tone: 'excelling', cls: 'excellent', label: 'excellent' };
+}
+
+// ══════════════════════════════════════════════════
 // SUBMIT & MARKING
 // ══════════════════════════════════════════════════
 async function submitLesson(lessonId) {
@@ -1620,18 +1751,44 @@ async function submitLesson(lessonId) {
 }
 function buildMarkPrompt(lesson, qs, answers) {
   const lines = qs.map((q,i)=>`Q${i+1} (${q.marks} marks): ${q.q}\nStudent answer: ${answers[i]||'[no answer]'}`).join('\n\n');
-  return `You are a ${S.activeChild?.key_stage} teacher marking a lesson titled "${lesson.title}".
-Mark each answer fairly, award partial marks where appropriate.
+  const child = S.activeChild;
+  const { performanceCtx, moodCtx, recent, mood } = getAdaptiveContext();
+  const name = child?.name || 'the student';
+
+  // Build adaptive tone instruction based on mood + recent performance
+  let toneInstruction = '';
+
+  if(mood === 'tired' || recent !== null && recent < 45) {
+    toneInstruction = `TONE: ${name} is ${mood === 'tired' ? 'tired today' : 'finding things difficult recently'}. Use an especially warm, gentle, patient tone. Never highlight what went wrong without first celebrating what went right. Keep individual question comments SHORT (one sentence). The overall comment must be genuinely encouraging — find something real to praise even if scores are low. Never use words like "unfortunately", "however", "but" or "wrong". Instead use "let us look at", "next time try", "you were so close".`;
+  } else if(mood === 'great' && (recent === null || recent >= 65)) {
+    toneInstruction = `TONE: ${name} is feeling great and performing well. Match their energy — be enthusiastic and celebratory where deserved. Still be specific and constructive. You can challenge them slightly — suggest they try the harder version next time if they scored well.`;
+  } else {
+    toneInstruction = `TONE: Be warm, specific, and constructive. Acknowledge effort before correcting. Use ${name}'s name at least once. Keep feedback encouraging but honest.`;
+  }
+
+  // Add recent performance context
+  let performanceInstruction = '';
+  if(performanceCtx) {
+    performanceInstruction = `CONTEXT: ${name} has been ${performanceCtx}. ${recent !== null && recent < 50 ? 'Confidence building is more important than correction right now. Focus on what they got right.' : recent !== null && recent >= 80 ? 'They are doing well — feel free to stretch them with suggestions for going deeper.' : 'Balance encouragement with specific, actionable improvement tips.'}`;
+  }
+
+  return `You are Professor Hoot, a warm and encouraging ${child?.key_stage || 'primary'} teacher marking a lesson titled "${lesson.title}" for ${name}.
+
+${toneInstruction}
+
+${performanceInstruction}
+
+Mark each answer fairly and award partial marks where appropriate. Always explain WHY an answer was right or wrong in simple language the child can understand.
 
 ${lines}
 
-Return ONLY valid JSON:
+Return ONLY valid JSON with no markdown:
 {
   "feedback": [
-    {"q":1,"score":N,"max":N,"comment":"specific constructive comment"},
+    {"q":1,"score":N,"max":N,"comment":"specific, warm, child-readable comment — never cold or clinical"},
     ...
   ],
-  "overall": "2-3 sentence encouraging overall comment with specific strengths and one area to improve"
+  "overall": "2-3 sentences. Start with something genuinely positive. Name one specific strength. End with one encouraging forward-looking suggestion. Never end on a negative. Use ${name}'s name."
 }`;
 }
 async function awardXP(subject, score, maxScore, lessonId) {
@@ -1716,7 +1873,7 @@ function renderMarked(lesson, marking, qs, submission) {
     </div>
     <div class="q-feedback">
       ${fbItems}
-      ${result.overall?`<div style="padding:14px;background:rgba(124,106,247,0.1);border-radius:var(--radius-sm);margin-top:10px;font-size:14px;line-height:1.6;color:var(--muted)"><strong style="color:var(--text)">🦉 Professor Hoot says:</strong><br>${result.overall}</div>`:''}
+      ${result.overall?(()=>{const pct=score&&maxScore?Math.round(score/maxScore*100):50;const t=getHootTone(pct);return `<div class="hoot-feedback-wrap ${t.cls}"><strong style="color:var(--text)">🦉 Professor Hoot says:</strong><br>${result.overall}</div>`;})():''}
     </div>
   </div>
   <div style="margin-top:16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
