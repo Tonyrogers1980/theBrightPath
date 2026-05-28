@@ -1428,8 +1428,11 @@ async function generateLesson(subjectId, part) {
   // Check subscription before generating
   if(!isSubscriptionValid()) { showPaywall(); return; }
   // Show mood check-in once per session (first lesson of the day only)
-  const todayKey = 'bp_mood_' + (S.activeChild?.id||'') + '_' + new Date().toISOString().split('T')[0];
-  if(!S.sessionMood && !localStorage.getItem(todayKey)) {
+  const _childId = S.activeChild?.id || 'guest';
+  const todayKey = 'bp_mood_' + _childId + '_' + new Date().toISOString().split('T')[0];
+  const moodDone = S.sessionMood || localStorage.getItem(todayKey);
+  console.log('[BrightPath] Mood gate — sessionMood:', S.sessionMood, '| stored:', localStorage.getItem(todayKey), '| childId:', _childId);
+  if(!moodDone) {
     await showMoodCheckin(subjectId, part);
     return;
   }
@@ -1652,14 +1655,16 @@ async function showMoodCheckin(subjectId, part) {
 
 async function setMood(mood, subjectId, part, btnEl) {
   S.sessionMood = mood;
-  const todayKey = 'bp_mood_' + S.activeChild?.id + '_' + new Date().toISOString().split('T')[0];
+  const _childId = S.activeChild?.id || 'guest';
+  const todayKey = 'bp_mood_' + _childId + '_' + new Date().toISOString().split('T')[0];
   localStorage.setItem(todayKey, mood);
+  console.log('[BrightPath] Mood set:', mood, '| key:', todayKey);
   if(btnEl) {
     document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
     btnEl.classList.add('selected');
   }
-  // Brief pause so child sees their selection, then generate
-  await new Promise(r => setTimeout(r, 400));
+  // Show selection briefly then generate
+  await new Promise(r => setTimeout(r, 350));
   await generateLesson(subjectId, part);
 }
 
