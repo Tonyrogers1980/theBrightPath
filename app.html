@@ -1177,7 +1177,9 @@ async function loadHomeData() {
   if(!S.activeChild) return;
   const today = new Date().toISOString().split('T')[0];
   try {
-    const lessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}&lesson_date=eq.${today}`);
+    // Use 2-day window to handle BST/timezone offsets where lesson_date may differ from local date
+    const yesterdayUTC = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const lessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}&lesson_date=gte.${yesterdayUTC}&order=created_at.desc`);
     S.todayLessons = {};
     (lessons||[]).forEach(l => { const k=`${l.subject}:${l.part}`; S.todayLessons[k]=l; });
   } catch(e) {}
@@ -1382,14 +1384,31 @@ async function openSubject(subjectId) {
   list.innerHTML = '<div class="loading-msg"><div class="spinner"></div><p>Loading lessons…</p></div>';
   goPage('subject');
   try {
-    const today = new Date().toISOString().split('T')[0];
+    // Always re-fetch from DB to catch lessons from current session and handle timezone edge cases
+    // Use a 2-day window (today + yesterday UTC) to handle BST/timezone offsets
+    const todayUTC = new Date().toISOString().split('T')[0];
+    const yesterdayUTC = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const freshLessons = await sbGet('lessons',
+      `child_id=eq.${S.activeChild.id}&lesson_date=gte.${yesterdayUTC}&subject=eq.${subjectId}&order=created_at.desc`
+    );
+    // Update S.todayLessons with any fresher data
+    (freshLessons||[]).forEach(l => {
+      const k = `${l.subject}:${l.part}`;
+      if(!S.todayLessons[k] || l.lesson_date >= S.todayLessons[k]?.lesson_date) {
+        S.todayLessons[k] = l;
+      }
+    });
     let l1 = S.todayLessons[`${subjectId}:L1`];
     let l2 = S.todayLessons[`${subjectId}:L2`];
+    // Also check fresh results directly in case state missed them
+    if(!l1) l1 = (freshLessons||[]).find(l=>l.part==='L1') || null;
+    if(!l2) l2 = (freshLessons||[]).find(l=>l.part==='L2') || null;
     const markingIds = [l1?.id,l2?.id].filter(Boolean);
     const markings = markingIds.length ? await getMarkings(markingIds) : [];
     list.innerHTML = renderLessonList(subjectId, l1, l2, markings);
   } catch(e) {
-    list.innerHTML = '<div class="empty-state"><span class="icon">⚠\uFE0F</span><p>Could not load lessons. Check connection.</p></div>';
+    console.error('[openSubject] error:', e);
+    list.innerHTML = '<div class="empty-state"><span class="icon">⚠️</span><p>Could not load lessons. Check connection.</p></div>';
   }
 }
 function renderLessonList(subjectId, l1, l2, markings) {
