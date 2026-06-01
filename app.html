@@ -1186,13 +1186,13 @@ async function getMarkings(lessonIds) {
   if(!lessonIds || !lessonIds.length) return [];
   // Use IN syntax for multiple IDs, eq for single
   if(lessonIds.length === 1) {
-    try { return await sbGet('markings', `lesson_id=eq.${lessonIds[0]}`); } catch(e) { return []; }
+    try { return await sbGet('markings', `lesson_id=eq.${lessonIds[0]}&order=created_at.desc`); } catch(e) { return []; }
   }
   // Batch in groups of 10 to avoid URL length issues
   const results = [];
   for(let i=0; i<lessonIds.length; i+=10) {
     const batch = lessonIds.slice(i, i+10);
-    const q = `lesson_id=in.(${batch.join(',')})`;
+    const q = `lesson_id=in.(${batch.join(',')})&order=created_at.desc`;
     try { const r = await sbGet('markings', q); if(r) results.push(...r); } catch(e) {}
   }
   return results;
@@ -1755,6 +1755,9 @@ async function submitLesson(lessonId) {
     savedMarking = marking[0];
     await awardXP(lesson.subject, score, maxScore, lessonId);
     clearDraft(lessonId);
+    // Flag lesson as marked in state so redos are detected
+    const lessonInState = Object.values(S.todayLessons).find(l=>l.id===lessonId);
+    if(lessonInState) lessonInState._marked = true;
   } catch(e) {
     console.error('Marking error:', e);
     if(btn) { btn.disabled=false; btn.textContent='Submit for marking ✨'; }
@@ -1795,7 +1798,11 @@ function buildMarkPrompt(lesson, qs, answers) {
     performanceInstruction = `CONTEXT: ${name} has been ${performanceCtx}. ${recent !== null && recent < 50 ? 'Confidence building is more important than correction right now. Focus on what they got right.' : recent !== null && recent >= 80 ? 'They are doing well — feel free to stretch them with suggestions for going deeper.' : 'Balance encouragement with specific, actionable improvement tips.'}`;
   }
 
-  return `You are Professor Hoot, a warm and encouraging ${child?.key_stage || 'primary'} teacher marking a lesson titled "${lesson.title}" for ${name}.
+  // Check if this is a redo (lesson already has a marking in todayLessons state)
+  const existingMarking = Object.values(S.todayLessons).find(l=>l.id===lesson.id);
+  const isRedo = !!(existingMarking && existingMarking._marked);
+
+  return `You are Professor Hoot, a warm and encouraging ${child?.key_stage || 'primary'} teacher marking a lesson titled "${lesson.title}" for ${name}.${isRedo ? ' This is a RE-SUBMISSION — the child has revised their answers. Mark ONLY what is written now. Do NOT refer to or repeat feedback from any previous attempt. Judge each answer completely fresh.' : ''}
 
 ${toneInstruction}
 
