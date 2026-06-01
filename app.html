@@ -1393,12 +1393,14 @@ async function openSubject(subjectId) {
     const freshLessons = await sbGet('lessons',
       `child_id=eq.${S.activeChild.id}&lesson_date=gte.${yesterdayUTC}&subject=eq.${subjectId}`
     );
-    // Update S.todayLessons with any fresher data
+    // Update S.todayLessons — prefer most recent lesson_date, then most recent created_at
     (freshLessons||[]).forEach(l => {
       const k = `${l.subject}:${l.part}`;
-      if(!S.todayLessons[k] || l.lesson_date >= S.todayLessons[k]?.lesson_date) {
-        S.todayLessons[k] = l;
-      }
+      const existing = S.todayLessons[k];
+      if(!existing) { S.todayLessons[k] = l; return; }
+      // Prefer newer lesson_date; if same date, prefer newer created_at
+      if(l.lesson_date > existing.lesson_date) { S.todayLessons[k] = l; return; }
+      if(l.lesson_date === existing.lesson_date && l.created_at > existing.created_at) { S.todayLessons[k] = l; }
     });
     let l1 = S.todayLessons[`${subjectId}:L1`];
     let l2 = S.todayLessons[`${subjectId}:L2`];
@@ -1416,7 +1418,8 @@ async function openSubject(subjectId) {
 function renderLessonList(subjectId, l1, l2, markings) {
   const subj = SUBJECTS.find(s=>s.id===subjectId);
   const mById = {};
-  markings.forEach(m=>mById[m.lesson_id]=m);
+  // Only keep latest marking per lesson (markings sorted newest-first)
+  markings.forEach(m=>{ if(!mById[m.lesson_id]) mById[m.lesson_id]=m; });
   const parts = ['L1','L2'];
   return parts.map((part,i) => {
     const lesson = i===0?l1:l2;
@@ -2139,7 +2142,8 @@ async function renderProgress() {
     const mIds=(lessons||[]).map(l=>l.id);
     const markings=mIds.length?await getMarkings(mIds):[];
     const mByLesson={};
-    markings.forEach(m=>mByLesson[m.lesson_id]=m);
+    // Only keep the latest marking per lesson (markings are sorted newest-first)
+    markings.forEach(m=>{ if(!mByLesson[m.lesson_id]) mByLesson[m.lesson_id]=m; });
     const subjectStats={};
     SUBJECTS.forEach(s=>subjectStats[s.id]={total:0,scored:0,lessons:0});
     (lessons||[]).forEach(l=>{
