@@ -1680,7 +1680,7 @@ async function fetchRecentScores() {
     const ids = lessons.map(l => l.id).join(',');
     // Step 2: get markings for those lessons
     const rows = await sbGet('markings',
-      `lesson_id=in.(${ids})&order=created_at.desc&limit=3&select=score,max_score`
+      `lesson_id=in.(${ids})&select=score,max_score&order=created_at.desc&limit=3`
     );
     if(!Array.isArray(rows) || !rows.length) return;
     const pcts = rows.map(r => r.max_score > 0 ? Math.round((r.score / r.max_score) * 100) : 50);
@@ -1739,23 +1739,37 @@ async function submitLesson(lessonId) {
   if(!allFilled) { toast('Answer all questions before submitting'); return; }
   const btn = document.querySelector('#lessonBody .btn-primary');
   if(btn) { btn.disabled=true; btn.textContent='Professor Hoot is marking… 🦉'; }
+  let savedMarking = null;
+  let score = 0;
+  let maxScore = 0;
+  let markResult = null;
   try {
     const sub = await sbPost('submissions',{lesson_id:lessonId,answers});
     const subId = sub[0]?.id;
     const markPrompt = buildMarkPrompt(lesson, qs, answers);
     const raw = await callAI(markPrompt, 1200);
-    const result = extractJSON(raw);
-    const score = (result.feedback||[]).reduce((a,f)=>a+(f.score||0),0);
-    const maxScore = qs.reduce((a,q)=>a+(q.marks||1),0);
-    const marking = await sbPost('markings',{submission_id:subId,lesson_id:lessonId,score,max_score:maxScore,feedback:JSON.stringify(result)});
-    const savedMarking = marking[0];
+    markResult = extractJSON(raw);
+    score = (markResult.feedback||[]).reduce((a,f)=>a+(f.score||0),0);
+    maxScore = qs.reduce((a,q)=>a+(q.marks||1),0);
+    const marking = await sbPost('markings',{submission_id:subId,lesson_id:lessonId,score,max_score:maxScore,feedback:JSON.stringify(markResult)});
+    savedMarking = marking[0];
     await awardXP(lesson.subject, score, maxScore, lessonId);
     clearDraft(lessonId);
+  } catch(e) {
+    console.error('Marking error:', e);
+    if(btn) { btn.disabled=false; btn.textContent='Submit for marking ✨'; }
+    toast('Marking failed — please try again');
+    return;
+  }
+  // Render result separately so a render bug doesn't mask a successful marking
+  try {
     renderMarkedView(lesson, savedMarking, qs, score, maxScore, lesson.subject, {answers});
     showCelebration(score, maxScore, lesson.subject);
   } catch(e) {
-    if(btn) { btn.disabled=false; btn.textContent='Submit for marking ✨'; }
-    toast('Marking failed — check connection');
+    console.error('Render error after marking:', e);
+    // Marking succeeded — reload the lesson view to show results
+    toast('Marked! Loading results…');
+    openLesson(lesson.subject, lesson.part||'L1');
   }
 }
 function buildMarkPrompt(lesson, qs, answers) {
@@ -1911,8 +1925,9 @@ async function redoLesson(lessonId) {
   })();
   const qs = parseQs(lesson.questions);
   const videoUrl = lesson.youtube_url || getCuratedVideo(lesson.subject, S.activeChild?.key_stage);
+  const _thumbId = videoUrl ? (videoUrl.match(/(?:v=|youtu\.be\/)([^&?/]+)/)||[])[1] || '' : '';
   const videoHtml = videoUrl ? `<div class="video-card">
-    <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
+    <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${_thumbId?`<img src="https://img.youtube.com/vi/${_thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
     <div class="video-info" style="flex:1"><h4>${lesson.youtube_query||'Educational video'}</h4><button class="video-btn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button></div>
   </div>` : '';
   const qHtml = qs.map((q,i)=>{
