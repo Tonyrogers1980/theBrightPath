@@ -1540,12 +1540,13 @@ async function openLesson(subjectId, part) {
   document.getElementById('lessonMeta').innerHTML = `<span class="subj-pill ${subj.cls}">${subj.label}</span> ${part} · ${S.activeChild?.key_stage}`;
   document.getElementById('lessonBackBtn').onclick = () => openSubject(subjectId);
   try {
-    const [markings, submissions] = await Promise.all([
+    const [markings, submission] = await Promise.all([
       getMarkings([lesson.id]),
       getSubmission(lesson.id)
     ]);
-    const marking = markings[0]||null;
-    renderLessonBody(lesson, marking, subjectId, submissions);
+    // Always use latest marking (ordered desc) and latest submission
+    const marking = (markings && markings.length) ? markings[0] : null;
+    renderLessonBody(lesson, marking, subjectId, submission);
   } catch(e) {
     renderLessonBody(lesson, null, subjectId, null);
   }
@@ -1554,7 +1555,7 @@ async function openLesson(subjectId, part) {
 
 async function getSubmission(lessonId) {
   try {
-    const rows = await sbGet('submissions', `lesson_id=eq.${lessonId}&order=submitted_at.desc&limit=1`);
+    const rows = await sbGet('submissions', `lesson_id=eq.${lessonId}&order=created_at.desc&limit=1`);
     return rows && rows.length ? rows[0] : null;
   } catch(e) { return null; }
 }
@@ -1857,10 +1858,12 @@ async function checkBadges(subject, score, maxScore) {
   }
 }
 function renderMarkedView(lesson, marking, qs, score, maxScore, subject, submission) {
-  const result = typeof marking.feedback==='string'?JSON.parse(marking.feedback):marking.feedback;
+  // Cache answers on lesson object so re-entry can display them if submission fetch fails
+  if(submission?.answers && lesson) lesson._lastAnswers = submission.answers;
   const videoUrl = lesson.youtube_url || getCuratedVideo(subject, S.activeChild?.key_stage);
+  const _rmvThumbId = videoUrl ? (videoUrl.match(/[?&v=|youtu\.be\/]([^&?/]{11})/)||[])[1] || '' : '';
   const videoHtml = videoUrl ? `<div class="video-card">
-    <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
+    <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${_rmvThumbId?`<img src="https://img.youtube.com/vi/${_rmvThumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
     <div class="video-info" style="flex:1"><h4>${lesson.youtube_query||'Educational video'}</h4><button class="video-btn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button></div>
   </div>` : '';
   document.getElementById('lessonBody').innerHTML = videoHtml + renderMarked(lesson, marking, qs, submission);
@@ -1873,10 +1876,11 @@ function renderMarked(lesson, marking, qs, submission) {
   const [bg,emoji,msg] = pct>=80?['rgba(105,240,174,0.15)','🌟','Outstanding work!']:pct>=50?['rgba(247,201,72,0.15)','⭐','Good effort!']:['rgba(247,89,106,0.15)','💪','Keep practising!'];
   // Parse saved answers from submission
   const savedAnswers = (() => {
-    if(!submission) return {};
+    // Try submission first, then fall back to cached answers on lesson object
+    const raw = submission?.answers || lesson?._lastAnswers || null;
+    if(!raw) return {};
     try {
-      const a = typeof submission.answers==='string' ? JSON.parse(submission.answers) : (submission.answers||{});
-      return a;
+      return typeof raw === 'string' ? JSON.parse(raw) : (raw || {});
     } catch(e) { return {}; }
   })();
   const fbItems=(result.feedback||[]).map((f,i)=>{
