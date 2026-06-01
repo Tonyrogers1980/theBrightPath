@@ -1188,7 +1188,7 @@ async function getMarkings(lessonIds) {
   if(!lessonIds || !lessonIds.length) return [];
   // Use IN syntax for multiple IDs, eq for single
   if(lessonIds.length === 1) {
-    try { const r = await sbGet('markings', `lesson_id=eq.${lessonIds[0]}`); console.log('[getMarkings] id:', lessonIds[0], '| results:', r?.length); return (r||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)); } catch(e) { console.error('[getMarkings] error:', e); return []; }
+    try { const r = await sbGet('markings', `lesson_id=eq.${lessonIds[0]}`); console.log('[getMarkings] id:', lessonIds[0], '| results:', r?.length); return (r||[]).sort((a,b)=>new Date(b.marked_at)-new Date(a.marked_at)); } catch(e) { console.error('[getMarkings] error:', e); return []; }
   }
   // Batch in groups of 10 to avoid URL length issues
   const results = [];
@@ -1198,7 +1198,7 @@ async function getMarkings(lessonIds) {
     try { const r = await sbGet('markings', q); if(r) results.push(...r); } catch(e) {}
   }
   // Sort by most recent first in JS
-  results.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  results.sort((a,b) => new Date(b.marked_at) - new Date(a.marked_at));
   return results;
 }
 
@@ -1708,8 +1708,10 @@ async function fetchRecentScores() {
       `lesson_id=in.(${ids})&order=created_at.desc&limit=3`
     );
     if(!Array.isArray(rows) || !rows.length) return;
-    const pcts = rows.map(r => r.max_score > 0 ? Math.round((r.score / r.max_score) * 100) : 50);
-    S.recentScorePct = Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length);
+    rows.sort((a,b) => new Date(b.marked_at) - new Date(a.marked_at));
+    const recentRows = rows.slice(0,3);
+    const pcts = recentRows.map(r => r.max_score > 0 ? Math.round((r.score / r.max_score) * 100) : 50);
+    S.recentScorePct = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null;
   } catch(e) {
     S.recentScorePct = null;
   }
@@ -1751,6 +1753,9 @@ function getHootTone(scorePct) {
 // SUBMIT & MARKING
 // ══════════════════════════════════════════════════
 async function submitLesson(lessonId) {
+  // Guard against double submission (e.g. double-tap on submit button)
+  if(S._submitting === lessonId) { console.warn('[submitLesson] Already submitting, ignoring duplicate call'); return; }
+  S._submitting = lessonId;
   const lesson = Object.values(S.todayLessons).find(l=>l.id===lessonId);
   if(!lesson) return;
   const qs = parseQs(lesson.questions);
@@ -1786,17 +1791,18 @@ async function submitLesson(lessonId) {
     if(lessonInState) lessonInState._marked = true;
   } catch(e) {
     console.error('Marking error:', e);
+    S._submitting = null; // Release guard on failure
     if(btn) { btn.disabled=false; btn.textContent='Submit for marking ✨'; }
     toast('Marking failed — please try again');
     return;
   }
+  S._submitting = null; // Release guard on success
   // Render result separately so a render bug doesn't mask a successful marking
   try {
     renderMarkedView(lesson, savedMarking, qs, score, maxScore, lesson.subject, {answers});
     showCelebration(score, maxScore, lesson.subject);
   } catch(e) {
     console.error('Render error after marking:', e);
-    // Marking succeeded — reload the lesson view to show results
     toast('Marked! Loading results…');
     openLesson(lesson.subject, lesson.part||'L1');
   }
