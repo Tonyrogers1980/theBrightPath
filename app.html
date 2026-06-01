@@ -1777,6 +1777,7 @@ async function submitLesson(lessonId) {
     savedMarking = marking[0];
     await awardXP(lesson.subject, score, maxScore, lessonId);
     clearDraft(lessonId);
+    clearDraft(lessonId + '_redo');  // Also clear redo draft on successful submission
     // Flag lesson as marked in state so redos are detected
     const lessonInState = Object.values(S.todayLessons).find(l=>l.id===lessonId);
     if(lessonInState) lessonInState._marked = true;
@@ -1984,7 +1985,25 @@ async function redoLesson(lessonId) {
       <div id="draftStatus" style="font-size:12px;color:var(--muted);text-align:right;margin-bottom:6px;min-height:16px"></div>
       <button class="btn btn-primary btn-full btn-lg" style="margin-top:4px" onclick="submitLesson('${lessonId}')">Submit improved answers ✨</button>
     </div>`;
-  loadDraft(lessonId + '_redo');
+  // Only load draft if it has content AND differs from the pre-filled submission answers
+  // This prevents an empty/stale draft from blanking out the pre-filled previous answers
+  const redoDraftKey = draftKey(lessonId + '_redo');
+  const existingDraft = localStorage.getItem(redoDraftKey);
+  if(existingDraft) {
+    try {
+      const draftAnswers = JSON.parse(existingDraft);
+      const hasContent = Object.values(draftAnswers).some(v => v && v.trim());
+      if(hasContent) {
+        // Draft has content — restore it and notify
+        Object.entries(draftAnswers).forEach(([id, val]) => {
+          const el = document.getElementById(id);
+          if(el && val) el.value = val;
+        });
+        toast('📝 Draft answers restored');
+      }
+      // If draft is empty, keep the pre-filled submission answers as-is
+    } catch(e) {}
+  }
   document.querySelectorAll('[id^="ans_"]').forEach(el => {
     el.addEventListener('input', () => {
       saveDraft(lessonId + '_redo');
