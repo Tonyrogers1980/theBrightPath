@@ -1188,7 +1188,7 @@ async function getMarkings(lessonIds) {
   if(!lessonIds || !lessonIds.length) return [];
   // Use IN syntax for multiple IDs, eq for single
   if(lessonIds.length === 1) {
-    try { const r = await sbGet('markings', `lesson_id=eq.${lessonIds[0]}`); return (r||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)); } catch(e) { return []; }
+    try { const r = await sbGet('markings', `lesson_id=eq.${lessonIds[0]}`); console.log('[getMarkings] id:', lessonIds[0], '| results:', r?.length); return (r||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)); } catch(e) { console.error('[getMarkings] error:', e); return []; }
   }
   // Batch in groups of 10 to avoid URL length issues
   const results = [];
@@ -1561,14 +1561,17 @@ async function openLesson(subjectId, part) {
   document.getElementById('lessonMeta').innerHTML = `<span class="subj-pill ${subj.cls}">${subj.label}</span> ${part} · ${S.activeChild?.key_stage}`;
   document.getElementById('lessonBackBtn').onclick = () => openSubject(subjectId);
   try {
+    console.log('[openLesson] lesson.id:', lesson.id, '| subject:', subjectId, '| part:', part);
     const [markings, submission] = await Promise.all([
       getMarkings([lesson.id]),
       getSubmission(lesson.id)
     ]);
+    console.log('[openLesson] markings:', markings?.length, '| submission:', !!submission);
     // Always use latest marking (ordered desc) and latest submission
     const marking = (markings && markings.length) ? markings[0] : null;
     renderLessonBody(lesson, marking, subjectId, submission);
   } catch(e) {
+    console.error('[openLesson] error:', e);
     renderLessonBody(lesson, null, subjectId, null);
   }
   goPage('lesson');
@@ -1576,7 +1579,7 @@ async function openLesson(subjectId, part) {
 
 async function getSubmission(lessonId) {
   try {
-    const rows = await sbGet('submissions', `lesson_id=eq.${lessonId}&order=created_at.desc`);
+    const rows = await sbGet('submissions', `lesson_id=eq.${lessonId}`);
     return rows && rows.length ? rows[0] : null;
   } catch(e) { return null; }
 }
