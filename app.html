@@ -1179,7 +1179,7 @@ async function loadHomeData() {
   try {
     // Use 2-day window to handle BST/timezone offsets where lesson_date may differ from local date
     const yesterdayUTC = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    const lessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}&lesson_date=gte.${yesterdayUTC}&order=created_at.desc`);
+    const lessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}&lesson_date=gte.${yesterdayUTC}`);
     S.todayLessons = {};
     (lessons||[]).forEach(l => { const k=`${l.subject}:${l.part}`; S.todayLessons[k]=l; });
   } catch(e) {}
@@ -1188,15 +1188,17 @@ async function getMarkings(lessonIds) {
   if(!lessonIds || !lessonIds.length) return [];
   // Use IN syntax for multiple IDs, eq for single
   if(lessonIds.length === 1) {
-    try { return await sbGet('markings', `lesson_id=eq.${lessonIds[0]}&order=created_at.desc`); } catch(e) { return []; }
+    try { const r = await sbGet('markings', `lesson_id=eq.${lessonIds[0]}`); return (r||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)); } catch(e) { return []; }
   }
   // Batch in groups of 10 to avoid URL length issues
   const results = [];
   for(let i=0; i<lessonIds.length; i+=10) {
     const batch = lessonIds.slice(i, i+10);
-    const q = `lesson_id=in.(${batch.join(',')})&order=created_at.desc`;
+    const q = `lesson_id=in.(${batch.join(',')})`;
     try { const r = await sbGet('markings', q); if(r) results.push(...r); } catch(e) {}
   }
+  // Sort by most recent first in JS
+  results.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
   return results;
 }
 
@@ -1389,7 +1391,7 @@ async function openSubject(subjectId) {
     const todayUTC = new Date().toISOString().split('T')[0];
     const yesterdayUTC = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     const freshLessons = await sbGet('lessons',
-      `child_id=eq.${S.activeChild.id}&lesson_date=gte.${yesterdayUTC}&subject=eq.${subjectId}&order=created_at.desc`
+      `child_id=eq.${S.activeChild.id}&lesson_date=gte.${yesterdayUTC}&subject=eq.${subjectId}`
     );
     // Update S.todayLessons with any fresher data
     (freshLessons||[]).forEach(l => {
@@ -1574,7 +1576,7 @@ async function openLesson(subjectId, part) {
 
 async function getSubmission(lessonId) {
   try {
-    const rows = await sbGet('submissions', `lesson_id=eq.${lessonId}&order=created_at.desc&limit=1`);
+    const rows = await sbGet('submissions', `lesson_id=eq.${lessonId}&order=created_at.desc`);
     return rows && rows.length ? rows[0] : null;
   } catch(e) { return null; }
 }
@@ -1694,13 +1696,13 @@ async function fetchRecentScores() {
   try {
     // Step 1: get recent lesson IDs for this child
     const lessons = await sbGet('lessons',
-      `child_id=eq.${S.activeChild.id}&order=created_at.desc&limit=5&select=id`
+      `child_id=eq.${S.activeChild.id}&order=created_at.desc&limit=5`
     );
     if(!Array.isArray(lessons) || !lessons.length) return;
     const ids = lessons.map(l => l.id).join(',');
     // Step 2: get markings for those lessons
     const rows = await sbGet('markings',
-      `lesson_id=in.(${ids})&select=score,max_score&order=created_at.desc&limit=3`
+      `lesson_id=in.(${ids})&order=created_at.desc&limit=3`
     );
     if(!Array.isArray(rows) || !rows.length) return;
     const pcts = rows.map(r => r.max_score > 0 ? Math.round((r.score / r.max_score) * 100) : 50);
