@@ -1721,8 +1721,8 @@ function buildLessonPrompt(subjectId, part, child) {
     : '';
 
   return `You are an expert UK primary/secondary school teacher creating an interactive lesson for ${name}, age ${age}, ${ks}.
-Subject: ${subjLabel}. Topic: ${topic}. This is ${isL2?'Lesson 2 (deeper, harder)':'Lesson 1 (introduction)'}.
-${subjectId==='english'&&topic.includes('book')?`Books the child has read: ${readBooks}`:''}
+Subject: ${subjLabel}. Topic: ${chosenTopic||subjLabel}. This is ${isL2?'Lesson 2 (deeper, harder)':'Lesson 1 (introduction)'}.
+${subjectId==='english'&&(chosenTopic||'').toLowerCase().includes('book')?`Books the child has read: ${readBooks}`:''}
 
 ${topicHint}
 ${themeHint}
