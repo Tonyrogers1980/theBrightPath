@@ -1327,7 +1327,7 @@ async function loadHomeData() {
       });
     // Also load all-time stats for avg score display
     await loadAllTimeStats();
-  } catch(e) { console.error('[loadHomeData] error:', e); }
+  } catch(e) {}
 }
 
 async function loadAllTimeStats() {
@@ -1362,7 +1362,7 @@ async function getMarkings(lessonIds) {
   if(!lessonIds.length) return [];
   // Use IN syntax for multiple IDs, eq for single
   if(lessonIds.length === 1) {
-    try { const r = await sbGet('markings', `lesson_id=eq.${lessonIds[0]}`); console.log('[getMarkings] id:', lessonIds[0], '| results:', r?.length); return (r||[]).sort((a,b)=>new Date(b.marked_at)-new Date(a.marked_at)); } catch(e) { console.error('[getMarkings] error:', e); return []; }
+    try { const r = await sbGet('markings', `lesson_id=eq.${lessonIds[0]}`); return (r||[]).sort((a,b)=>new Date(b.marked_at)-new Date(a.marked_at)); } catch(e) { return []; }
   }
   // Batch in groups of 10 to avoid URL length issues
   const results = [];
@@ -1621,7 +1621,7 @@ async function generateLesson(subjectId, part) {
   const _childId = S.activeChild?.id || 'guest';
   const todayKey = 'bp_mood_' + _childId + '_' + new Date().toISOString().split('T')[0];
   const moodDone = S.sessionMood || localStorage.getItem(todayKey);
-  console.log('[BrightPath] Mood gate — sessionMood:', S.sessionMood, '| stored:', localStorage.getItem(todayKey), '| childId:', _childId);
+
   if(!moodDone) {
     await showMoodCheckin(subjectId, part);
     return;
@@ -1757,17 +1757,17 @@ async function openLesson(subjectId, part) {
   document.getElementById('lessonMeta').innerHTML = `<span class="subj-pill ${subj.cls}">${subj.label}</span> ${part} · ${S.activeChild?.key_stage}`;
   document.getElementById('lessonBackBtn').onclick = () => openSubject(subjectId);
   try {
-    console.log('[openLesson] lesson.id:', lesson.id, '| subject:', subjectId, '| part:', part);
+
     const [markings, submission] = await Promise.all([
       getMarkings([lesson.id]),
       getSubmission(lesson.id)
     ]);
-    console.log('[openLesson] markings:', markings?.length, '| submission:', !!submission);
+
     // Always use latest marking (ordered desc) and latest submission
     const marking = (markings && markings.length) ? markings[0] : null;
     renderLessonBody(lesson, marking, subjectId, submission);
   } catch(e) {
-    console.error('[openLesson] error:', e);
+
     renderLessonBody(lesson, null, subjectId, null);
   }
   goPage('lesson');
@@ -1879,7 +1879,7 @@ async function setMood(mood, subjectId, part, btnEl) {
   const _childId = S.activeChild?.id || 'guest';
   const todayKey = 'bp_mood_' + _childId + '_' + new Date().toISOString().split('T')[0];
   localStorage.setItem(todayKey, mood);
-  console.log('[BrightPath] Mood set:', mood, '| key:', todayKey);
+
   if(btnEl) {
     document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
     btnEl.classList.add('selected');
