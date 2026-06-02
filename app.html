@@ -1358,7 +1358,8 @@ async function loadAllTimeStats() {
   } catch(e) { S.allTimeAvg = null; }
 }
 async function getMarkings(lessonIds) {
-  if(!lessonIds || !lessonIds.length) return [];
+  lessonIds = (lessonIds||[]).filter(Boolean);
+  if(!lessonIds.length) return [];
   // Use IN syntax for multiple IDs, eq for single
   if(lessonIds.length === 1) {
     try { const r = await sbGet('markings', `lesson_id=eq.${lessonIds[0]}`); console.log('[getMarkings] id:', lessonIds[0], '| results:', r?.length); return (r||[]).sort((a,b)=>new Date(b.marked_at)-new Date(a.marked_at)); } catch(e) { console.error('[getMarkings] error:', e); return []; }
@@ -1669,28 +1670,13 @@ function buildLessonPrompt(subjectId, part, child) {
   const subjLabel = SUBJECTS.find(s=>s.id===subjectId)?.label;
   const rb = child.read_books ? (typeof child.read_books==='string' ? JSON.parse(child.read_books) : child.read_books) : [];
   const readBooks = rb.join(', ') || 'any popular childrens books';
-  const englishTypes = ['book comprehension','persuasive writing','poetry analysis','grammar and punctuation','narrative writing','unseen text comprehension','argument writing','vocabulary and spelling'];
-  const englishType = englishTypes[Math.floor(Math.random()*englishTypes.length)];
-  const topicMap = {
-    math: {KS1:['counting and place value','addition and subtraction','shapes and patterns'],KS2:['multiplication and division','fractions and decimals','area and perimeter','statistics'],KS3:['algebra','ratio and proportion','geometry','probability'],KS4:['quadratic equations','trigonometry','statistics and data','simultaneous equations']},
-    science: {KS1:['plants and animals','materials','seasons'],KS2:['forces and motion','habitats','human body','states of matter','light and sound'],KS3:['cells and organisms','chemical reactions','energy','waves'],KS4:['atomic structure','genetics','electromagnetism','organic chemistry']},
-    history: {KS1:['famous people from the past','significant events'],KS2:['ancient Egypt','ancient Greece','the Vikings','the Romans','World War 2','the Tudors'],KS3:['the Norman conquest','the Renaissance','British Empire','World War 1'],KS4:['Cold War','civil rights','20th century conflicts']},
-    geography: {KS1:['our local area','weather and seasons'],KS2:['rainforests','rivers','mountains','countries and capitals'],KS3:['plate tectonics','urbanisation','climate change'],KS4:['ecosystems','development and globalisation','natural hazards']},
-  };
-  let topic;
-  if(subjectId==='english') topic = englishType;
-  else { const ksTopics=(topicMap[subjectId]||{})[ks]||['general']; topic=ksTopics[Math.floor(Math.random()*ksTopics.length)]; }
-  const themeObj = THEMES.find(t => t.id === child.theme);
-  const topicHint = chosenTopic ? `TOPIC: This lesson must focus specifically on "${chosenTopic}". All questions, examples, and content must be about this topic within ${cfg?.label||subjectId}.` : '';
-  const themeHint = themeObj ? `IMPORTANT THEME INSTRUCTION: ${themeObj.promptHint} The child loves ${themeObj.label} — make every example, scenario and question feel relevant to this interest. This is what makes BrightPath special for this child.` : '';
-  // ── Topic selection ──────────────────────────────
+
+  // ── Topic selection — must happen first ──────────
   const cfg = TOPIC_CONFIG[subjectId];
   let chosenTopic = '';
   if(cfg) {
     const focusTopics = (child.focus_topics || {})[subjectId] || [];
     if(focusTopics.length) {
-      // Parent has set focus topics — rotate through them avoiding recent repeats
-      // Recent topics stored as last 3 lesson titles containing the topic label
       const recentTopicIds = Object.values(S.todayLessons)
         .filter(l => l.subject === subjectId && l.topic)
         .map(l => l.topic);
@@ -1700,7 +1686,6 @@ function buildLessonPrompt(subjectId, part, child) {
       const topicObj = cfg.topics.find(t => t.id === picked);
       chosenTopic = topicObj ? topicObj.label : '';
     } else {
-      // Smart rotation — pick from all topics avoiding last 5 used
       const recentTopics = Object.values(S.todayLessons)
         .filter(l => l.subject === subjectId && l.topic)
         .map(l => l.topic);
@@ -1710,8 +1695,17 @@ function buildLessonPrompt(subjectId, part, child) {
       chosenTopic = pool[Math.floor(Math.random() * pool.length)];
     }
   }
-  // Store chosen topic on lesson after save (we pass it via S._pendingTopic)
+  // Fallback for English — use topic from reading list or writing type
+  if(subjectId === 'english' && !chosenTopic) {
+    const englishTypes = ['book comprehension','persuasive writing','poetry analysis','grammar and punctuation','narrative writing','unseen text comprehension','argument writing','vocabulary and spelling'];
+    chosenTopic = englishTypes[Math.floor(Math.random()*englishTypes.length)];
+  }
   S._pendingTopic = chosenTopic;
+
+  // ── Theme and hints ───────────────────────────────
+  const themeObj = THEMES.find(t => t.id === child.theme);
+  const topicHint = chosenTopic ? `TOPIC: This lesson must focus specifically on "${chosenTopic}". All questions, examples, and content must be about this topic within ${cfg?.label||subjLabel||subjectId}.` : '';
+  const themeHint = themeObj ? `IMPORTANT THEME INSTRUCTION: ${themeObj.promptHint} The child loves ${themeObj.label} — make every example, scenario and question feel relevant to this interest. This is what makes BrightPath special for this child.` : '';
 
   // ── Adaptive context ──────────────────────────────
   const adaptCtx = getAdaptiveContext();
