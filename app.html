@@ -2421,11 +2421,7 @@ function renderParent() {
     </div>`).join('')}
     <button class="btn btn-secondary btn-sm" onclick="showAddChild()">+ Add child</button>
   </div>
-  <div class="parent-section">
-    <h3>Book list for English</h3>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Mark which books ${c?.name||'your child'} has read to personalise English lessons.</p>
-    ${c?renderBookPicker(c):'<p style="color:var(--muted);font-size:13px">Select a child first</p>'}
-  </div>
+
   <div class="parent-section">
     <!-- Referral -->
     <div class="referral-card" id="referralCard">
@@ -2555,33 +2551,7 @@ async function showSubscribe(plan='single') {
   }
 }
 
-// ── BOOK PICKER ─────────────────────────────────
-const ALL_BOOKS = {
-  KS1:['The Gruffalo','Zog','The Tiger Who Came to Tea','Each Peach Pear Plum','Elmer','Where the Wild Things Are','The Very Hungry Caterpillar','Charlie and Lola'],
-  KS2:["Charlie and the Chocolate Factory","Matilda","James and the Giant Peach","Harry Potter and the Philosopher's Stone","The Lion the Witch and the Wardrobe","The Hobbit","The Explorer","Cogheart","Percy Jackson","Holes","Wonder","Tom Gates","Diary of a Wimpy Kid","The Worst Witch"],
-  KS3:["The Hunger Games","Percy Jackson and the Lightning Thief","The Book Thief","Animal Farm","Of Mice and Men","Skellig","Kensuke's Kingdom","Private Peaceful","War Horse","The Boy in the Striped Pyjamas","Stormbreaker","His Dark Materials","Holes","The Curious Incident of the Dog in the Night-Time"],
-  KS4:["To Kill a Mockingbird","1984","Brave New World","Lord of the Flies","The Great Gatsby","An Inspector Calls","Macbeth","Romeo and Juliet","A Christmas Carol","Pride and Prejudice","Frankenstein","The Strange Case of Dr Jekyll and Mr Hyde"],
-};
-function renderBookPicker(c) {
-  const books=ALL_BOOKS[c.key_stage]||ALL_BOOKS.KS2;
-  const read=c.read_books||[];
-  return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
-    ${books.map(b=>`<span class="tag ${read.includes(b)?'selected':''}" onclick="toggleBook('${b.replace(/'/g,"\\'")}','${c.id}')">${b}</span>`).join('')}
-  </div>
-  <p style="font-size:12px;color:var(--muted)">${read.length} book${read.length!==1?'s':''} selected</p>`;
-}
-async function toggleBook(book, childId) {
-  const ch=S.children.find(c=>c.id===childId);
-  if(!ch) return;
-  const read=ch.read_books||[];
-  const newRead=read.includes(book)?read.filter(b=>b!==book):[...read,book];
-  try {
-    await sbPatch('children',`id=eq.${childId}`,{read_books:JSON.stringify(newRead)});
-    ch.read_books=newRead;
-    renderParent();
-    toast(newRead.includes(book)?`Added: ${book} 📚`:`Removed: ${book}`);
-  } catch(e) { toast('Could not save'); }
-}
+
 
 // ── TIMETABLE ───────────────────────────────────
 const DAYS=['Mon','Tue','Wed','Thu','Fri'];
