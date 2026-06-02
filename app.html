@@ -1175,14 +1175,24 @@ async function loadChildren() {
 }
 async function loadHomeData() {
   if(!S.activeChild) return;
-  const today = new Date().toISOString().split('T')[0];
+  const todayUTC = new Date().toISOString().split('T')[0];
+  const yesterdayUTC = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   try {
-    // Use 2-day window to handle BST/timezone offsets where lesson_date may differ from local date
-    const yesterdayUTC = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    const lessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}&lesson_date=gte.${yesterdayUTC}`);
+    // Query today first — this is the correct date for UK users outside BST edge case
+    let lessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}&lesson_date=eq.${todayUTC}`);
+    // If nothing today (BST edge case where lesson was saved with tomorrow UTC date),
+    // try yesterday as fallback
+    if(!lessons || !lessons.length) {
+      lessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}&lesson_date=eq.${yesterdayUTC}`);
+    }
     S.todayLessons = {};
-    (lessons||[]).forEach(l => { const k=`${l.subject}:${l.part}`; S.todayLessons[k]=l; });
-  } catch(e) {}
+    // Sort by created_at descending so newest wins when keying by subject:part
+    (lessons||[]).sort((a,b) => a.created_at > b.created_at ? -1 : 1)
+      .forEach(l => {
+        const k = `${l.subject}:${l.part}`;
+        if(!S.todayLessons[k]) S.todayLessons[k] = l; // first = newest
+      });
+  } catch(e) { console.error('[loadHomeData] error:', e); }
 }
 async function getMarkings(lessonIds) {
   if(!lessonIds || !lessonIds.length) return [];
@@ -1386,27 +1396,25 @@ async function openSubject(subjectId) {
   list.innerHTML = '<div class="loading-msg"><div class="spinner"></div><p>Loading lessons…</p></div>';
   goPage('subject');
   try {
-    // Always re-fetch from DB to catch lessons from current session and handle timezone edge cases
-    // Use a 2-day window (today + yesterday UTC) to handle BST/timezone offsets
+    // Fetch today's lessons for this subject — fallback to yesterday for BST edge case
     const todayUTC = new Date().toISOString().split('T')[0];
     const yesterdayUTC = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    const freshLessons = await sbGet('lessons',
-      `child_id=eq.${S.activeChild.id}&lesson_date=gte.${yesterdayUTC}&subject=eq.${subjectId}`
+    let freshLessons = await sbGet('lessons',
+      `child_id=eq.${S.activeChild.id}&lesson_date=eq.${todayUTC}&subject=eq.${subjectId}`
     );
-    // Update S.todayLessons — prefer most recent lesson_date, then most recent created_at
-    (freshLessons||[]).forEach(l => {
-      const k = `${l.subject}:${l.part}`;
-      const existing = S.todayLessons[k];
-      if(!existing) { S.todayLessons[k] = l; return; }
-      // Prefer newer lesson_date; if same date, prefer newer created_at
-      if(l.lesson_date > existing.lesson_date) { S.todayLessons[k] = l; return; }
-      if(l.lesson_date === existing.lesson_date && l.created_at > existing.created_at) { S.todayLessons[k] = l; }
-    });
-    let l1 = S.todayLessons[`${subjectId}:L1`];
-    let l2 = S.todayLessons[`${subjectId}:L2`];
-    // Also check fresh results directly in case state missed them
-    if(!l1) l1 = (freshLessons||[]).find(l=>l.part==='L1') || null;
-    if(!l2) l2 = (freshLessons||[]).find(l=>l.part==='L2') || null;
+    if(!freshLessons || !freshLessons.length) {
+      freshLessons = await sbGet('lessons',
+        `child_id=eq.${S.activeChild.id}&lesson_date=eq.${yesterdayUTC}&subject=eq.${subjectId}`
+      );
+    }
+    // Update state — newest created_at wins for each subject:part key
+    (freshLessons||[]).sort((a,b) => a.created_at > b.created_at ? -1 : 1)
+      .forEach(l => {
+        const k = `${l.subject}:${l.part}`;
+        if(!S.todayLessons[k] || l.created_at > S.todayLessons[k].created_at) S.todayLessons[k] = l;
+      });
+    let l1 = (freshLessons||[]).find(l=>l.part==='L1') || S.todayLessons[`${subjectId}:L1`] || null;
+    let l2 = (freshLessons||[]).find(l=>l.part==='L2') || S.todayLessons[`${subjectId}:L2`] || null;
     const markingIds = [l1?.id,l2?.id].filter(Boolean);
     const markings = markingIds.length ? await getMarkings(markingIds) : [];
     list.innerHTML = renderLessonList(subjectId, l1, l2, markings);
