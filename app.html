@@ -282,6 +282,45 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 .trust-badges { display: flex; justify-content: center; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
 .trust-badge { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 11px; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 5px; }
 
+/* ── LEARNING SETUP ── */
+.setup-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.setup-tab { font-size: 13px; font-weight: 700; font-family: 'Nunito', sans-serif; padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+.setup-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.setup-subject-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: opacity 0.15s; }
+.setup-subject-row:last-child { border-bottom: none; }
+.setup-subject-row:hover { opacity: 0.8; }
+.setup-subj-emoji { font-size: 22px; width: 36px; text-align: center; flex-shrink: 0; }
+.setup-subj-info { flex: 1; min-width: 0; }
+.setup-subj-name { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 15px; }
+.setup-subj-focus { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.setup-subj-focus .focus-val { color: var(--accent2); }
+.setup-edit-btn { font-size: 12px; font-weight: 700; color: var(--accent); border: 1.5px solid rgba(124,106,247,0.3); border-radius: 8px; padding: 5px 12px; background: rgba(124,106,247,0.08); flex-shrink: 0; }
+.setup-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: flex-end; justify-content: center; z-index: 500; }
+.setup-modal-box { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; padding: 24px 20px 40px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
+.setup-modal-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 19px; margin-bottom: 4px; }
+.setup-modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.6; }
+.topic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.topic-chip { font-size: 13px; font-weight: 600; font-family: 'Nunito', sans-serif; padding: 9px 10px; border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; text-align: center; color: var(--muted); background: var(--surface2); transition: all 0.15s; line-height: 1.3; }
+.topic-chip:hover { border-color: var(--accent); color: var(--text); }
+.topic-chip.selected { border-color: var(--accent); background: rgba(124,106,247,0.15); color: var(--text); }
+.topic-chip.smart-chip { grid-column: 1 / -1; background: rgba(91,240,200,0.08); border-color: rgba(91,240,200,0.3); color: var(--accent2); }
+.topic-chip.smart-chip.selected { background: rgba(91,240,200,0.18); border-color: var(--accent2); }
+.timetable-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 14px; }
+.tt-day { text-align: center; }
+.tt-day-label { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+.tt-day-label.today { color: var(--accent2); }
+.tt-slot { width: 36px; height: 36px; border-radius: 8px; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 15px; margin: 0 auto 4px; cursor: pointer; transition: all 0.15s; background: var(--surface2); }
+.tt-slot.active { border-color: var(--accent); background: rgba(124,106,247,0.15); }
+.tt-slot.empty { color: var(--muted); font-size: 13px; }
+.tt-slot:hover { border-color: var(--accent); }
+.book-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.book-item:last-child { border-bottom: none; }
+.book-title { font-size: 14px; flex: 1; }
+.book-check { width: 24px; height: 24px; border-radius: 6px; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.15s; font-size: 13px; }
+.book-check.checked { background: rgba(91,240,200,0.2); border-color: var(--accent2); }
+.book-add-input { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 14px; color: var(--text); width: 100%; font-family: inherit; margin-top: 10px; }
+.book-add-input:focus { outline: none; border-color: var(--accent); }
+
 /* ── REFERRAL ── */
 .referral-card { background: linear-gradient(135deg, rgba(124,106,247,0.15), rgba(247,89,106,0.1)); border: 1px solid rgba(124,106,247,0.3); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; }
 .referral-title { font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 17px; margin-bottom: 6px; }
@@ -899,6 +938,105 @@ const THEMES = [
   { id:'films',   emoji:'🎬', label:'Films & Stories',  desc:'Movies, TV shows & characters',      promptHint:'Use film and storytelling examples throughout — plot structures, character arcs, box office numbers, dramatic scenarios, screenwriting.' },
 ];
 
+
+// ── TOPIC CONFIG ─────────────────────────────────
+const TOPIC_CONFIG = {
+  math: {
+    label: 'Maths', emoji: '🔢',
+    topics: [
+      { id: 'number_place_value',      label: 'Number & Place Value' },
+      { id: 'addition_subtraction',    label: 'Addition & Subtraction' },
+      { id: 'multiplication_division', label: 'Multiplication & Division' },
+      { id: 'fractions_decimals',      label: 'Fractions & Decimals' },
+      { id: 'measurement',             label: 'Measurement' },
+      { id: 'geometry_shapes',         label: 'Geometry — Shapes' },
+      { id: 'geometry_position',       label: 'Geometry — Position & Direction' },
+      { id: 'statistics',              label: 'Statistics' },
+      { id: 'ratio_proportion',        label: 'Ratio & Proportion' },
+      { id: 'algebra',                 label: 'Algebra' },
+    ]
+  },
+  english: {
+    label: 'English', emoji: '📖',
+    topics: [
+      { id: 'reading_comprehension',   label: 'Reading Comprehension' },
+      { id: 'writing_fiction',         label: 'Creative Writing' },
+      { id: 'writing_nonfiction',      label: 'Non-Fiction Writing' },
+      { id: 'grammar_punctuation',     label: 'Grammar & Punctuation' },
+      { id: 'spelling_vocabulary',     label: 'Spelling & Vocabulary' },
+      { id: 'poetry',                  label: 'Poetry' },
+    ]
+  },
+  science: {
+    label: 'Science', emoji: '🔬',
+    topics: [
+      { id: 'living_things_habitats',  label: 'Living Things & Habitats' },
+      { id: 'animals_humans',          label: 'Animals Including Humans' },
+      { id: 'plants',                  label: 'Plants' },
+      { id: 'earth_space',             label: 'Earth & Space' },
+      { id: 'forces',                  label: 'Forces' },
+      { id: 'light_sound',             label: 'Light & Sound' },
+      { id: 'materials',               label: 'Materials & Their Properties' },
+      { id: 'electricity',             label: 'Electricity' },
+      { id: 'evolution',               label: 'Evolution & Inheritance' },
+    ]
+  },
+  history: {
+    label: 'History', emoji: '🏛️',
+    topics: [
+      { id: 'stone_bronze_iron_age',   label: 'Stone Age to Iron Age' },
+      { id: 'ancient_egypt',           label: 'Ancient Egyptians' },
+      { id: 'ancient_greece',          label: 'Ancient Greeks' },
+      { id: 'romans',                  label: 'Romans in Britain' },
+      { id: 'anglo_saxons',            label: 'Anglo-Saxons' },
+      { id: 'vikings',                 label: 'Vikings' },
+      { id: 'maya',                    label: 'Maya Civilisation' },
+      { id: 'tudors',                  label: 'Tudors' },
+      { id: 'victorians',              label: 'Victorians' },
+      { id: 'ww2',                     label: 'World War 2' },
+      { id: 'local_history',           label: 'Local History' },
+    ]
+  },
+  geography: {
+    label: 'Geography', emoji: '🌍',
+    topics: [
+      { id: 'maps_fieldwork',          label: 'Maps & Fieldwork' },
+      { id: 'the_uk',                  label: 'The United Kingdom' },
+      { id: 'europe',                  label: 'Europe' },
+      { id: 'americas',                label: 'North & South America' },
+      { id: 'mountains_volcanoes',     label: 'Mountains & Volcanoes' },
+      { id: 'rivers_coasts',           label: 'Rivers & Coasts' },
+      { id: 'climate_weather',         label: 'Climate & Weather' },
+      { id: 'human_physical',          label: 'Human vs Physical Geography' },
+      { id: 'sustainability',          label: 'Sustainability & Environment' },
+    ]
+  }
+};
+
+// ── CURATED BOOKS LIST ────────────────────────────
+const BOOK_LIST = [
+  "Charlie and the Chocolate Factory",
+  "Matilda",
+  "James and the Giant Peach",
+  "Danny the Champion of the World",
+  "Harry Potter and the Philosopher's Stone",
+  "Harry Potter and the Chamber of Secrets",
+  "The Lion, the Witch and the Wardrobe",
+  "The Hobbit",
+  "Percy Jackson and the Lightning Thief",
+  "Diary of a Wimpy Kid",
+  "The Explorer",
+  "Holes",
+  "Wonder",
+  "The Gruffalo",
+  "The BFG",
+  "Treasure Island",
+  "Robin Hood",
+  "Coraline",
+  "Northern Lights",
+  "Tom's Midnight Garden",
+];
+
 // ── BADGES CONFIG ────────────────────────────────
 const BADGES_DEF = [
   { id:'first_lesson',  emoji:'🌟', name:'First Star',      desc:'Complete your first lesson',             xp:10  },
@@ -1177,10 +1315,7 @@ async function loadChildren() {
 async function loadHomeData() {
   if(!S.activeChild) return;
   // Use LOCAL date — this is what the user sees and expects
-  const todayLocal = new Date();
-  const todayStr = todayLocal.getFullYear() + '-' +
-    String(todayLocal.getMonth()+1).padStart(2,'0') + '-' +
-    String(todayLocal.getDate()).padStart(2,'0');
+  const todayStr = new Date().toLocaleDateString('en-CA');
   try {
     // Today's lessons only — no fallback to yesterday
     const lessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}&lesson_date=eq.${todayStr}`);
@@ -1251,7 +1386,7 @@ function goPage(name) {
   document.querySelectorAll('.bnav-item').forEach(b=>b.classList.toggle('active', b.dataset.page===name));
   if(name==='home') renderHome();
   if(name==='progress') renderProgress();
-  if(name==='parent') { renderParent(); renderReferralCard(); }
+  if(name==='parent') { renderParent(); renderReferralCard(); renderLearningSetup(); }
   if(name==='challenge') renderChallenge();
   window.scrollTo(0,0);
 }
@@ -1425,10 +1560,7 @@ async function openSubject(subjectId) {
   goPage('subject');
   try {
     // Always fetch today's lessons only — use local date
-    const _today = new Date();
-    const todayLocal = _today.getFullYear() + '-' +
-      String(_today.getMonth()+1).padStart(2,'0') + '-' +
-      String(_today.getDate()).padStart(2,'0');
+    const todayLocal = new Date().toLocaleDateString('en-CA');
     const freshLessons = await sbGet('lessons',
       `child_id=eq.${S.activeChild.id}&lesson_date=eq.${todayLocal}&subject=eq.${subjectId}`
     );
@@ -1505,7 +1637,7 @@ async function generateLesson(subjectId, part) {
     const videoUrl = getCuratedVideo(subjectId, c.key_stage);
     const row = {
       child_id: c.id,
-      lesson_date: new Date().toISOString().split('T')[0],
+      lesson_date: new Date().toLocaleDateString('en-CA'),
       subject: subjectId,
       part,
       title: lesson.title || 'Lesson',
@@ -1513,8 +1645,10 @@ async function generateLesson(subjectId, part) {
       questions: lesson.questions||[],
       youtube_url: videoUrl || null,
       youtube_query: lesson.videoQuery || subj.label,
+      topic: S._pendingTopic || null,
       created_at: new Date().toISOString()
     };
+    S._pendingTopic = null;
     const saved = await sbPost('lessons', row);
     const savedLesson = saved[0];
     S.todayLessons[`${subjectId}:${part}`] = savedLesson;
@@ -1547,8 +1681,39 @@ function buildLessonPrompt(subjectId, part, child) {
   if(subjectId==='english') topic = englishType;
   else { const ksTopics=(topicMap[subjectId]||{})[ks]||['general']; topic=ksTopics[Math.floor(Math.random()*ksTopics.length)]; }
   const themeObj = THEMES.find(t => t.id === child.theme);
+  const topicHint = chosenTopic ? `TOPIC: This lesson must focus specifically on "${chosenTopic}". All questions, examples, and content must be about this topic within ${cfg?.label||subjectId}.` : '';
   const themeHint = themeObj ? `IMPORTANT THEME INSTRUCTION: ${themeObj.promptHint} The child loves ${themeObj.label} — make every example, scenario and question feel relevant to this interest. This is what makes BrightPath special for this child.` : '';
-  // Inject adaptive context into lesson generation
+  // ── Topic selection ──────────────────────────────
+  const cfg = TOPIC_CONFIG[subjectId];
+  let chosenTopic = '';
+  if(cfg) {
+    const focusTopics = (child.focus_topics || {})[subjectId] || [];
+    if(focusTopics.length) {
+      // Parent has set focus topics — rotate through them avoiding recent repeats
+      // Recent topics stored as last 3 lesson titles containing the topic label
+      const recentTopicIds = Object.values(S.todayLessons)
+        .filter(l => l.subject === subjectId && l.topic)
+        .map(l => l.topic);
+      const available = focusTopics.filter(id => !recentTopicIds.includes(id));
+      const pool = available.length ? available : focusTopics;
+      const picked = pool[Math.floor(Math.random() * pool.length)];
+      const topicObj = cfg.topics.find(t => t.id === picked);
+      chosenTopic = topicObj ? topicObj.label : '';
+    } else {
+      // Smart rotation — pick from all topics avoiding last 5 used
+      const recentTopics = Object.values(S.todayLessons)
+        .filter(l => l.subject === subjectId && l.topic)
+        .map(l => l.topic);
+      const allTopicLabels = cfg.topics.map(t => t.label);
+      const available = allTopicLabels.filter(t => !recentTopics.includes(t));
+      const pool = available.length ? available : allTopicLabels;
+      chosenTopic = pool[Math.floor(Math.random() * pool.length)];
+    }
+  }
+  // Store chosen topic on lesson after save (we pass it via S._pendingTopic)
+  S._pendingTopic = chosenTopic;
+
+  // ── Adaptive context ──────────────────────────────
   const adaptCtx = getAdaptiveContext();
   const lessonMoodHint = adaptCtx.mood === 'tired'
     ? 'IMPORTANT: The child is tired today. Keep the lesson introduction shorter than usual. Use simple, clear language. Start with an easier warm-up question to build confidence before the main questions.'
@@ -1565,6 +1730,7 @@ function buildLessonPrompt(subjectId, part, child) {
 Subject: ${subjLabel}. Topic: ${topic}. This is ${isL2?'Lesson 2 (deeper, harder)':'Lesson 1 (introduction)'}.
 ${subjectId==='english'&&topic.includes('book')?`Books the child has read: ${readBooks}`:''}
 
+${topicHint}
 ${themeHint}
 ${lessonMoodHint}
 ${lessonPerfHint}
@@ -2272,9 +2438,8 @@ function renderParent() {
       <div style="font-size:12px;color:var(--muted)">Share this link with friends — works on WhatsApp, email, or any group.</div>
     </div>
 
-    <h3>Weekly timetable</h3>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Set which subjects to do each day.</p>
-    ${c?renderTimetable(c):''}
+    <!-- Learning Setup -->
+    <div id="learningSetupSection"></div>
   </div>
   <div class="divider"></div>
   <button class="btn btn-secondary btn-full" onclick="doLogout()" style="margin-bottom:16px">Sign out</button>
@@ -3675,6 +3840,271 @@ function copyReferralLink() {
   }).catch(() => {
     toast('Your link: ' + link);
   });
+}
+
+
+// ══════════════════════════════════════════════════
+// LEARNING SETUP
+// ══════════════════════════════════════════════════
+let setupTab = 'topics'; // 'topics' | 'timetable' | 'books'
+
+function renderLearningSetup() {
+  const c = S.activeChild;
+  const wrap = document.getElementById('learningSetupSection');
+  if(!wrap || !c) return;
+
+  const focusTopics = c.focus_topics || {};
+  const readBooks = Array.isArray(c.read_books) ? c.read_books : [];
+  const timetable = c.timetable || {};
+
+  const tabHtml = (id, label) =>
+    `<button class="setup-tab ${setupTab===id?'active':''}" onclick="switchSetupTab('${id}')">${label}</button>`;
+
+  let bodyHtml = '';
+
+  if(setupTab === 'topics') {
+    bodyHtml = SUBJECTS.map(s => {
+      const cfg = TOPIC_CONFIG[s.id];
+      if(!cfg) return '';
+      const focus = focusTopics[s.id];
+      const focusLabel = !focus || !focus.length
+        ? '<span class="focus-val">Smart rotation</span>'
+        : `<span class="focus-val">${focus.slice(0,2).map(id => cfg.topics.find(t=>t.id===id)?.label||id).join(', ')}${focus.length>2?' +'+( focus.length-2)+' more':''}</span>`;
+      return `<div class="setup-subject-row" onclick="openTopicSheet('${s.id}')">
+        <div class="setup-subj-emoji">${cfg.emoji}</div>
+        <div class="setup-subj-info">
+          <div class="setup-subj-name">${cfg.label}</div>
+          <div class="setup-subj-focus">Focus: ${focusLabel}</div>
+        </div>
+        <div class="setup-edit-btn">Edit</div>
+      </div>`;
+    }).join('');
+
+  } else if(setupTab === 'timetable') {
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const todayIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+    bodyHtml = `<p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">Tap a slot to add or remove subjects. These appear on ${c.name}'s home screen each morning.</p>
+    <div class="timetable-grid">
+      ${days.map((day, di) => {
+        const scheduled = timetable[day] || [];
+        const slots = [...scheduled, ...Array(Math.max(0, 3 - scheduled.length)).fill(null)].slice(0, 4);
+        return `<div class="tt-day">
+          <div class="tt-day-label ${di===todayIdx?'today':''}">${day}</div>
+          ${scheduled.map(sid => {
+            const subj = SUBJECTS.find(s=>s.id===sid);
+            return `<div class="tt-slot active" onclick="removeFromTimetable('${day}','${sid}')" title="Remove ${subj?.label}">${subj?.emoji||'?'}</div>`;
+          }).join('')}
+          ${scheduled.length < 5 ? `<div class="tt-slot empty" onclick="openTimetableSlot('${day}')">+</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:12px;color:var(--muted)">Tap a subject emoji to remove it. Tap + to add. Up to 5 subjects per day.</div>`;
+
+  } else if(setupTab === 'books') {
+    const allBooks = [...new Set([...BOOK_LIST, ...readBooks])].sort();
+    bodyHtml = `<p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">Tick books ${c.name} has read. English lessons will use these for comprehension and analysis.</p>
+    ${allBooks.map(b => {
+      const checked = readBooks.includes(b);
+      return `<div class="book-item">
+        <div class="book-check ${checked?'checked':''}" onclick="toggleBook('${b.replace(/'/g,"\\'")}')">
+          ${checked ? '✓' : ''}
+        </div>
+        <div class="book-title">${b}</div>
+      </div>`;
+    }).join('')}
+    <input type="text" class="book-add-input" id="bookAddInput" placeholder="Add a book title…" onkeydown="if(event.key==='Enter')addCustomBook()">
+    <button class="btn btn-secondary btn-full" style="margin-top:8px" onclick="addCustomBook()">+ Add book</button>`;
+  }
+
+  wrap.innerHTML = `<div style="margin-top:8px">
+    <h3 style="font-family:Nunito,sans-serif;font-weight:900;font-size:17px;margin-bottom:4px">Learning setup</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Control what ${c.name} learns, when, and which topics to focus on.</p>
+    <div class="setup-tabs">
+      ${tabHtml('topics','Focus topics')}
+      ${tabHtml('timetable','Timetable')}
+      ${tabHtml('books','Books')}
+    </div>
+    <div id="setupBody">${bodyHtml}</div>
+  </div>`;
+}
+
+function switchSetupTab(tab) {
+  setupTab = tab;
+  renderLearningSetup();
+}
+
+// ── TOPIC SHEET ──────────────────────────────────
+function openTopicSheet(subjectId) {
+  const existing = document.getElementById('topicSheetModal');
+  if(existing) existing.remove();
+  const c = S.activeChild;
+  const cfg = TOPIC_CONFIG[subjectId];
+  if(!cfg) return;
+  const currentFocus = (c.focus_topics || {})[subjectId] || [];
+
+  const modal = document.createElement('div');
+  modal.id = 'topicSheetModal';
+  modal.className = 'setup-modal';
+  modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+
+  modal.innerHTML = `<div class="setup-modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="setup-modal-title">${cfg.emoji} ${cfg.label} — focus topics</div>
+      <button onclick="document.getElementById('topicSheetModal').remove()" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div class="setup-modal-sub">Select topics to focus on. BrightPath will rotate through your choices, avoiding recent repeats. Leave on Smart to let the app decide based on ${c.name}'s history.</div>
+    <div class="topic-grid">
+      <div class="topic-chip smart-chip ${!currentFocus.length?'selected':''}" id="chip_smart" onclick="toggleTopicChip('__smart__','${subjectId}')">
+        ✦ Smart rotation (recommended)
+      </div>
+      ${cfg.topics.map(t => `
+        <div class="topic-chip ${currentFocus.includes(t.id)?'selected':''}" id="chip_${t.id}" onclick="toggleTopicChip('${t.id}','${subjectId}')">
+          ${t.label}
+        </div>`).join('')}
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:4px" onclick="saveTopicFocus('${subjectId}')">Save</button>
+    ${subjectId === 'english' ? `<button class="btn btn-secondary btn-full" style="margin-top:8px" onclick="document.getElementById('topicSheetModal').remove();switchSetupTab('books')">Manage reading list →</button>` : ''}
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+let _pendingTopics = {};
+function toggleTopicChip(topicId, subjectId) {
+  const key = subjectId;
+  if(!_pendingTopics[key]) {
+    // Init from current
+    _pendingTopics[key] = [...((S.activeChild?.focus_topics||{})[subjectId]||[])];
+  }
+  if(topicId === '__smart__') {
+    _pendingTopics[key] = [];
+    // Deselect all
+    document.querySelectorAll('.topic-chip:not(.smart-chip)').forEach(el => el.classList.remove('selected'));
+    document.getElementById('chip_smart')?.classList.add('selected');
+    return;
+  }
+  // Deselect smart
+  document.getElementById('chip_smart')?.classList.remove('selected');
+  const idx = _pendingTopics[key].indexOf(topicId);
+  const el = document.getElementById('chip_' + topicId);
+  if(idx === -1) {
+    _pendingTopics[key].push(topicId);
+    el?.classList.add('selected');
+  } else {
+    _pendingTopics[key].splice(idx, 1);
+    el?.classList.remove('selected');
+  }
+  // If nothing selected, revert to smart
+  if(!_pendingTopics[key].length) {
+    document.getElementById('chip_smart')?.classList.add('selected');
+  }
+}
+
+async function saveTopicFocus(subjectId) {
+  const c = S.activeChild;
+  if(!c) return;
+  const newFocus = _pendingTopics[subjectId] || [];
+  const updatedFocusTopics = { ...(c.focus_topics || {}), [subjectId]: newFocus };
+  try {
+    await sbPatch('children', `id=eq.${c.id}`, { focus_topics: updatedFocusTopics });
+    c.focus_topics = updatedFocusTopics;
+    delete _pendingTopics[subjectId];
+    document.getElementById('topicSheetModal')?.remove();
+    renderLearningSetup();
+    toast('✓ Focus topics saved');
+  } catch(e) { toast('Could not save — please try again'); }
+}
+
+// ── TIMETABLE ──────────────────────────────────
+function openTimetableSlot(day) {
+  const existing = document.getElementById('ttSlotModal');
+  if(existing) existing.remove();
+  const c = S.activeChild;
+  const scheduled = (c.timetable || {})[day] || [];
+  const modal = document.createElement('div');
+  modal.id = 'ttSlotModal';
+  modal.className = 'setup-modal';
+  modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+  modal.innerHTML = `<div class="setup-modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="setup-modal-title">Add to ${day}</div>
+      <button onclick="document.getElementById('ttSlotModal').remove()" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      ${SUBJECTS.filter(s => !scheduled.includes(s.id)).map(s => `
+        <button class="btn btn-secondary" style="padding:14px;font-size:18px;display:flex;flex-direction:column;align-items:center;gap:4px" onclick="addToTimetable('${day}','${s.id}')">
+          <span>${s.emoji}</span>
+          <span style="font-size:12px">${s.label}</span>
+        </button>`).join('')}
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+async function addToTimetable(day, subjectId) {
+  const c = S.activeChild;
+  if(!c) return;
+  const tt = { ...(c.timetable || {}) };
+  if(!tt[day]) tt[day] = [];
+  if(!tt[day].includes(subjectId)) tt[day].push(subjectId);
+  try {
+    await sbPatch('children', `id=eq.${c.id}`, { timetable: tt });
+    c.timetable = tt;
+    document.getElementById('ttSlotModal')?.remove();
+    renderLearningSetup();
+    renderTodaysPlan();
+    toast('✓ Timetable updated');
+  } catch(e) { toast('Could not save'); }
+}
+
+async function removeFromTimetable(day, subjectId) {
+  const c = S.activeChild;
+  if(!c) return;
+  const tt = { ...(c.timetable || {}) };
+  tt[day] = (tt[day] || []).filter(s => s !== subjectId);
+  try {
+    await sbPatch('children', `id=eq.${c.id}`, { timetable: tt });
+    c.timetable = tt;
+    renderLearningSetup();
+    renderTodaysPlan();
+    toast('✓ Removed from timetable');
+  } catch(e) { toast('Could not save'); }
+}
+
+// ── BOOKS ─────────────────────────────────────────
+async function toggleBook(bookTitle) {
+  const c = S.activeChild;
+  if(!c) return;
+  let books = Array.isArray(c.read_books) ? [...c.read_books] : [];
+  const idx = books.indexOf(bookTitle);
+  if(idx === -1) books.push(bookTitle);
+  else books.splice(idx, 1);
+  try {
+    await sbPatch('children', `id=eq.${c.id}`, { read_books: books });
+    c.read_books = books;
+    renderLearningSetup();
+    toast(idx === -1 ? `📚 Added to ${c.name}'s reading list` : '📚 Removed from reading list');
+  } catch(e) { toast('Could not save'); }
+}
+
+async function addCustomBook() {
+  const input = document.getElementById('bookAddInput');
+  if(!input) return;
+  const title = input.value.trim();
+  if(!title) return;
+  const c = S.activeChild;
+  let books = Array.isArray(c.read_books) ? [...c.read_books] : [];
+  if(!books.includes(title)) {
+    books.push(title);
+    try {
+      await sbPatch('children', `id=eq.${c.id}`, { read_books: books });
+      c.read_books = books;
+      input.value = '';
+      renderLearningSetup();
+      toast(`📚 "${title}" added`);
+    } catch(e) { toast('Could not save'); }
+  } else {
+    toast('Already in the list');
+  }
 }
 
 // ══════════════════════════════════════════════════
