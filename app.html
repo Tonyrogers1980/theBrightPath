@@ -1462,7 +1462,15 @@ function renderSubscriptionBanner() {
 }
 function renderSubjectGrid() {
   const grid = document.getElementById('subjectGrid');
-  grid.innerHTML = SUBJECTS.map(s => {
+  const c = S.activeChild;
+  // If timetable is set for today, only show scheduled subjects
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const todayKey = days[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
+  const scheduled = c?.timetable?.[todayKey] || [];
+  const subjectsToShow = scheduled.length
+    ? SUBJECTS.filter(s => scheduled.includes(s.id))
+    : SUBJECTS;
+  grid.innerHTML = subjectsToShow.map(s => {
     const l1 = S.todayLessons[`${s.id}:L1`];
     const l2 = S.todayLessons[`${s.id}:L2`];
     const done = (l1?1:0)+(l2?1:0);
