@@ -946,7 +946,8 @@ let S = {
   user: null, profile: null, children: [], activeChild: null,
   todayLessons: {},
   sessionMood: null,       // 'great' | 'okay' | 'tired'
-  recentScorePct: null,    // rolling average of last 3 lessons (0–100) activeLessonId: null, activeSubject: null,
+  recentScorePct: null,    // rolling average of last 3 lessons (0–100)
+  allTimeAvg: null,        // all-time average score percentage activeLessonId: null, activeSubject: null,
   dbMode: 'live'
 };
 const LDB = { profiles:{}, children:{}, lessons:{}, submissions:{}, markings:{} };
@@ -1118,7 +1119,7 @@ async function ensureProfile() {
 }
 function doLogout() {
   localStorage.removeItem('bp_session');
-  S = {user:null,profile:null,children:[],activeChild:null,todayLessons:{},activeLessonId:null,activeSubject:null,dbMode:'live'};
+  S = {user:null,profile:null,children:[],activeChild:null,todayLessons:{},activeLessonId:null,activeSubject:null,dbMode:'live',allTimeAvg:null,sessionMood:null,recentScorePct:null};
   document.getElementById('mainApp').style.display='none';
   document.getElementById('authPage').style.display='flex';
 }
@@ -1175,24 +1176,51 @@ async function loadChildren() {
 }
 async function loadHomeData() {
   if(!S.activeChild) return;
-  const todayUTC = new Date().toISOString().split('T')[0];
-  const yesterdayUTC = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  // Use LOCAL date — this is what the user sees and expects
+  const todayLocal = new Date();
+  const todayStr = todayLocal.getFullYear() + '-' +
+    String(todayLocal.getMonth()+1).padStart(2,'0') + '-' +
+    String(todayLocal.getDate()).padStart(2,'0');
   try {
-    // Query today first — this is the correct date for UK users outside BST edge case
-    let lessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}&lesson_date=eq.${todayUTC}`);
-    // If nothing today (BST edge case where lesson was saved with tomorrow UTC date),
-    // try yesterday as fallback
-    if(!lessons || !lessons.length) {
-      lessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}&lesson_date=eq.${yesterdayUTC}`);
-    }
+    // Today's lessons only — no fallback to yesterday
+    const lessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}&lesson_date=eq.${todayStr}`);
     S.todayLessons = {};
-    // Sort by created_at descending so newest wins when keying by subject:part
     (lessons||[]).sort((a,b) => a.created_at > b.created_at ? -1 : 1)
       .forEach(l => {
         const k = `${l.subject}:${l.part}`;
-        if(!S.todayLessons[k]) S.todayLessons[k] = l; // first = newest
+        if(!S.todayLessons[k]) S.todayLessons[k] = l;
       });
+    // Also load all-time stats for avg score display
+    await loadAllTimeStats();
   } catch(e) { console.error('[loadHomeData] error:', e); }
+}
+
+async function loadAllTimeStats() {
+  if(!S.activeChild) return;
+  try {
+    // Get all lessons for this child to calculate all-time avg
+    const allLessons = await sbGet('lessons', `child_id=eq.${S.activeChild.id}`);
+    if(!allLessons || !allLessons.length) { S.allTimeAvg = null; return; }
+    const ids = allLessons.map(l=>l.id);
+    // Fetch all markings — batch if needed
+    let allMarkings = [];
+    for(let i=0; i<ids.length; i+=10) {
+      const batch = ids.slice(i,i+10);
+      try {
+        const r = await sbGet('markings', `lesson_id=in.(${batch.join(',')})`);
+        if(r) allMarkings.push(...r);
+      } catch(e) {}
+    }
+    if(!allMarkings.length) { S.allTimeAvg = null; return; }
+    // Only keep latest marking per lesson
+    const latestByLesson = {};
+    allMarkings.sort((a,b)=> new Date(b.marked_at)-new Date(a.marked_at))
+      .forEach(m => { if(!latestByLesson[m.lesson_id]) latestByLesson[m.lesson_id]=m; });
+    const markings = Object.values(latestByLesson);
+    const totalScore = markings.reduce((sum,m)=>sum+(m.score||0),0);
+    const totalMax = markings.reduce((sum,m)=>sum+(m.max_score||1),0);
+    S.allTimeAvg = totalMax > 0 ? Math.round((totalScore/totalMax)*100) : null;
+  } catch(e) { S.allTimeAvg = null; }
 }
 async function getMarkings(lessonIds) {
   if(!lessonIds || !lessonIds.length) return [];
@@ -1243,8 +1271,8 @@ function renderHome() {
   document.getElementById('navStreak').textContent = `🔥 ${c.current_streak||0}`;
   document.getElementById('navAvatar').textContent = avatarEmoji(c.avatar);
   document.getElementById('statLessons').textContent = Object.keys(S.todayLessons).length;
-  document.getElementById('statXp').textContent = c.total_xp||0;
-  document.getElementById('statAvg').textContent = '—';
+  document.getElementById('statXp').textContent = (c.total_xp||0).toLocaleString();
+  document.getElementById('statAvg').textContent = S.allTimeAvg != null ? S.allTimeAvg + '%' : '—';
   document.getElementById('mascotMsg').textContent = mascotMsg('home');
   renderSubscriptionBanner();
   renderTodaysPlan();
@@ -1396,17 +1424,14 @@ async function openSubject(subjectId) {
   list.innerHTML = '<div class="loading-msg"><div class="spinner"></div><p>Loading lessons…</p></div>';
   goPage('subject');
   try {
-    // Fetch today's lessons for this subject — fallback to yesterday for BST edge case
-    const todayUTC = new Date().toISOString().split('T')[0];
-    const yesterdayUTC = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    let freshLessons = await sbGet('lessons',
-      `child_id=eq.${S.activeChild.id}&lesson_date=eq.${todayUTC}&subject=eq.${subjectId}`
+    // Always fetch today's lessons only — use local date
+    const _today = new Date();
+    const todayLocal = _today.getFullYear() + '-' +
+      String(_today.getMonth()+1).padStart(2,'0') + '-' +
+      String(_today.getDate()).padStart(2,'0');
+    const freshLessons = await sbGet('lessons',
+      `child_id=eq.${S.activeChild.id}&lesson_date=eq.${todayLocal}&subject=eq.${subjectId}`
     );
-    if(!freshLessons || !freshLessons.length) {
-      freshLessons = await sbGet('lessons',
-        `child_id=eq.${S.activeChild.id}&lesson_date=eq.${yesterdayUTC}&subject=eq.${subjectId}`
-      );
-    }
     // Update state — newest created_at wins for each subject:part key
     (freshLessons||[]).sort((a,b) => a.created_at > b.created_at ? -1 : 1)
       .forEach(l => {
