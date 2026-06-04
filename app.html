@@ -2004,7 +2004,7 @@ async function submitLesson(lessonId) {
     const sub = await sbPost('submissions',{lesson_id:lessonId,answers});
     const subId = sub[0]?.id;
     const markPrompt = buildMarkPrompt(lesson, qs, answers);
-    const raw = await callAI(markPrompt, 1200);
+    const raw = await callAI(markPrompt, 2000);
     markResult = extractJSON(raw);
     score = (markResult.feedback||[]).reduce((a,f)=>a+(f.score||0),0);
     maxScore = qs.reduce((a,q)=>a+(q.marks||1),0);
