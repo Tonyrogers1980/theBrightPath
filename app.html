@@ -4256,6 +4256,13 @@ async function boot() {
     history.replaceState({}, '', window.location.pathname);
     setTimeout(() => toast('Payment cancelled — no charge made'), 1000);
   }
+  // Force login screen if ?mode=login (e.g. from landing page Log in button)
+  if(urlParams.get('mode') === 'login') {
+    history.replaceState({}, '', window.location.pathname);
+    localStorage.removeItem('bp_session');
+    document.getElementById('authPage').style.display='flex';
+    return;
+  }
   const saved = localStorage.getItem('bp_session');
   if(saved) {
     try {
