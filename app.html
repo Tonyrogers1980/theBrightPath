@@ -718,7 +718,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.1.0';
+const APP_VERSION = 'v1.2.0';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -909,7 +909,7 @@ async function loadVideoLibrary() {
   }
 }
 
-const YOUTUBE_API_KEY = 'REPLACE_WITH_YOUTUBE_API_KEY';
+let YOUTUBE_API_KEY = ''; // Loaded at boot from Supabase config table
 const YOUTUBE_SEARCH_CACHE = {};
 
 async function fetchYouTubeVideo(subject, ks, topic) {
@@ -4285,6 +4285,18 @@ async function switchChildSetup(childId) {
 // BOOT
 // ══════════════════════════════════════════════════
 async function boot() {
+  // Load remote config from Supabase (API keys etc) — fire and forget, non-blocking
+  (async () => {
+    try {
+      const cfg = await sbGet('config', 'select=key,value');
+      if (cfg && cfg.length) {
+        cfg.forEach(row => {
+          if (row.key === 'youtube_api_key') YOUTUBE_API_KEY = row.value;
+        });
+      }
+    } catch(e) { console.warn('[boot] config fetch failed:', e.message); }
+  })();
+
   // Handle Stripe redirect back to app
   const urlParams = new URLSearchParams(window.location.search);
   if(urlParams.get('status') === 'success') {
