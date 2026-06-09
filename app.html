@@ -156,7 +156,8 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 .back-btn:hover { color: var(--text); border-color: var(--accent); }
 
 /* ── VIDEO CARD ── */
-.video-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 16px; display: flex; gap: 14px; align-items: center; }
+.video-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0; margin-bottom: 16px; overflow: hidden; }
+.video-preview { display: flex; gap: 14px; align-items: center; padding: 14px 16px; cursor: pointer; }
 .video-thumb { width: 80px; height: 54px; border-radius: 8px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow: hidden; position: relative; cursor: pointer; }
 .video-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .video-play-icon { position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 20px; }
@@ -169,6 +170,11 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 .video-feedback { display: flex; gap: 6px; margin-top: 6px; }
 .vf-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; color: var(--muted); transition: all 0.15s; }
 .vf-btn:hover { border-color: rgba(255,255,255,0.3); color: var(--text); }
+.video-player-wrap { display: none; position: relative; padding-bottom: 56.25%; height: 0; background: #000; }
+.video-player-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+.video-player-wrap.active { display: block; }
+.video-unavailable { padding: 14px 16px; font-size: 12px; color: var(--muted); text-align: center; display: none; }
+.video-unavailable.show { display: block; }
 
 /* ── LESSON CONTENT ── */
 .lesson-content { font-size: 15px; line-height: 1.75; color: rgba(255,255,255,0.85); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
@@ -718,7 +724,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.3.0';
+const APP_VERSION = 'v1.4.0';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -1451,6 +1457,20 @@ function goPage(name) {
   if(name==='parent') { renderParent(); renderReferralCard(); }
   if(name==='setup') renderSetupPage();
   if(name==='challenge') renderChallenge();
+  // Re-trigger TTS pre-warm every time lesson page becomes visible
+  if(name==='lesson') {
+    setTimeout(() => {
+      const lessonContent = document.getElementById('lessonContent');
+      if (lessonContent && 'TTS' in window && !TTS.speaking) {
+        const raw = lessonContent.innerText || lessonContent.textContent || '';
+        const lessonText = raw.split(/[\r\n]+/).map(l=>l.trim()).filter(l=>l.length>0).join('. ').trim();
+        if (lessonText && !TTS.nextChunkUrl) {
+          if (lessonText !== TTS.text) TTS.init(lessonText);
+          TTS.pregenerateFirst();
+        }
+      }
+    }, 150);
+  }
   window.scrollTo(0,0);
 }
 
@@ -1858,23 +1878,7 @@ async function renderLessonBody(lesson, marking, subjectId, submission) {
   const liveVideo = await fetchYouTubeVideo(subjectId, ks, topic);
   const videoUrl = liveVideo || lesson.youtube_url || getCuratedVideo(subjectId, ks);
   const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
-  const videoHtml = videoUrl ? `<div class="video-card">
-    <div class="video-thumb" onclick="openVideo('${videoUrl}')">
-      ${thumbId?`<img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">`:''}<div class="video-play-icon">▶️</div>
-    </div>
-    <div class="video-info" style="flex:1">
-      <h4>${lesson.youtube_query||'Educational video'}</h4>
-      <p style="font-size:11px;color:var(--muted)">Curated for ${S.activeChild?.key_stage}</p>
-      <div class="video-actions">
-        <button class="video-btn" id="watchedBtn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button>
-      </div>
-      <div class="video-feedback">
-        <button class="vf-btn" onclick="videoFeedback(true,'${videoUrl}')">👍 Helpful</button>
-        <button class="vf-btn" onclick="videoFeedback(false,'${videoUrl}')">👎 Not helpful</button>
-        <button class="vf-btn" onclick="reportVideo('${thumbId}','${lesson.subject}','${S.activeChild?.key_stage?.toLowerCase()}')">🚩 Broken link</button>
-      </div>
-    </div>
-  </div>` : '';
+  const videoHtml = buildVideoCard(videoUrl, lesson.youtube_query, lesson.subject || subjectId, ks);
   if(marking) {
     body.innerHTML = videoHtml + renderMarked(lesson, marking, qs, submission);
     return;
@@ -1929,6 +1933,95 @@ async function videoFeedback(helpful, url) {
   toast(helpful?'Thanks! 👍':'Noted, we will improve the videos');
 }
 function openVideo(url) { window.open(url,'_blank'); }
+
+// Build inline video card — embeds in-app, no YouTube redirect
+function buildVideoCard(videoUrl, label, subject, ks) {
+  if (!videoUrl) return '';
+  const thumbId = videoUrl.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] || '';
+  if (!thumbId) return '';
+  const cardId = 'vc_' + thumbId;
+  return `<div class="video-card" id="${cardId}">
+    <div class="video-preview" onclick="openVideoEmbed('${thumbId}','${cardId}','${subject}','${ks}')">
+      <div class="video-thumb">
+        <img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="video" onerror="this.style.display='none'">
+        <div class="video-play-icon">▶️</div>
+      </div>
+      <div class="video-info" style="flex:1">
+        <h4>${label||'Educational video'}</h4>
+        <p style="font-size:11px;color:var(--muted)">Tap to watch · ${ks||''}</p>
+        <div class="video-feedback" style="margin-top:6px">
+          <button class="vf-btn" onclick="event.stopPropagation();videoFeedback(true,'${videoUrl}')">👍</button>
+          <button class="vf-btn" onclick="event.stopPropagation();videoFeedback(false,'${videoUrl}')">👎</button>
+          <button class="vf-btn" onclick="event.stopPropagation();reportVideo('${thumbId}','${subject}','${ks?.toLowerCase()}')">🚩 Report</button>
+        </div>
+      </div>
+    </div>
+    <div class="video-player-wrap" id="vp_${thumbId}">
+      <iframe
+        src=""
+        data-src="https://www.youtube.com/embed/${thumbId}?autoplay=1&rel=0&modestbranding=1"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        onload="handleVideoLoad(this)"
+        onerror="handleVideoError('${cardId}','${subject}','${ks}')">
+      </iframe>
+    </div>
+    <div class="video-unavailable" id="vu_${thumbId}">
+      ⚠️ This video isn't available. <button class="vf-btn" onclick="retryVideo('${cardId}','${subject}','${ks}')">Try another</button>
+    </div>
+  </div>`;
+}
+
+function openVideoEmbed(thumbId, cardId, subject, ks) {
+  const playerWrap = document.getElementById('vp_' + thumbId);
+  const preview = document.querySelector(`#${cardId} .video-preview`);
+  if (!playerWrap) return;
+  // Load iframe src lazily — only when tapped
+  const iframe = playerWrap.querySelector('iframe');
+  if (iframe && iframe.dataset.src) {
+    iframe.src = iframe.dataset.src;
+    delete iframe.dataset.src;
+  }
+  playerWrap.classList.add('active');
+  if (preview) preview.style.display = 'none';
+}
+
+function handleVideoLoad(iframe) {
+  // iframe loaded — nothing needed, video is playing
+}
+
+async function handleVideoError(cardId, subject, ks) {
+  // Video failed — show unavailable message and try to fetch a replacement
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const thumbId = cardId.replace('vc_', '');
+  const playerWrap = document.getElementById('vp_' + thumbId);
+  const unavail = document.getElementById('vu_' + thumbId);
+  if (playerWrap) playerWrap.classList.remove('active');
+  if (unavail) unavail.classList.add('show');
+  // Clear cache for this subject/ks so next fetch tries fresh
+  Object.keys(YOUTUBE_SEARCH_CACHE).forEach(k => { if (k.startsWith(subject.toLowerCase())) delete YOUTUBE_SEARCH_CACHE[k]; });
+}
+
+async function retryVideo(cardId, subject, ks) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const newUrl = await fetchYouTubeVideo(subject, ks, '');
+  if (!newUrl) { toast('No video available right now'); return; }
+  const newThumbId = newUrl.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] || '';
+  if (!newThumbId) return;
+  const unavail = card.querySelector('.video-unavailable');
+  if (unavail) unavail.classList.remove('show');
+  // Update the iframe with new video
+  const iframe = card.querySelector('iframe');
+  if (iframe) {
+    iframe.src = `https://www.youtube.com/embed/${newThumbId}?autoplay=1&rel=0&modestbranding=1`;
+    const playerWrap = card.querySelector('.video-player-wrap');
+    const preview = card.querySelector('.video-preview');
+    if (playerWrap) playerWrap.classList.add('active');
+    if (preview) preview.style.display = 'none';
+  }
+}
 
 // ══════════════════════════════════════════════════
 // ══════════════════════════════════════════════════
@@ -2174,10 +2267,7 @@ function renderMarkedView(lesson, marking, qs, score, maxScore, subject, submiss
   if(submission?.answers && lesson) lesson._lastAnswers = submission.answers;
   const videoUrl = lesson.youtube_url || getCuratedVideo(subject, S.activeChild?.key_stage);
   const _rmvThumbId = videoUrl ? (videoUrl.match(/[?&v=|youtu\.be\/]([^&?/]{11})/)||[])[1] || '' : '';
-  const videoHtml = videoUrl ? `<div class="video-card">
-    <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${_rmvThumbId?`<img src="https://img.youtube.com/vi/${_rmvThumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
-    <div class="video-info" style="flex:1"><h4>${lesson.youtube_query||'Educational video'}</h4><button class="video-btn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button></div>
-  </div>` : '';
+  const videoHtml = buildVideoCard(videoUrl, lesson.youtube_query, lesson.subject, S.activeChild?.key_stage);
   document.getElementById('lessonBody').innerHTML = videoHtml + renderMarked(lesson, marking, qs, submission);
 }
 function renderMarked(lesson, marking, qs, submission) {
@@ -2251,11 +2341,7 @@ async function redoLesson(lessonId) {
   const ks = S.activeChild?.key_stage || 'KS2';
   const liveVideo = await fetchYouTubeVideo(lesson.subject, ks, topic);
   const videoUrl = liveVideo || lesson.youtube_url || getCuratedVideo(lesson.subject, ks);
-  const _thumbId = videoUrl ? (videoUrl.match(/(?:v=|youtu\.be\/)([^&?/]+)/)||[])[1] || '' : '';
-  const videoHtml = videoUrl ? `<div class="video-card">
-    <div class="video-thumb" onclick="openVideo('${videoUrl}')"><div class="video-play-icon">▶️</div>${_thumbId?`<img src="https://img.youtube.com/vi/${_thumbId}/mqdefault.jpg" alt="video thumbnail" onerror="this.style.display='none'">`:''}</div>
-    <div class="video-info" style="flex:1"><h4>${lesson.youtube_query||'Educational video'}</h4><button class="video-btn" onclick="markWatched(this,'${videoUrl}')">▶ Watch video</button></div>
-  </div>` : '';
+  const videoHtml = buildVideoCard(videoUrl, lesson.youtube_query, lesson.subject, ks);
   const qHtml = qs.map((q,i)=>{
     const prev = prevAnswers[i] || prevAnswers[String(i)] || '';
     return `<div class="question-card">
