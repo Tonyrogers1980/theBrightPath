@@ -724,7 +724,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.4.0';
+const APP_VERSION = 'v1.5.0';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -732,8 +732,9 @@ const PRICE_SINGLE = 'REPLACE_WITH_999_STRIPE_PRICE_ID';
 const PRICE_FAMILY = 'REPLACE_WITH_1499_STRIPE_PRICE_ID';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZ3JnY2Joa3BpaHhxc2prbWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzYwOTQsImV4cCI6MjA5NDE1MjA5NH0.cGDgY80q6YL6pycCipe2kce-GHtkdIsF7sGFjmpNnng';
 const AI_URL = 'https://sehomeservices.app.n8n.cloud/webhook/ai-proxy';
-let YOUTUBE_API_KEY = ''; // Loaded at boot from Supabase config table
+let YOUTUBE_API_KEY = ''; // Kept for fallback but proxied through n8n
 const YOUTUBE_SEARCH_CACHE = {};
+const YOUTUBE_PROXY_URL = 'https://sehomeservices.app.n8n.cloud/webhook/youtube-search';
 
 // ── YOUTUBE CHANNEL WHITELIST ──────────────────────
 const YT_CHANNELS = {
@@ -920,33 +921,20 @@ async function loadVideoLibrary() {
 async function fetchYouTubeVideo(subject, ks, topic) {
   const cacheKey = `${subject}:${ks}:${topic||''}`.toLowerCase();
   if (YOUTUBE_SEARCH_CACHE[cacheKey]) return YOUTUBE_SEARCH_CACHE[cacheKey];
-  if (!YOUTUBE_API_KEY) return null;
   try {
-    const ksLabel = ks==='KS1'?'Year 1 Year 2':ks==='KS2'?'Year 3 Year 4 Year 5 Year 6':ks==='KS3'?'Year 7 Year 8 Year 9':'GCSE';
-    const query = `${subject} ${topic||''} ${ksLabel} UK school lesson`.trim();
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoEmbeddable=true&safeSearch=strict&relevanceLanguage=en&regionCode=GB&maxResults=5&key=${YOUTUBE_API_KEY}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`YouTube API ${res.status}`);
+    // Route through n8n proxy — YouTube API key never touches the client
+    const res = await fetch(YOUTUBE_PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject, ks, topic: topic || '' })
+    });
+    if (!res.ok) throw new Error(`Proxy ${res.status}`);
     const data = await res.json();
-    if (!data.items || !data.items.length) return null;
-    // Validate each result with Videos API to confirm it's actually playable
-    const ids = data.items.map(i => i.id.videoId).join(',');
-    const vRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=status&id=${ids}&key=${YOUTUBE_API_KEY}`);
-    if (vRes.ok) {
-      const vData = await vRes.json();
-      const playable = vData.items?.find(v => v.status?.embeddable && v.status?.uploadStatus === 'processed');
-      if (playable) {
-        const videoUrl = `https://www.youtube.com/watch?v=${playable.id}`;
-        YOUTUBE_SEARCH_CACHE[cacheKey] = videoUrl;
-        return videoUrl;
-      }
-    }
-    // Fallback to first search result if validation fails
-    const videoUrl = `https://www.youtube.com/watch?v=${data.items[0].id.videoId}`;
-    YOUTUBE_SEARCH_CACHE[cacheKey] = videoUrl;
-    return videoUrl;
+    if (!data.videoUrl) throw new Error('No video returned');
+    YOUTUBE_SEARCH_CACHE[cacheKey] = data.videoUrl;
+    return data.videoUrl;
   } catch(e) {
-    console.warn('[fetchYouTubeVideo] failed, using curated fallback:', e.message);
+    console.warn('[fetchYouTubeVideo] proxy failed, using curated fallback:', e.message);
     return null;
   }
 }
@@ -3419,20 +3407,36 @@ const TTS = {
   splitIntoChunks(text) {
     // Clean markdown
     const clean = text.replace(/#{1,6}\s/g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/---/g,'').trim();
-    // Split by double newlines (paragraphs), then group into ~300 char chunks for fast first response
-    const paras = clean.split(/\n\n+/).filter(p => p.trim().length > 20);
+
+    // Chunk 0: first 2-3 sentences only (~300 chars max) — generates in ~2-3s, pre-warm feels instant
+    // Subsequent chunks: ~800 chars — long enough playback (~20-25s) for next chunk to pre-fetch
+    const sentences = clean.match(/[^.!?]+[.!?]+/g) || [clean];
     const chunks = [];
-    let current = '';
-    for(const p of paras) {
-      if(current.length + p.length > 350 && current.length > 0) {
-        chunks.push(current.trim());
-        current = p;
-      } else {
-        current += (current ? ' ' : '') + p;
-      }
+
+    // Build chunk 0 from first sentences up to 320 chars
+    let chunk0 = '';
+    let i = 0;
+    while (i < sentences.length && chunk0.length + sentences[i].length < 320) {
+      chunk0 += sentences[i];
+      i++;
     }
-    if(current.trim()) chunks.push(current.trim());
-    return chunks.length ? chunks : [clean.substring(0, 400)];
+    if (!chunk0 && sentences.length) chunk0 = sentences[0].substring(0, 320);
+    if (chunk0.trim()) chunks.push(chunk0.trim());
+
+    // Build remaining chunks at ~800 chars each
+    let current = '';
+    while (i < sentences.length) {
+      if (current.length + sentences[i].length > 800 && current.length > 0) {
+        chunks.push(current.trim());
+        current = sentences[i];
+      } else {
+        current += sentences[i];
+      }
+      i++;
+    }
+    if (current.trim()) chunks.push(current.trim());
+
+    return chunks.length ? chunks : [clean.substring(0, 320)];
   },
 
   async fetchChunk(text) {
@@ -4399,16 +4403,6 @@ async function switchChildSetup(childId) {
 // BOOT
 // ══════════════════════════════════════════════════
 async function boot() {
-  // Load remote config (API keys etc) — fire and forget
-  (async () => {
-    try {
-      const cfg = await sbGet('config', 'select=key,value');
-      if (cfg && cfg.length) cfg.forEach(row => {
-        if (row.key === 'youtube_api_key') YOUTUBE_API_KEY = row.value;
-      });
-    } catch(e) { console.warn('[boot] config fetch failed:', e.message); }
-  })();
-
   // Handle Stripe redirect back to app
   const urlParams = new URLSearchParams(window.location.search);
   if(urlParams.get('status') === 'success') {
