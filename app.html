@@ -498,7 +498,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 <!-- MAIN APP -->
 <div id="mainApp" style="display:none">
   <nav id="topnav" style="display:none">
-    <div class="nav-logo">✨ BrightPath</div>
+    <div class="nav-logo">✨ BrightPath <span id="appVersionTag" style="font-size:9px;opacity:0.3;font-family:monospace;margin-left:4px;font-weight:400"></span></div>
     <div class="nav-right">
       <div class="xp-badge" id="navXp">⚡ 0 XP</div>
       <div class="streak-badge" id="navStreak">🔥 0</div>
@@ -718,6 +718,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
+const APP_VERSION = 'v1.1.0';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -908,7 +909,7 @@ async function loadVideoLibrary() {
   }
 }
 
-const YOUTUBE_API_KEY = 'AIzaSyAHRUB3Su8rmwGbBWko2vax5QqrxuDql84';
+const YOUTUBE_API_KEY = 'REPLACE_WITH_YOUTUBE_API_KEY';
 const YOUTUBE_SEARCH_CACHE = {};
 
 async function fetchYouTubeVideo(subject, ks, topic) {
@@ -1328,6 +1329,8 @@ async function showApp() {
   document.getElementById('authPage').style.display='none';
   document.getElementById('mainApp').style.display='';
   document.getElementById('topnav').style.display='flex';
+  const vTag = document.getElementById('appVersionTag');
+  if (vTag) vTag.textContent = APP_VERSION;
   startTokenRefreshTimer();
   loadVideoLibrary(); // async, don't await — loads in background
   await loadChildren();
