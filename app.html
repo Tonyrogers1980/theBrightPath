@@ -908,6 +908,30 @@ async function loadVideoLibrary() {
   }
 }
 
+const YOUTUBE_API_KEY = 'REPLACE_WITH_YOUTUBE_API_KEY';
+const YOUTUBE_SEARCH_CACHE = {};
+
+async function fetchYouTubeVideo(subject, ks, topic) {
+  const cacheKey = `${subject}:${ks}:${topic||''}`.toLowerCase();
+  if (YOUTUBE_SEARCH_CACHE[cacheKey]) return YOUTUBE_SEARCH_CACHE[cacheKey];
+  if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === 'REPLACE_WITH_YOUTUBE_API_KEY') return null;
+  try {
+    const ksLabel = ks === 'KS1' ? 'Year 1 Year 2' : ks === 'KS2' ? 'Year 3 Year 4 Year 5 Year 6' : ks === 'KS3' ? 'Year 7 Year 8 Year 9' : 'GCSE';
+    const query = `${subject} ${topic||''} ${ksLabel} UK school lesson`.trim();
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoEmbeddable=true&safeSearch=strict&relevanceLanguage=en&regionCode=GB&maxResults=5&key=${YOUTUBE_API_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`YouTube API ${res.status}`);
+    const data = await res.json();
+    if (!data.items || !data.items.length) return null;
+    const videoUrl = `https://www.youtube.com/watch?v=${data.items[0].id.videoId}`;
+    YOUTUBE_SEARCH_CACHE[cacheKey] = videoUrl;
+    return videoUrl;
+  } catch(e) {
+    console.warn('[fetchYouTubeVideo] failed, using curated fallback:', e.message);
+    return null;
+  }
+}
+
 function getCuratedVideo(subject, ks) {
   const key = subject.toLowerCase() + ':' + ks.toLowerCase();
   const list = VIDEO_CACHE[key] || VIDEO_CACHE[subject.toLowerCase() + ':ks2'] || [];
@@ -941,6 +965,7 @@ async function reportVideo(youtubeId, subject, ks) {
   }
 }
 
+// ── YOUTUBE API CONFIG ────────────────────────────
 // ── SUBJECTS CONFIG ──────────────────────────────
 const SUBJECTS = [
   { id:'math',      label:'Maths',     emoji:'🔢', cls:'subj-math' },
@@ -1796,10 +1821,10 @@ async function openLesson(subjectId, part) {
 
     // Always use latest marking (ordered desc) and latest submission
     const marking = (markings && markings.length) ? markings[0] : null;
-    renderLessonBody(lesson, marking, subjectId, submission);
+    await renderLessonBody(lesson, marking, subjectId, submission);
   } catch(e) {
 
-    renderLessonBody(lesson, null, subjectId, null);
+    await renderLessonBody(lesson, null, subjectId, null);
   }
   goPage('lesson');
 }
@@ -1810,10 +1835,15 @@ async function getSubmission(lessonId) {
     return rows && rows.length ? rows[0] : null;
   } catch(e) { return null; }
 }
-function renderLessonBody(lesson, marking, subjectId, submission) {
+async function renderLessonBody(lesson, marking, subjectId, submission) {
   const body = document.getElementById('lessonBody');
   const qs = parseQs(lesson.questions);
-  const videoUrl = lesson.youtube_url || getCuratedVideo(subjectId, S.activeChild?.key_stage);
+
+  // Try YouTube Data API first, fall back to curated list
+  const topic = lesson.topic || S.activeChild?.topics?.[subjectId] || '';
+  const ks = S.activeChild?.key_stage || 'KS2';
+  const liveVideo = await fetchYouTubeVideo(subjectId, ks, topic);
+  const videoUrl = liveVideo || lesson.youtube_url || getCuratedVideo(subjectId, ks);
   const thumbId = videoUrl ? videoUrl.match(/[?&]v=([^&]+)/)?.[1] : null;
   const videoHtml = videoUrl ? `<div class="video-card">
     <div class="video-thumb" onclick="openVideo('${videoUrl}')">
@@ -1853,6 +1883,12 @@ function renderLessonBody(lesson, marking, subjectId, submission) {
     </div>`;
   // Inject per-section TTS buttons
   injectSectionTTS(lesson);
+  // Pre-warm speech engine so read aloud fires instantly on first tap
+  if ('speechSynthesis' in window) {
+    const warmup = new SpeechSynthesisUtterance('');
+    warmup.volume = 0;
+    window.speechSynthesis.speak(warmup);
+  }
   // Restore any saved draft
   loadDraft(lesson.id);
   // Autosave on every keystroke
@@ -4255,13 +4291,6 @@ async function boot() {
   } else if(urlParams.get('status') === 'cancelled') {
     history.replaceState({}, '', window.location.pathname);
     setTimeout(() => toast('Payment cancelled — no charge made'), 1000);
-  }
-  // Force login screen if ?mode=login (e.g. from landing page Log in button)
-  if(urlParams.get('mode') === 'login') {
-    history.replaceState({}, '', window.location.pathname);
-    localStorage.removeItem('bp_session');
-    document.getElementById('authPage').style.display='flex';
-    return;
   }
   const saved = localStorage.getItem('bp_session');
   if(saved) {
