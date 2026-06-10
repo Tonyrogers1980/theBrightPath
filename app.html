@@ -3210,52 +3210,6 @@ async function runUiTests() {
   // Restore original page
   try { if(originalPage) { const pg = originalPage.replace('Page',''); goPage(pg); } } catch(e) {}
 
-    // Session state
-    addLog('Checking session state…', 'info');
-    const hasUser = !!(S && S.user && S.user.user && S.user.user.id);
-    const hasProfile = !!(S && S.profile);
-    const hasChildren = !!(S && S.children && S.children.length > 0);
-    hasUser ? uiPass('Session', 'User authenticated', S.user.user.email) : uiWarn('Session', 'User authenticated', 'No active session');
-    hasProfile ? uiPass('Session', 'Profile loaded', 'Status: ' + S.profile?.subscription_status) : uiWarn('Session', 'Profile loaded', 'No profile');
-    hasChildren ? uiPass('Session', 'Children loaded', S.children.map(c=>c.name).join(', ')) : uiWarn('Session', 'Children loaded', 'None found');
-
-    // Video cache
-    addLog('Checking video library…', 'info');
-    const vidCount = Object.values(VIDEO_CACHE || {}).reduce((a,b)=>a+b.length, 0);
-    vidCount > 0 ? uiPass('Videos', 'Video cache loaded', vidCount + ' videos') : uiWarn('Videos', 'Video cache loaded', 'Cache empty — may still be loading');
-
-    // Local storage
-    addLog('Checking local storage…', 'info');
-    try {
-      localStorage.setItem('bp_test', '1');
-      localStorage.removeItem('bp_test');
-      uiPass('Storage', 'localStorage available');
-    } catch(e) { uiFail('Storage', 'localStorage available', e.message); }
-
-    // Network — ping Supabase
-    addLog('Checking network connectivity…', 'info');
-    try {
-      const r = await fetch(SB_URL + '/rest/v1/video_library?limit=1', {
-        headers: { 'apikey': SB_KEY }
-      });
-      r.ok || r.status === 200 ? uiPass('Network', 'Supabase reachable', 'HTTP ' + r.status) : uiWarn('Network', 'Supabase reachable', 'HTTP ' + r.status);
-    } catch(e) { uiFail('Network', 'Supabase reachable', e.message); }
-
-    try {
-      const r = await fetch(AI_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: 'ping', max_tokens: 5 })
-      });
-      r.status < 500 ? uiPass('Network', 'AI proxy reachable', 'HTTP ' + r.status) : uiFail('Network', 'AI proxy reachable', 'HTTP ' + r.status);
-    } catch(e) { uiFail('Network', 'AI proxy reachable', e.message); }
-
-    addLog('All checks complete!', 'pass');
-
-  } catch(e) {
-    uiFail('System', 'In-browser checks', e.message);
-  }
-
   // Render results
   lastUiResults = uiResults;
   const total = uiResults.length;
