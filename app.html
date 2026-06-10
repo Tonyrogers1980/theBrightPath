@@ -724,7 +724,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.5.2';
+const APP_VERSION = 'v1.5.3';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -2971,20 +2971,17 @@ async function runUiTests() {
   const spinner = document.getElementById('uiSpinner');
   const btnText = document.getElementById('uiBtnText');
   const resultsEl = document.getElementById('uiResults');
+  const originalPage = document.querySelector('.page.active')?.id || 'homePage';
 
   btn.disabled = true;
   spinner.classList.add('running');
   btnText.textContent = 'Running…';
 
-  // The UI tests run via Playwright locally - show instructions + what we can check in-browser
   resultsEl.innerHTML = `
     <div class="card" style="margin-bottom:12px">
       <div style="font-family:Nunito,sans-serif;font-weight:900;font-size:16px;margin-bottom:12px">🎭 UI Test Suite</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">
-        The full Playwright browser automation suite runs locally. Running in-browser checks now…
-      </div>
       <div id="uiLog" class="admin-log">
-        <div class="admin-log-line info">Starting in-browser checks…</div>
+        <div class="admin-log-line info">Starting full UI checks…</div>
       </div>
     </div>`;
 
@@ -2998,55 +2995,220 @@ async function runUiTests() {
   };
 
   const uiResults = [];
-  function uiPass(suite, test, detail='') { uiResults.push({suite,test,status:'PASS',detail}); addLog('PASS  ' + suite + ': ' + test + (detail?' — '+detail:''), 'pass'); }
-  function uiFail(suite, test, detail='') { uiResults.push({suite,test,status:'FAIL',detail}); addLog('FAIL  ' + suite + ': ' + test + (detail?' — '+detail:''), 'fail'); }
-  function uiWarn(suite, test, detail='') { uiResults.push({suite,test,status:'WARN',detail}); addLog('WARN  ' + suite + ': ' + test + (detail?' — '+detail:''), 'warn'); }
+  function uiPass(t, n, d='') { uiResults.push({suite:t,test:n,status:'PASS',detail:d}); addLog('PASS  '+t+': '+n+(d?' — '+d:''),'pass'); }
+  function uiFail(t, n, d='') { uiResults.push({suite:t,test:n,status:'FAIL',detail:d}); addLog('FAIL  '+t+': '+n+(d?' — '+d:''),'fail'); }
+  function uiWarn(t, n, d='') { uiResults.push({suite:t,test:n,status:'WARN',detail:d}); addLog('WARN  '+t+': '+n+(d?' — '+d:''),'warn'); }
+  const wait = ms => new Promise(r => setTimeout(r, ms));
 
-  await new Promise(r => setTimeout(r, 100));
+  await wait(100);
 
-  // Run browser-side checks
   try {
-    // DOM structure checks
-    addLog('Checking DOM structure…', 'info');
-    const checks = [
-      ['App', 'Auth page exists', !!document.getElementById('authPage')],
-      ['App', 'Main app exists', !!document.getElementById('mainApp')],
-      ['App', 'Home page exists', !!document.getElementById('homePage')],
-      ['App', 'Progress page exists', !!document.getElementById('progressPage')],
-      ['App', 'Parent page exists', !!document.getElementById('parentPage')],
-      ['App', 'Admin page exists', !!document.getElementById('adminPage')],
-      ['App', 'Lesson page exists', !!document.getElementById('lessonPage')],
-      ['App', 'Subject page exists', !!document.getElementById('subjectPage')],
-      ['App', 'Top nav exists', !!document.getElementById('topnav')],
-      ['App', 'Bottom nav exists', !!document.querySelector('.bnav')],
-    ];
-    checks.forEach(([suite, test, ok]) => ok ? uiPass(suite, test) : uiFail(suite, test));
 
-    // JS functions exist
-    addLog('Checking core functions…', 'info');
-    const fns = [
-      ['Functions', 'generateLesson', typeof generateLesson === 'function'],
-      ['Functions', 'submitLesson', typeof submitLesson === 'function'],
-      ['Functions', 'renderHome', typeof renderHome === 'function'],
-      ['Functions', 'showSubscribe', typeof showSubscribe === 'function'],
-      ['Functions', 'showPrivacyPolicy', typeof showPrivacyPolicy === 'function'],
-      ['Functions', 'showTerms', typeof showTerms === 'function'],
-      ['Functions', 'isSubscriptionValid', typeof isSubscriptionValid === 'function'],
-      ['Functions', 'refreshSession', typeof refreshSession === 'function'],
-      ['Functions', 'loadVideoLibrary', typeof loadVideoLibrary === 'function'],
-      ['Functions', 'saveDraft', typeof saveDraft === 'function'],
-      ['Functions', 'redoLesson', typeof redoLesson === 'function'],
-    ];
-    fns.forEach(([suite, test, ok]) => ok ? uiPass(suite, test) : uiFail(suite, test));
+    // ── SUITE: DOM STRUCTURE ────────────────────────────
+    addLog('Suite: DOM Structure', 'info');
+    const pageIds = ['authPage','homePage','lessonPage','subjectPage','progressPage','parentPage','setupPage','adminPage','challengePage','leaderboardPage'];
+    pageIds.forEach(id => document.getElementById(id) ? uiPass('DOM','Page element: '+id) : uiFail('DOM','Page element: '+id));
+    document.querySelector('.bnav') ? uiPass('DOM','Bottom nav present') : uiFail('DOM','Bottom nav present');
+    document.querySelector('[data-page="home"]') ? uiPass('DOM','Bottom nav home item') : uiFail('DOM','Bottom nav home item');
+    document.querySelector('[data-page="progress"]') ? uiPass('DOM','Bottom nav progress item') : uiFail('DOM','Bottom nav progress item');
+    document.querySelector('[data-page="parent"]') ? uiPass('DOM','Bottom nav parent item') : uiFail('DOM','Bottom nav parent item');
+    document.querySelector('[data-page="setup"]') ? uiPass('DOM','Bottom nav setup item') : uiFail('DOM','Bottom nav setup item');
+    document.getElementById('subjectGrid') ? uiPass('DOM','Subject grid element') : uiFail('DOM','Subject grid element');
+    document.getElementById('lessonBody') || document.getElementById('lessonContent') ? uiPass('DOM','Lesson body element') : uiFail('DOM','Lesson body element');
+    document.getElementById('moodBtn_great') && document.getElementById('moodBtn_okay') && document.getElementById('moodBtn_tired')
+      ? uiPass('DOM','All 3 mood check-in buttons') : uiFail('DOM','All 3 mood check-in buttons');
+    document.getElementById('childSwitcher') ? uiPass('DOM','Child switcher element') : uiFail('DOM','Child switcher element');
+    document.getElementById('onboardOverlay') ? uiPass('DOM','Onboard overlay element') : uiFail('DOM','Onboard overlay element');
+    document.getElementById('leaderboardContent') ? uiPass('DOM','Leaderboard content element') : uiFail('DOM','Leaderboard content element');
+    document.getElementById('challengeBody') || document.getElementById('challengeAns') ? uiPass('DOM','Challenge content element') : uiFail('DOM','Challenge content element');
 
-    // Config constants
-    addLog('Checking config…', 'info');
-    const SB_OK = typeof SB_URL === 'string' && SB_URL.includes('supabase.co');
-    const AI_OK = typeof AI_URL === 'string' && AI_URL.includes('n8n');
-    const SK_OK = typeof SB_KEY === 'string' && SB_KEY.length > 20;
-    SB_OK ? uiPass('Config', 'Supabase URL configured', SB_URL) : uiFail('Config', 'Supabase URL configured');
-    AI_OK ? uiPass('Config', 'AI proxy URL configured', AI_URL) : uiFail('Config', 'AI proxy URL configured');
-    SK_OK ? uiPass('Config', 'Supabase key configured') : uiFail('Config', 'Supabase key configured');
+    // ── SUITE: FUNCTIONS ────────────────────────────────
+    addLog('Suite: Core Functions', 'info');
+    [
+      ['generateLesson','generateLesson'],['submitLesson','submitLesson'],['renderHome','renderHome'],
+      ['goPage','goPage'],['showSubscribe','showSubscribe'],['isSubscriptionValid','isSubscriptionValid'],
+      ['refreshSession','refreshSession'],['loadVideoLibrary','loadVideoLibrary'],
+      ['saveDraft','saveDraft'],['redoLesson','redoLesson'],['renderAdminPage','renderAdminPage'],
+      ['runInfraTests','runInfraTests'],['checkAdminAccess','checkAdminAccess'],
+      ['showPrivacyPolicy','showPrivacyPolicy'],['showTerms','showTerms'],
+      ['openLeaderboard','openLeaderboard'],['renderLeaderboard','renderLeaderboard'],
+    ].forEach(([label, fn]) => typeof window[fn]==='function' ? uiPass('Functions',label) : uiFail('Functions',label));
+
+    // ── SUITE: CONFIG ───────────────────────────────────
+    addLog('Suite: Config & Constants', 'info');
+    typeof SB_URL==='string' && SB_URL.includes('supabase.co') ? uiPass('Config','Supabase URL',SB_URL) : uiFail('Config','Supabase URL');
+    typeof SB_KEY==='string' && SB_KEY.length>20 ? uiPass('Config','Supabase anon key set') : uiFail('Config','Supabase anon key set');
+    typeof AI_URL==='string' && AI_URL.includes('n8n') ? uiPass('Config','AI proxy URL',AI_URL) : uiFail('Config','AI proxy URL');
+    typeof YOUTUBE_PROXY_URL==='string' && YOUTUBE_PROXY_URL.includes('n8n') ? uiPass('Config','YouTube proxy URL') : uiFail('Config','YouTube proxy URL');
+    typeof TTS_URL==='string' && TTS_URL.includes('supabase') ? uiPass('Config','TTS endpoint URL') : uiFail('Config','TTS endpoint URL');
+    typeof STRIPE_CHECKOUT_URL==='string' && STRIPE_CHECKOUT_URL.length>10 ? uiPass('Config','Stripe checkout URL') : uiFail('Config','Stripe checkout URL');
+    typeof APP_VERSION==='string' && APP_VERSION.startsWith('v') ? uiPass('Config','APP_VERSION set',APP_VERSION) : uiFail('Config','APP_VERSION set');
+
+    // ── SUITE: SESSION & STATE ──────────────────────────
+    addLog('Suite: Session & State', 'info');
+    const hasUser = !!(S && S.user && S.user.user && S.user.user.id);
+    const hasProfile = !!(S && S.profile);
+    const hasChildren = !!(S && S.children && S.children.length > 0);
+    const hasActiveChild = !!(S && S.activeChild);
+    hasUser ? uiPass('Session','User authenticated', S.user.user.email) : uiWarn('Session','User authenticated','No active session — some checks will skip');
+    hasProfile ? uiPass('Session','Profile loaded','Status: '+(S.profile?.subscription_status||'unknown')) : uiWarn('Session','Profile loaded','No profile in state');
+    hasChildren ? uiPass('Session','Children loaded',S.children.map(c=>c.name).join(', ')) : uiWarn('Session','Children loaded','No children found');
+    hasActiveChild ? uiPass('Session','Active child set',S.activeChild.name+' ('+S.activeChild.key_stage+')') : uiWarn('Session','Active child set','No active child');
+    if (hasActiveChild) {
+      S.activeChild.theme ? uiPass('Session','Active child has theme',S.activeChild.theme) : uiWarn('Session','Active child has theme','No theme set');
+      S.activeChild.key_stage ? uiPass('Session','Active child has key_stage',S.activeChild.key_stage) : uiFail('Session','Active child has key_stage');
+    }
+
+    // ── SUITE: HOME PAGE ────────────────────────────────
+    addLog('Suite: Home Page', 'info');
+    goPage('home');
+    await wait(600);
+    document.getElementById('homePage')?.classList.contains('active')
+      ? uiPass('Home','Home page is active after goPage') : uiFail('Home','Home page is active after goPage');
+    const homeText = document.getElementById('homePage')?.textContent || '';
+    homeText.length > 50 ? uiPass('Home','Home page has content') : uiFail('Home','Home page has content','appears empty');
+    homeText.toLowerCase().includes('xp') ? uiPass('Home','XP visible on home') : uiFail('Home','XP visible on home');
+    homeText.toLowerCase().includes('streak') || homeText.includes('🔥')
+      ? uiPass('Home','Streak visible on home') : uiFail('Home','Streak visible on home');
+    document.querySelectorAll('#subjectGrid .subject-card, #subjectGrid [class*="card"]').length > 0
+      ? uiPass('Home','Subject cards rendered in grid',document.querySelectorAll('#subjectGrid [class*="card"]').length+' cards')
+      : uiFail('Home','Subject cards rendered in grid');
+
+    // ── SUITE: NAVIGATION ───────────────────────────────
+    addLog('Suite: Navigation', 'info');
+    for (const [nav, pageId] of [['progress','progressPage'],['parent','parentPage'],['setup','setupPage']]) {
+      goPage(nav);
+      await wait(500);
+      document.getElementById(pageId)?.classList.contains('active')
+        ? uiPass('Navigation','Navigate to '+nav) : uiFail('Navigation','Navigate to '+nav,pageId+' not active');
+    }
+    goPage('home');
+    await wait(400);
+    document.getElementById('homePage')?.classList.contains('active')
+      ? uiPass('Navigation','Navigate back to home') : uiFail('Navigation','Navigate back to home');
+    goPage('leaderboard');
+    await wait(400);
+    document.getElementById('leaderboardPage')?.classList.contains('active')
+      ? uiPass('Navigation','Navigate to leaderboard') : uiFail('Navigation','Navigate to leaderboard');
+    goPage('challenge');
+    await wait(400);
+    document.getElementById('challengePage')?.classList.contains('active')
+      ? uiPass('Navigation','Navigate to challenge') : uiFail('Navigation','Navigate to challenge');
+
+    // ── SUITE: LESSON PAGE ──────────────────────────────
+    addLog('Suite: Lesson Page', 'info');
+    goPage('lesson');
+    await wait(800);
+    document.getElementById('lessonPage')?.classList.contains('active')
+      ? uiPass('Lesson','Lesson page navigates correctly') : uiFail('Lesson','Lesson page navigates correctly');
+    document.getElementById('moodBtn_great')?.offsetParent !== null
+      ? uiPass('Lesson','Mood buttons visible') : uiWarn('Lesson','Mood buttons visible','may be hidden until lesson loads');
+    document.getElementById('lessonBackBtn')
+      ? uiPass('Lesson','Back button present') : uiFail('Lesson','Back button present');
+    document.getElementById('lessonTitle')
+      ? uiPass('Lesson','Lesson title element present') : uiFail('Lesson','Lesson title element present');
+    document.getElementById('lessonMeta')
+      ? uiPass('Lesson','Lesson meta element present') : uiFail('Lesson','Lesson meta element present');
+
+    // ── SUITE: PROGRESS PAGE ────────────────────────────
+    addLog('Suite: Progress Page', 'info');
+    goPage('progress');
+    await wait(700);
+    const progressText = document.getElementById('progressPage')?.textContent || '';
+    progressText.length > 100 ? uiPass('Progress','Progress page has content') : uiFail('Progress','Progress page has content','appears empty');
+    progressText.toLowerCase().includes('badge') || document.querySelector('[class*="badge"]')
+      ? uiPass('Progress','Badges section present') : uiFail('Progress','Badges section present');
+    ['learner','explorer','scholar','academic','professor','genius'].some(r => progressText.toLowerCase().includes(r))
+      ? uiPass('Progress','Rank label visible') : uiFail('Progress','Rank label visible');
+    progressText.toLowerCase().includes('xp') ? uiPass('Progress','XP shown on progress page') : uiFail('Progress','XP shown on progress page');
+
+    // ── SUITE: PARENT DASHBOARD ─────────────────────────
+    addLog('Suite: Parent Dashboard', 'info');
+    goPage('parent');
+    await wait(700);
+    const parentText = document.getElementById('parentPage')?.textContent || '';
+    parentText.length > 100 ? uiPass('Parent','Parent page has content') : uiFail('Parent','Parent page has content','appears empty');
+    document.getElementById('childList') ? uiPass('Parent','Child list element present') : uiFail('Parent','Child list element present');
+    parentText.toLowerCase().includes('subscription') || parentText.toLowerCase().includes('plan') || parentText.toLowerCase().includes('trial')
+      ? uiPass('Parent','Subscription status visible') : uiFail('Parent','Subscription status visible');
+    parentText.toLowerCase().includes('refer')
+      ? uiPass('Parent','Referral section present') : uiFail('Parent','Referral section present');
+
+    // ── SUITE: LEARNING SETUP ───────────────────────────
+    addLog('Suite: Learning Setup', 'info');
+    goPage('setup');
+    await wait(700);
+    const setupText = document.getElementById('setupPage')?.textContent || '';
+    setupText.length > 100 ? uiPass('Setup','Setup page has content') : uiFail('Setup','Setup page has content','appears empty');
+    setupText.toLowerCase().includes('timetable') || setupText.toLowerCase().includes('schedule')
+      ? uiPass('Setup','Timetable section present') : uiFail('Setup','Timetable section present');
+    setupText.toLowerCase().includes('topic') || setupText.toLowerCase().includes('focus')
+      ? uiPass('Setup','Topic focus section present') : uiFail('Setup','Topic focus section present');
+    setupText.toLowerCase().includes('theme') || document.getElementById('themeBadgeWrap')
+      ? uiPass('Setup','Theme selector present') : uiFail('Setup','Theme selector present');
+    setupText.toLowerCase().includes('reading') || setupText.toLowerCase().includes('book')
+      ? uiPass('Setup','Reading list section present') : uiFail('Setup','Reading list section present');
+
+    // ── SUITE: GAMIFICATION ─────────────────────────────
+    addLog('Suite: Gamification', 'info');
+    const challengeText = document.getElementById('challengePage')?.textContent || '';
+    goPage('challenge');
+    await wait(600);
+    document.getElementById('challengeBody') || document.getElementById('challengeAns')
+      ? uiPass('Gamification','Challenge content area present') : uiFail('Gamification','Challenge content area present');
+    document.getElementById('challengeXpBadge')
+      ? uiPass('Gamification','Challenge XP badge present') : uiWarn('Gamification','Challenge XP badge present','may appear after challenge loads');
+    goPage('leaderboard');
+    await wait(600);
+    document.getElementById('leaderboardContent')
+      ? uiPass('Gamification','Leaderboard content element present') : uiFail('Gamification','Leaderboard content element present');
+
+    // ── SUITE: VIDEO LIBRARY ────────────────────────────
+    addLog('Suite: Video Library', 'info');
+    const vidCount = Object.values(VIDEO_CACHE||{}).reduce((a,b)=>a+b.length,0);
+    vidCount > 0 ? uiPass('Videos','Video cache loaded',vidCount+' videos') : uiWarn('Videos','Video cache loaded','Cache empty — may still be loading');
+    typeof loadVideoLibrary === 'function' ? uiPass('Videos','loadVideoLibrary function present') : uiFail('Videos','loadVideoLibrary function present');
+
+    // ── SUITE: STORAGE ──────────────────────────────────
+    addLog('Suite: Storage', 'info');
+    try { localStorage.setItem('bp_test','1'); localStorage.removeItem('bp_test'); uiPass('Storage','localStorage read/write'); }
+    catch(e) { uiFail('Storage','localStorage read/write',e.message); }
+
+    // ── SUITE: NETWORK ──────────────────────────────────
+    addLog('Suite: Network Connectivity', 'info');
+    try {
+      const r = await fetch(SB_URL+'/rest/v1/video_library?limit=1', { headers:{'apikey':SB_KEY} });
+      r.status < 500 ? uiPass('Network','Supabase REST reachable','HTTP '+r.status) : uiFail('Network','Supabase REST reachable','HTTP '+r.status);
+    } catch(e) { uiFail('Network','Supabase REST reachable',e.message); }
+
+    try {
+      const r = await fetch(SB_URL+'/auth/v1/settings');
+      r.status < 500 ? uiPass('Network','Supabase Auth reachable','HTTP '+r.status) : uiFail('Network','Supabase Auth reachable','HTTP '+r.status);
+    } catch(e) { uiFail('Network','Supabase Auth reachable',e.message); }
+
+    try {
+      const r = await fetch(TTS_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' });
+      r.status < 500 ? uiPass('Network','TTS Edge Function reachable','HTTP '+r.status) : uiFail('Network','TTS Edge Function reachable','HTTP '+r.status+' — edge function may be down');
+    } catch(e) { uiFail('Network','TTS Edge Function reachable',e.message); }
+
+    try {
+      const r = await fetch(AI_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages:[{role:'user',content:'ping'}],maxTokens:5}) });
+      r.status < 500 ? uiPass('Network','AI proxy reachable','HTTP '+r.status) : uiFail('Network','AI proxy reachable','HTTP '+r.status);
+    } catch(e) { uiFail('Network','AI proxy reachable',e.message); }
+
+    try {
+      const r = await fetch(YOUTUBE_PROXY_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query:'test',ks:'KS2'}) });
+      r.status < 500 ? uiPass('Network','YouTube proxy reachable','HTTP '+r.status) : uiFail('Network','YouTube proxy reachable','HTTP '+r.status);
+    } catch(e) { uiFail('Network','YouTube proxy reachable',e.message); }
+
+    addLog('All checks complete!', 'pass');
+
+  } catch(e) {
+    uiFail('System','Suite completed without crash',e.message);
+  }
+
+  // Restore original page
+  try { if(originalPage) { const pg = originalPage.replace('Page',''); goPage(pg); } } catch(e) {}
 
     // Session state
     addLog('Checking session state…', 'info');
@@ -3100,7 +3262,7 @@ async function runUiTests() {
   const passed = uiResults.filter(r=>r.status==='PASS').length;
   const failed = uiResults.filter(r=>r.status==='FAIL').length;
   const warned = uiResults.filter(r=>r.status==='WARN').length;
-  const score = Math.round(passed/total*100);
+  const score = total > 0 ? Math.round(passed/total*100) : 0;
   const scoreColor = score>=90?'var(--success)':score>=70?'var(--warning)':'var(--accent2)';
   const statusLabel = score>=90?'All Systems OK':score>=70?'Issues Found':'Critical Failures';
 
@@ -3121,7 +3283,7 @@ async function runUiTests() {
           </div>
           <div style="font-size:12px;color:var(--muted)">${fp}P${ff?' · <span style="color:var(--accent2)">'+ff+'F</span>':''}${fw?' · <span style="color:var(--warning)">'+fw+'W</span>':''}</div>
         </div>
-        <div class="admin-suite-body ${ff>0?'open':''}">
+        <div class="admin-suite-body ${ff>0||fw>0?'open':''}">
           ${tests.map(t=>`
             <div class="admin-test-row">
               <div class="admin-status ${t.status.toLowerCase()}">${t.status}</div>
@@ -3135,7 +3297,7 @@ async function runUiTests() {
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div>
-          <div style="font-family:Nunito,sans-serif;font-weight:900;font-size:18px">In-Browser UI Tests</div>
+          <div style="font-family:Nunito,sans-serif;font-weight:900;font-size:18px">UI Tests — ${total} checks</div>
           <div style="font-size:12px;color:var(--muted)">${new Date().toLocaleString('en-GB')}</div>
         </div>
         <div style="text-align:right">
@@ -3152,10 +3314,6 @@ async function runUiTests() {
         <div class="admin-score-fill" style="width:${score}%;background:${scoreColor}"></div>
       </div>
       ${suitesHtml}
-      <div style="margin-top:14px;background:var(--surface2);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:var(--muted);line-height:1.7">
-        💡 For full browser automation (click testing, form submission, mobile layout), run the Playwright suite locally:<br>
-        <code style="color:var(--accent)">node brightpath-tests.js --headed --report</code>
-      </div>
     </div>`;
 
   btn.disabled = false;
