@@ -724,7 +724,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.5.1';
+const APP_VERSION = 'v1.5.2';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -3442,10 +3442,7 @@ const TTS = {
   async fetchChunk(text) {
     const res = await fetch(TTS_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SB_KEY}`
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, voice: 'nova', speed: 1.0 })
     });
     if(!res.ok) throw new Error('TTS request failed: ' + res.status);
@@ -3461,12 +3458,18 @@ const TTS = {
 
   async pregenerateFirst() {
     // Called when lesson loads — silently fetch chunk 0 so button tap is instant
-    if(this.nextChunkUrl || this.speaking || this.loading) return;
+    if(this.nextChunkUrl || this.speaking || this.loading) {
+      console.log('[TTS prewarm] skipped — nextChunkUrl:', !!this.nextChunkUrl, 'speaking:', this.speaking, 'loading:', this.loading);
+      return;
+    }
     try {
       this.chunks = this.splitIntoChunks(this.text);
       if(!this.chunks.length) return;
+      console.log('[TTS prewarm] fetching chunk 0, length:', this.chunks[0]?.length);
       this.nextChunkUrl = await this.fetchChunk(this.chunks[0]);
+      console.log('[TTS prewarm] complete — url cached:', !!this.nextChunkUrl);
     } catch(e) {
+      console.warn('[TTS prewarm] failed:', e.message);
       this.nextChunkUrl = null;
     }
   },
@@ -3528,6 +3531,7 @@ const TTS = {
       return;
     }
     if(this.loading || this.speaking) return;
+    console.log('[TTS speak] nextChunkUrl present:', !!this.nextChunkUrl, 'text length:', this.text?.length);
     // Only re-split if not already done by pregenerateFirst
     if(!this.chunks || !this.chunks.length) {
       this.chunks = this.splitIntoChunks(this.text);
