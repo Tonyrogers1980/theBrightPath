@@ -3273,6 +3273,34 @@ async function runUiTests() {
   btn.disabled = false;
   spinner.classList.remove('running');
   btnText.textContent = '↺ Re-run UI tests';
+
+  // Auto-log failures as bugs in work_items
+  const failures = uiResults.filter(r => r.status === 'FAIL');
+  if (failures.length > 0) {
+    try {
+      const existing = await sbGet('work_items', 'status=in.(new,in_progress,pending_testing)&select=title');
+      const existingTitles = new Set((existing || []).map(w => w.title));
+      const toInsert = failures
+        .map(f => ({ title: `[UI Test Fail] ${f.suite}: ${f.test}`, detail: f.detail || '' }))
+        .filter(w => !existingTitles.has(w.title));
+      for (const w of toInsert) {
+        await sbPost('work_items', {
+          type: 'bug',
+          title: w.title,
+          description: `Auto-logged by admin UI test suite.\n\nDetail: ${w.detail}\nLogged: ${new Date().toLocaleString('en-GB')}`,
+          status: 'new',
+          priority: 'high',
+          source: 'testing',
+          created_by: (S && S.user && S.user.user && S.user.user.email) || 'admin-console',
+          assigned_version: APP_VERSION,
+        });
+      }
+      if (toInsert.length > 0) addLog(toInsert.length + ' bug(s) auto-logged to work items', 'warn');
+      else addLog('All failures already tracked in work items', 'info');
+    } catch(e) {
+      addLog('Failed to auto-log bugs: ' + e.message, 'warn');
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════
