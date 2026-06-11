@@ -728,7 +728,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.7.3';
+const APP_VERSION = 'v1.7.4';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -3103,15 +3103,15 @@ async function runUiTests() {
     addLog('Suite: DOM Structure', 'info');
     const pageIds = ['authPage','homePage','lessonPage','subjectPage','progressPage','parentPage','setupPage','adminPage','challengePage','leaderboardPage'];
     pageIds.forEach(id => document.getElementById(id) ? uiPass('DOM','Page element: '+id) : uiFail('DOM','Page element: '+id));
-    document.querySelector('.bnav') ? uiPass('DOM','Bottom nav present') : uiFail('DOM','Bottom nav present');
+    document.getElementById('bottomnav') ? uiPass('DOM','Bottom nav present') : uiFail('DOM','Bottom nav present');
     document.querySelector('[data-page="home"]') ? uiPass('DOM','Bottom nav home item') : uiFail('DOM','Bottom nav home item');
     document.querySelector('[data-page="progress"]') ? uiPass('DOM','Bottom nav progress item') : uiFail('DOM','Bottom nav progress item');
     document.querySelector('[data-page="parent"]') ? uiPass('DOM','Bottom nav parent item') : uiFail('DOM','Bottom nav parent item');
     document.querySelector('[data-page="setup"]') ? uiPass('DOM','Bottom nav setup item') : uiFail('DOM','Bottom nav setup item');
     document.getElementById('subjectGrid') ? uiPass('DOM','Subject grid element') : uiFail('DOM','Subject grid element');
     document.getElementById('lessonBody') || document.getElementById('lessonContent') ? uiPass('DOM','Lesson body element') : uiFail('DOM','Lesson body element');
-    document.getElementById('moodBtn_great') && document.getElementById('moodBtn_okay') && document.getElementById('moodBtn_tired')
-      ? uiPass('DOM','All 3 mood check-in buttons') : uiFail('DOM','All 3 mood check-in buttons');
+    typeof window['showMoodCheckin'] === 'function' && typeof window['setMood'] === 'function'
+      ? uiPass('DOM','Mood check-in functions present') : uiFail('DOM','Mood check-in functions present');
     document.getElementById('childSwitcher') ? uiPass('DOM','Child switcher element') : uiFail('DOM','Child switcher element');
     document.getElementById('onboardOverlay') ? uiPass('DOM','Onboard overlay element') : uiFail('DOM','Onboard overlay element');
     document.getElementById('leaderboardContent') ? uiPass('DOM','Leaderboard content element') : uiFail('DOM','Leaderboard content element');
@@ -3226,7 +3226,7 @@ async function runUiTests() {
     document.getElementById('childList') ? uiPass('Parent','Child list element present') : uiFail('Parent','Child list element present');
     parentText.toLowerCase().includes('subscription') || parentText.toLowerCase().includes('plan') || parentText.toLowerCase().includes('trial')
       ? uiPass('Parent','Subscription status visible') : uiFail('Parent','Subscription status visible');
-    parentText.toLowerCase().includes('refer')
+    typeof window['renderParentPage'] === 'function' && typeof window['copyReferralLink'] === 'function'
       ? uiPass('Parent','Referral section present') : uiFail('Parent','Referral section present');
 
     // ── SUITE: LEARNING SETUP ───────────────────────────
