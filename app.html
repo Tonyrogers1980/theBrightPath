@@ -724,7 +724,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.6.0';
+const APP_VERSION = 'v1.6.1';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -1309,6 +1309,12 @@ async function ensureProfile() {
   } catch(e) { console.warn('[ensureProfile] error:', e.message); }
 }
 function doLogout() {
+  if(_tokenRefreshTimer) { clearInterval(_tokenRefreshTimer); _tokenRefreshTimer = null; }
+  // Invalidate server-side session
+  fetch(SB_URL+'/auth/v1/logout', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+(S.user?.access_token||'')}
+  }).catch(()=>{});
   localStorage.removeItem('bp_session');
   S = {user:null,profile:null,children:[],activeChild:null,todayLessons:{},activeLessonId:null,activeSubject:null,dbMode:'live',allTimeAvg:null,sessionMood:null,recentScorePct:null};
   document.getElementById('mainApp').style.display='none';
@@ -1318,9 +1324,10 @@ function doLogout() {
 // ══════════════════════════════════════════════════
 // PROACTIVE TOKEN REFRESH — every 45 mins so session never expires mid-use
 // ══════════════════════════════════════════════════
+let _tokenRefreshTimer = null;
 function startTokenRefreshTimer() {
-  // Refresh token every 45 minutes proactively (tokens expire after 60 mins)
-  setInterval(async () => {
+  if(_tokenRefreshTimer) clearInterval(_tokenRefreshTimer);
+  _tokenRefreshTimer = setInterval(async () => {
     if(S.user && S.user.refresh_token) {
       await refreshSession();
     }
