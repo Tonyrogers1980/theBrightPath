@@ -728,7 +728,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.7.0';
+const APP_VERSION = 'v1.7.1';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -1345,8 +1345,6 @@ async function showApp() {
   document.getElementById('authPage').style.display='none';
   document.getElementById('mainApp').style.display='';
   document.getElementById('topnav').style.display='flex';
-  const vTag = document.getElementById('appVersionTag');
-  if (vTag) vTag.textContent = APP_VERSION;
   startTokenRefreshTimer();
   loadVideoLibrary(); // async, don't await — loads in background
   await loadChildren();
@@ -1934,7 +1932,7 @@ async function renderLessonBody(lesson, marking, subjectId, submission) {
       TTS.pregenerateFirst(); // Fire-and-forget — network fetch starts now
       // KS1 auto-read-aloud — trigger automatically for younger children
       if(ks === 'KS1') {
-        setTimeout(() => { if(typeof startTTS === 'function') startTTS(); }, 800);
+        setTimeout(() => { if(window.TTS && typeof TTS.speak === 'function' && !TTS.speaking) TTS.speak(); }, 1200);
       }
     }
   }
@@ -2391,21 +2389,36 @@ async function redoLesson(lessonId) {
     catch(e) { return {}; }
   })();
   const qs = parseQs(lesson.questions);
-  const topic = lesson.topic || S.activeChild?.topics?.[lesson.subject] || '';
   const ks = S.activeChild?.key_stage || 'KS2';
+  const topic = lesson.topic || S.activeChild?.topics?.[lesson.subject] || '';
   const liveVideo = await fetchYouTubeVideo(lesson.subject, ks, topic);
   const videoUrl = liveVideo || lesson.youtube_url || getCuratedVideo(lesson.subject, ks);
   const videoHtml = buildVideoCard(videoUrl, lesson.youtube_query, lesson.subject, ks);
-  const qHtml = qs.map((q,i)=>{
-    const prev = prevAnswers[i] || prevAnswers[String(i)] || '';
+
+  // Render answer inputs using answer_type — same logic as renderLessonBody
+  const qHtml = qs.map((q,i) => {
+    const atype = q.answer_type || 'text';
+    const prev = prevAnswers[i] !== undefined ? prevAnswers[i] : (prevAnswers[String(i)] || '');
+    let inputHtml = '';
+    if(atype === 'mcq' && Array.isArray(q.options) && q.options.length) {
+      inputHtml = `<div class="mcq-options" id="mcq_${i}">
+        ${q.options.map((opt,oi) => `<button class="mcq-btn${opt===prev?' selected':''}" onclick="selectMcq(${i},${oi},this)" data-value="${opt.replace(/"/g,'&quot;')}">${opt}</button>`).join('')}
+      </div>
+      <input type="hidden" id="ans_${i}" value="${prev.replace(/"/g,'&quot;')}">`;
+    } else if(atype === 'blank') {
+      inputHtml = `<input type="text" class="blank-input" placeholder="Your answer…" id="ans_${i}" value="${prev.replace(/"/g,'&quot;')}" autocomplete="off" style="margin-top:8px;width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:15px">`;
+    } else {
+      inputHtml = `<textarea rows="3" placeholder="Edit your answer…" id="ans_${i}" style="margin-top:4px">${prev}</textarea>`;
+    }
     return `<div class="question-card">
-    <div class="question-num">Question ${i+1}</div>
-    <div class="question-text">${q.q}</div>
-    <span class="marks-badge">${q.marks} mark${q.marks!==1?'s':''}</span>
-    ${q.hint?`<p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">💡 ${q.hint}</p>`:''}
-    <textarea rows="3" placeholder="Edit your answer…" id="ans_${i}" style="margin-top:4px">${prev}</textarea>
-  </div>`;
+      <div class="question-num">Question ${i+1}</div>
+      <div class="question-text">${q.q}</div>
+      <span class="marks-badge">${q.marks} mark${q.marks!==1?'s':''}</span>
+      ${q.hint?`<p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">💡 ${q.hint}</p>`:''}
+      ${inputHtml}
+    </div>`;
   }).join('');
+
   const body = document.getElementById('lessonBody');
   body.innerHTML = `${videoHtml}
     <div style="background:rgba(124,106,247,0.1);border:1px solid rgba(124,106,247,0.3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--muted)">
@@ -2418,25 +2431,7 @@ async function redoLesson(lessonId) {
       <div id="draftStatus" style="font-size:12px;color:var(--muted);text-align:right;margin-bottom:6px;min-height:16px"></div>
       <button class="btn btn-primary btn-full btn-lg" style="margin-top:4px" onclick="submitLesson('${lessonId}')">Submit improved answers ✨</button>
     </div>`;
-  // Only load draft if it has content AND differs from the pre-filled submission answers
-  // This prevents an empty/stale draft from blanking out the pre-filled previous answers
-  const redoDraftKey = draftKey(lessonId + '_redo');
-  const existingDraft = localStorage.getItem(redoDraftKey);
-  if(existingDraft) {
-    try {
-      const draftAnswers = JSON.parse(existingDraft);
-      const hasContent = Object.values(draftAnswers).some(v => v && v.trim());
-      if(hasContent) {
-        // Draft has content — restore it and notify
-        Object.entries(draftAnswers).forEach(([id, val]) => {
-          const el = document.getElementById(id);
-          if(el && val) el.value = val;
-        });
-        toast('📝 Draft answers restored');
-      }
-      // If draft is empty, keep the pre-filled submission answers as-is
-    } catch(e) {}
-  }
+
   document.querySelectorAll('[id^="ans_"]').forEach(el => {
     el.addEventListener('input', () => {
       saveDraft(lessonId + '_redo');
@@ -2671,7 +2666,7 @@ function renderParent() {
     <a href="mailto:hello@thebrightpath.uk" class="btn btn-secondary btn-full">✉️ hello@thebrightpath.uk</a>
   </div>
   <p style="font-size:11px;color:var(--hint);text-align:center">🇬🇧 UK Curriculum · 🔒 GDPR Compliant · ✅ No Ads<br>© 2025 BrightPath · <a href="#privacy" onclick="showPrivacyPolicy()" style="color:var(--hint)">Privacy Policy</a> · <a href="#terms" onclick="showTerms()" style="color:var(--hint)">Terms of Service</a></p>
-  <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;font-family:monospace" id="appVersionTag"></p>
+  <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;font-family:monospace">${APP_VERSION}</p>
   `;
 }
 function renderSubStatus(p) {
@@ -4050,17 +4045,36 @@ function saveDraft(lessonId) {
   if(!qs.length) return;
   const answers = {};
   qs.forEach(el => { answers[el.id] = el.value; });
-  localStorage.setItem(draftKey(lessonId), JSON.stringify(answers));
+  // Also save MCQ selected button indices so we can restore visual state
+  const mcqState = {};
+  document.querySelectorAll('.mcq-options').forEach(group => {
+    const qIndex = group.id.replace('mcq_', '');
+    const selected = group.querySelector('.mcq-btn.selected');
+    if(selected) mcqState[qIndex] = selected.dataset.value;
+  });
+  localStorage.setItem(draftKey(lessonId), JSON.stringify({ answers, mcqState }));
 }
 
 function loadDraft(lessonId) {
   try {
     const saved = localStorage.getItem(draftKey(lessonId));
     if(!saved) return;
-    const answers = JSON.parse(saved);
+    const parsed = JSON.parse(saved);
+    // Support both old format (plain object) and new format ({ answers, mcqState })
+    const answers = parsed.answers || parsed;
+    const mcqState = parsed.mcqState || {};
     Object.entries(answers).forEach(([id, val]) => {
       const el = document.getElementById(id);
       if(el) el.value = val;
+    });
+    // Restore MCQ selected button visual state
+    Object.entries(mcqState).forEach(([qIndex, val]) => {
+      const group = document.getElementById('mcq_' + qIndex);
+      if(!group) return;
+      group.querySelectorAll('.mcq-btn').forEach(btn => {
+        if(btn.dataset.value === val) btn.classList.add('selected');
+        else btn.classList.remove('selected');
+      });
     });
     if(Object.values(answers).some(v => v)) toast('📝 Draft answers restored');
   } catch(e) {}
