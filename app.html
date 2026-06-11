@@ -187,6 +187,10 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 /* ── QUESTIONS ── */
 .questions-section h3 { font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 800; margin-bottom: 14px; }
 .question-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; }
+.mcq-options { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.mcq-btn { background: var(--surface2); border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; text-align: left; font-size: 15px; color: var(--text); cursor: pointer; transition: all 0.15s; font-family: inherit; }
+.mcq-btn:hover { border-color: var(--accent); background: rgba(124,106,247,0.08); }
+.mcq-btn.selected { border-color: var(--accent); background: rgba(124,106,247,0.15); color: var(--accent); font-weight: 700; }
 .question-num { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
 .question-text { font-size: 15px; line-height: 1.5; margin-bottom: 10px; font-weight: 600; }
 .marks-badge { font-size: 11px; background: rgba(124,106,247,0.15); color: var(--accent); border: 1px solid rgba(124,106,247,0.3); border-radius: 10px; padding: 2px 8px; margin-bottom: 10px; display: inline-block; }
@@ -504,7 +508,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 <!-- MAIN APP -->
 <div id="mainApp" style="display:none">
   <nav id="topnav" style="display:none">
-    <div class="nav-logo">✨ BrightPath <span id="appVersionTag" style="font-size:9px;opacity:0.3;font-family:monospace;margin-left:4px;font-weight:400"></span></div>
+    <div class="nav-logo">✨ BrightPath</div>
     <div class="nav-right">
       <div class="xp-badge" id="navXp">⚡ 0 XP</div>
       <div class="streak-badge" id="navStreak">🔥 0</div>
@@ -724,7 +728,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.6.1';
+const APP_VERSION = 'v1.7.0';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -1814,20 +1818,32 @@ ${themeHint}
 ${lessonMoodHint}
 ${lessonPerfHint}
 
+LANGUAGE RULES — follow strictly:
+${ks==='KS1'
+  ? '- KS1: Maximum 8 words per question. Use only Year 1/2 vocabulary. No subordinate clauses. No complex sentence structures. Simple, direct questions only. Short sentences throughout lesson content too.'
+  : '- KS2: Maximum 15 words per question. One idea per question. Clear and direct language.'}
+
+ANSWER TYPE RULES:
+Each question must include an "answer_type" field. Choose the most appropriate type per question:
+- "mcq" — multiple choice: include an "options" array of 3-4 short answer choices. Use for factual recall, definitions, single-answer questions. KS1 should use this type for most questions.
+- "blank" — fill in the gap: a single word or number answer. Use for calculations, missing words, simple completions.
+- "text" — free write: a full sentence or short paragraph. Use sparingly for KS1. Fine for KS2 explanation/analysis questions.
+${ks==='KS1' ? 'KS1 IMPORTANT: Default heavily to "mcq" and "blank". Use "text" only if no other type fits.' : 'KS2: Mix all three types appropriately across the 5 questions.'}
+
 Return ONLY valid JSON (no markdown, no preamble):
 {
   "title": "specific engaging lesson title",
   "content": "full lesson content in markdown, 350-500 words, age-appropriate, engaging, with examples. Use ## headings, bullet points, bold key terms.",
   "questions": [
-    {"q":"question text","marks":2,"hint":"optional short hint"},
-    {"q":"question text","marks":3,"hint":""},
-    {"q":"question text","marks":2,"hint":""},
-    {"q":"question text","marks":4,"hint":""},
-    {"q":"question text","marks":4,"hint":""}
+    {"q":"question text","marks":2,"hint":"optional short hint","answer_type":"mcq","options":["option A","option B","option C"]},
+    {"q":"question text","marks":3,"hint":"","answer_type":"blank"},
+    {"q":"question text","marks":2,"hint":"","answer_type":"mcq","options":["option A","option B","option C","option D"]},
+    {"q":"question text","marks":4,"hint":"","answer_type":"text"},
+    {"q":"question text","marks":4,"hint":"","answer_type":"blank"}
   ],
   "videoQuery": "specific 4-6 word YouTube search for a relevant ${ks} educational video"
 }
-Questions must be clear, ${ks}-appropriate, require full-sentence answers. Total marks: ${isL2?18:15}.`;
+Questions must be clear, ${ks}-appropriate. Include "options" array only when answer_type is "mcq". Total marks: ${isL2?18:15}.`;
 }
 
 // ══════════════════════════════════════════════════
@@ -1878,13 +1894,27 @@ async function renderLessonBody(lesson, marking, subjectId, submission) {
     body.innerHTML = videoHtml + renderMarked(lesson, marking, qs, submission);
     return;
   }
-  const qHtml = qs.map((q,i)=>`<div class="question-card">
-    <div class="question-num">Question ${i+1}</div>
-    <div class="question-text">${q.q}</div>
-    <span class="marks-badge">${q.marks} mark${q.marks!==1?'s':''}</span>
-    ${q.hint?`<p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">💡 ${q.hint}</p>`:''}
-    <textarea rows="3" placeholder="Write your answer here…" id="ans_${i}" style="margin-top:4px"></textarea>
-  </div>`).join('');
+  const qHtml = qs.map((q,i)=>{
+    const atype = q.answer_type || 'text';
+    let inputHtml = '';
+    if(atype === 'mcq' && Array.isArray(q.options) && q.options.length) {
+      inputHtml = `<div class="mcq-options" id="mcq_${i}">
+        ${q.options.map((opt,oi)=>`<button class="mcq-btn" onclick="selectMcq(${i},${oi},this)" data-value="${opt.replace(/"/g,'&quot;')}">${opt}</button>`).join('')}
+      </div>
+      <input type="hidden" id="ans_${i}" value="">`;
+    } else if(atype === 'blank') {
+      inputHtml = `<input type="text" class="blank-input" placeholder="Your answer…" id="ans_${i}" autocomplete="off" style="margin-top:8px;width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:15px">`;
+    } else {
+      inputHtml = `<textarea rows="3" placeholder="Write your answer here…" id="ans_${i}" style="margin-top:4px"></textarea>`;
+    }
+    return `<div class="question-card">
+      <div class="question-num">Question ${i+1}</div>
+      <div class="question-text">${q.q}</div>
+      <span class="marks-badge">${q.marks} mark${q.marks!==1?'s':''}</span>
+      ${q.hint?`<p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">💡 ${q.hint}</p>`:''}
+      ${inputHtml}
+    </div>`;
+  }).join('');
   body.innerHTML = `${videoHtml}
     <div class="lesson-content" id="lessonContent">${markdownToHtml(lesson.content)}</div>
     <div class="questions-section">
@@ -1902,6 +1932,10 @@ async function renderLessonBody(lesson, marking, subjectId, submission) {
     if (lessonText) {
       TTS.init(lessonText);
       TTS.pregenerateFirst(); // Fire-and-forget — network fetch starts now
+      // KS1 auto-read-aloud — trigger automatically for younger children
+      if(ks === 'KS1') {
+        setTimeout(() => { if(typeof startTTS === 'function') startTTS(); }, 800);
+      }
     }
   }
   // Inject per-section TTS buttons
@@ -1916,6 +1950,19 @@ async function renderLessonBody(lesson, marking, subjectId, submission) {
       if(status) status.textContent = '💾 Draft saved';
     });
   });
+}
+function selectMcq(qIndex, optIndex, btn) {
+  // Deselect all buttons in this question's mcq group
+  const group = document.getElementById('mcq_' + qIndex);
+  if(group) group.querySelectorAll('.mcq-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  // Store selected value in the hidden input
+  const hidden = document.getElementById('ans_' + qIndex);
+  if(hidden) {
+    hidden.value = btn.dataset.value;
+    // Trigger draft save
+    hidden.dispatchEvent(new Event('input'));
+  }
 }
 function markWatched(btn, url) {
   window.open(url,'_blank');
@@ -2177,8 +2224,15 @@ async function submitLesson(lessonId) {
   }
 }
 function buildMarkPrompt(lesson, qs, answers) {
-  const lines = qs.map((q,i)=>`Q${i+1} (${q.marks} marks): ${q.q}\nStudent answer: ${answers[i]||'[no answer]'}`).join('\n\n');
+  const lines = qs.map((q,i)=>{
+    const atype = q.answer_type || 'text';
+    const atypeNote = atype === 'mcq' ? ' [MCQ — mark as correct or incorrect only, full marks or zero]'
+      : atype === 'blank' ? ' [Fill-in-blank — exact or near-exact match required]'
+      : ' [Free write — use judgement, award partial marks where appropriate]';
+    return `Q${i+1} (${q.marks} marks)${atypeNote}: ${q.q}\nStudent answer: ${answers[i]||'[no answer]'}`;
+  }).join('\n\n');
   const child = S.activeChild;
+  const ks = child?.key_stage || 'KS2';
   const { performanceCtx, moodCtx, recent, mood } = getAdaptiveContext();
   const name = child?.name || 'the student';
 
@@ -2203,13 +2257,18 @@ function buildMarkPrompt(lesson, qs, answers) {
   const existingMarking = Object.values(S.todayLessons).find(l=>l.id===lesson.id);
   const isRedo = !!(existingMarking && existingMarking._marked);
 
-  return `You are Professor Hoot, a warm and encouraging ${child?.key_stage || 'primary'} teacher marking a lesson titled "${lesson.title}" for ${name}.${isRedo ? ' This is a RE-SUBMISSION — the child has revised their answers. Mark ONLY what is written now. Do NOT refer to or repeat feedback from any previous attempt. Judge each answer completely fresh.' : ''}
+  return `You are Professor Hoot, a warm and encouraging ${ks} teacher marking a lesson titled "${lesson.title}" for ${name}.${isRedo ? ' This is a RE-SUBMISSION — the child has revised their answers. Mark ONLY what is written now. Do NOT refer to or repeat feedback from any previous attempt. Judge each answer completely fresh.' : ''}
 
 ${toneInstruction}
 
 ${performanceInstruction}
 
-Mark each answer fairly and award partial marks where appropriate. Always explain WHY an answer was right or wrong in simple language the child can understand.
+FEEDBACK LENGTH RULES — follow strictly:
+${ks === 'KS1'
+  ? '- KS1: Maximum 1 sentence of feedback per question. No jargon. Always end the comment with encouragement. Keep it simple and kind.'
+  : '- KS2: Maximum 2 sentences per question. Be specific and constructive.'}
+
+Mark each answer fairly. For MCQ questions: full marks if correct, zero if wrong — do not award partial marks. For fill-in-blank: exact or near-exact match for full marks. For free-write: award partial marks where appropriate. Always explain WHY in simple language the child can understand.
 
 ${lines}
 
@@ -2612,6 +2671,7 @@ function renderParent() {
     <a href="mailto:hello@thebrightpath.uk" class="btn btn-secondary btn-full">✉️ hello@thebrightpath.uk</a>
   </div>
   <p style="font-size:11px;color:var(--hint);text-align:center">🇬🇧 UK Curriculum · 🔒 GDPR Compliant · ✅ No Ads<br>© 2025 BrightPath · <a href="#privacy" onclick="showPrivacyPolicy()" style="color:var(--hint)">Privacy Policy</a> · <a href="#terms" onclick="showTerms()" style="color:var(--hint)">Terms of Service</a></p>
+  <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;font-family:monospace" id="appVersionTag"></p>
   `;
 }
 function renderSubStatus(p) {
