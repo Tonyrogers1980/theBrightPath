@@ -728,7 +728,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.7.2';
+const APP_VERSION = 'v1.7.3';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -1831,8 +1831,13 @@ ${ks==='KS1' ? 'KS1: Use mcq for 2-3 questions, blank for 1-2 questions, text fo
 CONTENT CONSTRAINTS — critical:
 - NEVER ask children to draw, sketch, label a diagram, plot on a grid, use a number line, complete a table by hand, or perform any task requiring pen, paper, or a physical resource not shown in the lesson content.
 - NEVER reference diagrams, images, maps, or visual resources ("look at the diagram", "using the map below", "from the picture") — there are none.
-- NEVER ask children to "show working" — they cannot format mathematical working in a text box.
 - All questions must be answerable by typing only.
+
+HINT RULES — critical:
+Hints must tell the child WHAT IS EXPECTED for a good answer, never what the answer is.
+- For multi-mark questions: hint must state what completeness looks like. Examples: "Give 2 examples", "Name two features", "Your answer needs two parts", "Include a reason", "Give a number and its unit".
+- NEVER list possible answers, specific examples, or words that directly answer the question. "Think: dog, fog, log" for a question about 'og' words is forbidden — that IS the answer.
+- For 1-mark questions: hint can be omitted or give a brief format clue only (e.g. "One word", "A number").
 
 Return ONLY valid JSON (no markdown, no preamble):
 {
@@ -1880,8 +1885,7 @@ async function openLesson(subjectId, part) {
 
 async function getSubmission(lessonId) {
   try {
-    // Order by created_at desc to get the MOST RECENT submission — not the original
-    const rows = await sbGet('submissions', `lesson_id=eq.${lessonId}&order=created_at.desc`);
+    const rows = await sbGet('submissions', `lesson_id=eq.${lessonId}&order=submitted_at.desc`);
     return rows && rows.length ? rows[0] : null;
   } catch(e) { return null; }
 }
@@ -2284,9 +2288,9 @@ ${ks === 'KS1'
 Mark each answer fairly. For MCQ questions: full marks if correct, zero if wrong — do not award partial marks. For fill-in-blank: exact or near-exact match for full marks. For free-write: award partial marks where appropriate. Always explain WHY in simple language the child can understand.
 
 CRITICAL MARKING RULES:
-- NEVER suggest the child could have earned more marks by doing something not asked in the question (e.g. "show your working", "give more examples", "add units" if units were not required).
+- NEVER suggest the child could have earned more marks by doing something the question did not explicitly ask for. If a question only asks for an answer, do not say "show your working for the extra mark" — unless the question specifically asked for working to be shown.
 - Only mark and comment on what the question actually asked for.
-- If a question awards 1 mark, there is no "extra mark" to suggest.
+- If a question awards 1 mark, there is no "extra mark" available — do not imply otherwise.
 
 ${lines}
 
@@ -2458,6 +2462,15 @@ async function redoLesson(lessonId) {
       const status = document.getElementById('draftStatus');
       if(status) status.textContent = '💾 Draft saved';
     });
+  });
+  // Set MCQ hidden input values via JS (HTML value attribute not always reliable in template literals)
+  qs.forEach((q, i) => {
+    const atype = q.answer_type || 'text';
+    if(atype === 'mcq') {
+      const prev = prevAnswers[i] !== undefined ? prevAnswers[i] : (prevAnswers[String(i)] || '');
+      const hiddenInput = document.getElementById('ans_' + i);
+      if(hiddenInput && prev) hiddenInput.value = prev;
+    }
   });
   window.scrollTo(0, 0);
 }
