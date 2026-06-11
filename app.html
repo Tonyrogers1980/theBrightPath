@@ -728,7 +728,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.7.1';
+const APP_VERSION = 'v1.7.2';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -1821,12 +1821,18 @@ ${ks==='KS1'
   ? '- KS1: Maximum 8 words per question. Use only Year 1/2 vocabulary. No subordinate clauses. No complex sentence structures. Simple, direct questions only. Short sentences throughout lesson content too.'
   : '- KS2: Maximum 15 words per question. One idea per question. Clear and direct language.'}
 
-ANSWER TYPE RULES:
-Each question must include an "answer_type" field. Choose the most appropriate type per question:
-- "mcq" — multiple choice: include an "options" array of 3-4 short answer choices. Use for factual recall, definitions, single-answer questions. KS1 should use this type for most questions.
-- "blank" — fill in the gap: a single word or number answer. Use for calculations, missing words, simple completions.
-- "text" — free write: a full sentence or short paragraph. Use sparingly for KS1. Fine for KS2 explanation/analysis questions.
-${ks==='KS1' ? 'KS1 IMPORTANT: Default heavily to "mcq" and "blank". Use "text" only if no other type fits.' : 'KS2: Mix all three types appropriately across the 5 questions.'}
+ANSWER TYPE RULES — follow exactly:
+Each question must include an "answer_type" field. You MUST use all three types across the lesson — do not default to only mcq and text:
+- "mcq" — multiple choice: include an "options" array of 3-4 short answer choices. Use for factual recall, definitions, single-answer questions.
+- "blank" — short single-line answer: one word, one number, a name, a date, a unit, a short phrase (max 4 words). Use for calculations, "what is X called", "how many", "what year", "name one example". Do NOT use when the answer requires explanation. IMPORTANT: at least 1 question per lesson MUST be "blank" type.
+- "text" — free write: a full sentence or short paragraph requiring explanation or reasoning. Use sparingly for KS1. Fine for KS2.
+${ks==='KS1' ? 'KS1: Use mcq for 2-3 questions, blank for 1-2 questions, text for at most 1 question.' : 'KS2: Use mcq for 1-2 questions, blank for 1-2 questions, text for 1-2 questions.'}
+
+CONTENT CONSTRAINTS — critical:
+- NEVER ask children to draw, sketch, label a diagram, plot on a grid, use a number line, complete a table by hand, or perform any task requiring pen, paper, or a physical resource not shown in the lesson content.
+- NEVER reference diagrams, images, maps, or visual resources ("look at the diagram", "using the map below", "from the picture") — there are none.
+- NEVER ask children to "show working" — they cannot format mathematical working in a text box.
+- All questions must be answerable by typing only.
 
 Return ONLY valid JSON (no markdown, no preamble):
 {
@@ -1930,9 +1936,18 @@ async function renderLessonBody(lesson, marking, subjectId, submission) {
     if (lessonText) {
       TTS.init(lessonText);
       TTS.pregenerateFirst(); // Fire-and-forget — network fetch starts now
-      // KS1 auto-read-aloud — trigger automatically for younger children
+      // KS1 — browsers block autoplay without a user gesture, so show a prominent
+      // tap-to-listen banner instead. TTS is already pre-warmed so it fires instantly on tap.
       if(ks === 'KS1') {
-        setTimeout(() => { if(window.TTS && typeof TTS.speak === 'function' && !TTS.speaking) TTS.speak(); }, 1200);
+        const listenBanner = document.createElement('div');
+        listenBanner.id = 'ks1ListenBanner';
+        listenBanner.style.cssText = 'background:rgba(124,106,247,0.15);border:2px solid var(--accent);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:16px;text-align:center;cursor:pointer';
+        listenBanner.innerHTML = '<div style="font-size:28px;margin-bottom:4px">🔊</div><div style="font-family:Nunito,sans-serif;font-weight:800;font-size:16px;color:var(--accent)">Tap to hear the lesson read aloud</div><div style="font-size:12px;color:var(--muted);margin-top:4px">Ready to play!</div>';
+        listenBanner.onclick = () => { listenBanner.remove(); if(window.TTS && typeof TTS.speak === 'function') TTS.speak(); };
+        setTimeout(() => {
+          const lc = document.getElementById('lessonContent');
+          if(lc) lc.before(listenBanner);
+        }, 300);
       }
     }
   }
@@ -2267,6 +2282,11 @@ ${ks === 'KS1'
   : '- KS2: Maximum 2 sentences per question. Be specific and constructive.'}
 
 Mark each answer fairly. For MCQ questions: full marks if correct, zero if wrong — do not award partial marks. For fill-in-blank: exact or near-exact match for full marks. For free-write: award partial marks where appropriate. Always explain WHY in simple language the child can understand.
+
+CRITICAL MARKING RULES:
+- NEVER suggest the child could have earned more marks by doing something not asked in the question (e.g. "show your working", "give more examples", "add units" if units were not required).
+- Only mark and comment on what the question actually asked for.
+- If a question awards 1 mark, there is no "extra mark" to suggest.
 
 ${lines}
 
