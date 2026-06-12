@@ -728,7 +728,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.7.5';
+const APP_VERSION = 'v1.8.0';
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -1850,9 +1850,15 @@ Return ONLY valid JSON (no markdown, no preamble):
     {"q":"question text","marks":4,"hint":"","answer_type":"text"},
     {"q":"question text","marks":4,"hint":"","answer_type":"blank"}
   ],
-  "videoQuery": "specific 4-6 word YouTube search for a relevant ${ks} educational video"
+  "videoQuery": "a 4-6 word YouTube search built from the SPECIFIC topic and key concepts covered in the lesson content above — not the lesson title, and not just the subject name. Name the actual concept taught (e.g. 'fractions equivalent denominators explained' not 'maths lesson video', 'water cycle evaporation condensation' not 'science topic')"
 }
-Questions must be clear, ${ks}-appropriate. Include "options" array only when answer_type is "mcq". Total marks: ${isL2?18:15}.`;
+Questions must be clear, ${ks}-appropriate. Include "options" array only when answer_type is "mcq". Total marks: ${isL2?18:15}.
+
+VIDEO QUERY RULES — critical:
+- videoQuery must reflect what is actually taught in THIS lesson's content, not a generic subject/topic label.
+- Read back over the lesson content you just wrote and extract the specific concept, method, or fact it focuses on.
+- BAD examples: "KS2 maths lesson", "fun science video for kids", "${subjLabel} ${chosenTopic||subjLabel}"
+- GOOD examples: "long division remainders method", "Tudor monarchs Henry VIII wives", "photosynthesis chlorophyll sunlight process"`;
 }
 
 // ══════════════════════════════════════════════════
