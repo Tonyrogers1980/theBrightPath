@@ -492,7 +492,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
         <input type="checkbox" id="agreeTerms" style="width:16px;height:16px;margin-top:2px;flex-shrink:0">
         <label for="agreeTerms" style="font-size:12px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400">I agree to the <a href="#" onclick="showTerms()" style="color:var(--accent)">Terms of Service</a> and <a href="#" onclick="showPrivacyPolicy()" style="color:var(--accent)">Privacy Policy</a>. I confirm I am the parent or guardian of the child using this service.</label>
       </div>
-      <button class="btn btn-primary btn-full btn-lg" onclick="doSignup()">Start 7-day free trial →</button>
+      <button class="btn btn-primary btn-full btn-lg" onclick="doSignup()">Start 14-day free trial →</button>
       <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px">No card required. Then £9.99/month.</p>
     </div>
     <div id="authErr" style="color:var(--accent2);font-size:13px;margin-top:10px;text-align:center;display:none"></div>
@@ -528,8 +528,8 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 
       <!-- Trial/subscription banner -->
       <div id="subBanner" class="sub-banner" style="display:none">
-        <h3 id="subBannerTitle">🎉 7-day free trial</h3>
-        <p id="subBannerText">You have <strong id="trialDaysLeft">7</strong> days left. Subscribe to keep all progress and features.</p>
+        <h3 id="subBannerTitle">🎉 14-day free trial</h3>
+        <p id="subBannerText">You have <strong id="trialDaysLeft">14</strong> days left. Subscribe to keep all progress and features.</p>
         <div class="trial-progress"><div class="trial-fill" id="trialBar" style="width:100%"></div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
           <button class="btn btn-primary btn-sm" onclick="showSubscribe('single')">Subscribe — £9.99/month</button>
@@ -728,7 +728,8 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.8.0';
+const APP_VERSION = 'v1.9.5';
+const TRIAL_DAYS = 14;
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
 const STRIPE_CHECKOUT_URL = 'https://sehomeservices.app.n8n.cloud/webhook/stripe-checkout';
@@ -1532,9 +1533,9 @@ function renderSubscriptionBanner() {
   if(p.subscription_status==='active') { banner.style.display='none'; return; }
   if(p.subscription_status==='trial') {
     const start = new Date(p.trial_started_at);
-    const days = Math.max(0, 7 - Math.floor((Date.now()-start)/86400000));
+    const days = Math.max(0, TRIAL_DAYS - Math.floor((Date.now()-start)/86400000));
     document.getElementById('trialDaysLeft').textContent = days;
-    document.getElementById('trialBar').style.width = (days/7*100)+'%';
+    document.getElementById('trialBar').style.width = (days/TRIAL_DAYS*100)+'%';
     document.getElementById('subBannerTitle').textContent = days>0 ? '🎉 Free Trial Active' : '⚠️ Trial Ended';
     banner.style.display = '';
   }
@@ -2123,6 +2124,16 @@ async function setMood(mood, subjectId, part, btnEl) {
   const todayKey = 'bp_mood_' + _childId + '_' + new Date().toISOString().split('T')[0];
   localStorage.setItem(todayKey, mood);
 
+  // Persist to Supabase so the weekly parent email can access mood data
+  if(S.activeChild?.id) {
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      await sbPatch('children', `id=eq.${S.activeChild.id}`, { last_mood: mood, last_mood_date: today });
+      S.activeChild.last_mood = mood;
+      S.activeChild.last_mood_date = today;
+    } catch(e) {}
+  }
+
   if(btnEl) {
     document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
     btnEl.classList.add('selected');
@@ -2247,15 +2258,17 @@ async function submitLesson(lessonId) {
   }
 }
 function buildMarkPrompt(lesson, qs, answers) {
+  const child = S.activeChild;
+  const ks = child?.key_stage || 'KS2';
   const lines = qs.map((q,i)=>{
     const atype = q.answer_type || 'text';
     const atypeNote = atype === 'mcq' ? ' [MCQ — mark as correct or incorrect only, full marks or zero]'
-      : atype === 'blank' ? ' [Fill-in-blank — exact or near-exact match required]'
+      : atype === 'blank' ? (ks === 'KS1'
+          ? ' [Fill-in-blank, KS1 — award full marks for phonetically plausible or contextually correct spelling, e.g. "tow" for "two", "becos" for "because". Do not penalise spelling at this age — judge whether the child knows the answer, not whether they spelled it perfectly]'
+          : ' [Fill-in-blank — exact or near-exact match required]')
       : ' [Free write — use judgement, award partial marks where appropriate]';
     return `Q${i+1} (${q.marks} marks)${atypeNote}: ${q.q}\nStudent answer: ${answers[i]||'[no answer]'}`;
   }).join('\n\n');
-  const child = S.activeChild;
-  const ks = child?.key_stage || 'KS2';
   const { performanceCtx, moodCtx, recent, mood } = getAdaptiveContext();
   const name = child?.name || 'the student';
 
@@ -2318,8 +2331,13 @@ async function awardXP(subject, score, maxScore, lessonId) {
   const lastActive = S.activeChild.last_active_date;
   let streak = S.activeChild.current_streak||0;
   if(lastActive) {
-    const diff = (new Date(today)-new Date(lastActive))/86400000;
-    streak = diff<=1 ? streak+1 : 1;
+    if(lastActive === today) {
+      // Same-day lesson — streak unchanged
+      streak = streak || 1;
+    } else {
+      const diff = (new Date(today)-new Date(lastActive))/86400000;
+      streak = diff===1 ? streak+1 : 1;
+    }
   } else { streak=1; }
   const longest = Math.max(streak, S.activeChild.longest_streak||0);
   try {
@@ -2331,12 +2349,99 @@ async function awardXP(subject, score, maxScore, lessonId) {
   } catch(e){}
 }
 async function checkBadges(subject, score, maxScore) {
-  // simplified badge check
   const earned = S.activeChild.badges||[];
   const newBadges=[];
+  const childId = S.activeChild.id;
+
   if(!earned.includes('first_lesson')) newBadges.push('first_lesson');
   if((S.activeChild.current_streak||0)>=3&&!earned.includes('streak_3')) newBadges.push('streak_3');
+  if((S.activeChild.current_streak||0)>=7&&!earned.includes('streak_7')) newBadges.push('streak_7');
   if(score===maxScore&&subject==='math'&&!earned.includes('math_100')) newBadges.push('math_100');
+
+  // Badges requiring lesson history — query lessons + markings for this child
+  const needsHistory = ['english_book','science_ace','history_hero','geo_explorer','all_subjects','challenge_5','top_scorer','perfect_week']
+    .filter(b => !earned.includes(b));
+
+  if(needsHistory.length) {
+    try {
+      const lessons = await sbGet('lessons', `child_id=eq.${childId}&select=id,subject,lesson_date`);
+      const lessonIds = lessons.map(l=>l.id);
+      let markings = [];
+      if(lessonIds.length) {
+        const idList = lessonIds.join(',');
+        markings = await sbGet('markings', `lesson_id=in.(${idList})&select=lesson_id,score,max_score`);
+      }
+      const markedLessonIds = new Set(markings.map(m=>m.lesson_id));
+      const completedLessons = lessons.filter(l => markedLessonIds.has(l.id));
+
+      // english_book — 5 completed English lessons
+      if(needsHistory.includes('english_book')) {
+        const englishCount = completedLessons.filter(l=>l.subject==='english').length;
+        if(englishCount>=5) newBadges.push('english_book');
+      }
+
+      // science_ace — 3 science lessons at 80%+
+      if(needsHistory.includes('science_ace')) {
+        const scienceHigh = completedLessons.filter(l=>{
+          if(l.subject!=='science') return false;
+          const m = markings.find(mk=>mk.lesson_id===l.id);
+          return m && m.max_score>0 && (m.score/m.max_score)>=0.8;
+        }).length;
+        if(scienceHigh>=3) newBadges.push('science_ace');
+      }
+
+      // history_hero — 3 completed history lessons
+      if(needsHistory.includes('history_hero')) {
+        const historyCount = completedLessons.filter(l=>l.subject==='history').length;
+        if(historyCount>=3) newBadges.push('history_hero');
+      }
+
+      // geo_explorer — 3 completed geography lessons
+      if(needsHistory.includes('geo_explorer')) {
+        const geoCount = completedLessons.filter(l=>l.subject==='geography').length;
+        if(geoCount>=3) newBadges.push('geo_explorer');
+      }
+
+      // all_subjects — at least 1 completed lesson in each of the 5 subjects
+      if(needsHistory.includes('all_subjects')) {
+        const subjectsCovered = new Set(completedLessons.map(l=>l.subject));
+        const allFive = ['math','english','science','history','geography'].every(s=>subjectsCovered.has(s));
+        if(allFive) newBadges.push('all_subjects');
+      }
+
+      // top_scorer — average 90%+ over last 10 marked lessons
+      if(needsHistory.includes('top_scorer')) {
+        const recentMarkings = markings.filter(m=>m.max_score>0).slice(-10);
+        if(recentMarkings.length>=10) {
+          const avg = recentMarkings.reduce((sum,m)=>sum+(m.score/m.max_score),0)/recentMarkings.length;
+          if(avg>=0.9) newBadges.push('top_scorer');
+        }
+      }
+
+      // perfect_week — at least one completed lesson every day for 7 consecutive days
+      if(needsHistory.includes('perfect_week')) {
+        const completedDates = new Set(completedLessons.map(l=>l.lesson_date).filter(Boolean));
+        let consecutive = 0, maxConsecutive = 0;
+        const d = new Date();
+        for(let i=0;i<14;i++) {
+          const dateStr = d.toISOString().split('T')[0];
+          if(completedDates.has(dateStr)) { consecutive++; maxConsecutive=Math.max(maxConsecutive,consecutive); }
+          else consecutive=0;
+          d.setDate(d.getDate()-1);
+        }
+        if(maxConsecutive>=7) newBadges.push('perfect_week');
+      }
+
+      // challenge_5 — 5 completed daily challenges
+      if(needsHistory.includes('challenge_5')) {
+        try {
+          const challenges = await sbGet('daily_challenges', `child_id=eq.${childId}&completed_at=not.is.null&select=id`);
+          if(challenges.length>=5) newBadges.push('challenge_5');
+        } catch(e) {}
+      }
+    } catch(e) {}
+  }
+
   if(newBadges.length) {
     const all=[...earned,...newBadges];
     await sbPatch('children',`id=eq.${S.activeChild.id}`,{badges:JSON.stringify(all)});
@@ -2713,7 +2818,7 @@ function renderSubStatus(p) {
   const icons={trial:'🎉',active:'✅',expired:'⚠️',cancelled:'❌'};
   const labels={trial:'Free Trial',active:'Active Subscription',expired:'Trial Expired',cancelled:'Cancelled'};
   const trialStart=p.trial_started_at?new Date(p.trial_started_at):new Date();
-  const daysLeft=Math.max(0,7-Math.floor((Date.now()-trialStart)/86400000));
+  const daysLeft=Math.max(0,TRIAL_DAYS-Math.floor((Date.now()-trialStart)/86400000));
   return `<div class="card" style="background:var(--surface2)">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
       <span style="font-size:28px">${icons[status]||'❓'}</span>
@@ -2770,7 +2875,7 @@ function showTerms() {
         <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">2. Service</h2>
         <p>BrightPath provides AI-generated educational content aligned to the UK National Curriculum. Lessons are generated by AI and are intended as a supplementary learning tool. They are not a substitute for formal education.</p>
         <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">3. Subscription and payment</h2>
-        <p>Single child plan: £9.99/month. Family plan (unlimited children): £14.99/month. All plans include a 7-day free trial with no card required. Subscriptions renew automatically. You may cancel at any time via the Parent settings page. No refunds are provided for partial months.</p>
+        <p>Single child plan: £9.99/month. Family plan (unlimited children): £14.99/month. All plans include a 14-day free trial with no card required. Subscriptions renew automatically. You may cancel at any time via the Parent settings page. No refunds are provided for partial months.</p>
         <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">4. Acceptable use</h2>
         <p>You must not share your account credentials. You must not attempt to reverse-engineer, copy, or resell BrightPath content. One account per family household.</p>
         <h2 style="font-family:Nunito,sans-serif;font-size:18px;font-weight:800;margin:20px 0 8px">5. Limitation of liability</h2>
@@ -3976,7 +4081,7 @@ const ONBOARD_STEPS = [
       <div class="onboard-title">You're all set, ${name||''}!</div>
       <div class="onboard-sub">BrightPath is ready. Pick a subject from the home screen and generate your first lesson — it takes about 20 seconds.</div>
       <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:20px">
-        <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:13px;margin-bottom:10px;color:var(--muted)">YOUR 7-DAY FREE TRIAL INCLUDES</div>
+        <div style="font-family:Nunito,sans-serif;font-weight:800;font-size:13px;margin-bottom:10px;color:var(--muted)">YOUR ${TRIAL_DAYS}-DAY FREE TRIAL INCLUDES</div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">✅</span><span style="font-size:13px;color:var(--muted)">Unlimited lessons in all 5 subjects</span></div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">✅</span><span style="font-size:13px;color:var(--muted)">AI marking and detailed feedback</span></div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:18px">✅</span><span style="font-size:13px;color:var(--muted)">XP, badges and daily challenges</span></div>
@@ -4052,7 +4157,7 @@ function isSubscriptionValid() {
     // In-app trial fallback (before Stripe subscription created)
     const start = new Date(p.trial_started_at);
     const daysUsed = Math.floor((Date.now() - start) / 86400000);
-    return daysUsed < 7;
+    return daysUsed < TRIAL_DAYS;
   }
   return false;
 }
@@ -4066,7 +4171,7 @@ function showPaywall() {
   div.innerHTML = `<div class="paywall-box">
     <div style="font-size:52px;margin-bottom:12px">🔒</div>
     <div style="font-family:Nunito,sans-serif;font-size:24px;font-weight:900;margin-bottom:8px">Trial ended</div>
-    <div style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6">Your 7-day free trial has ended. Subscribe to keep Rory learning with unlimited lessons, AI marking, and daily challenges.</div>
+    <div style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6">Your 14-day free trial has ended. Subscribe to keep ${S.activeChild?.name || 'your child'} learning with unlimited lessons, AI marking, and daily challenges.</div>
     <button class="btn btn-primary btn-full btn-lg" onclick="document.getElementById('paywallOverlay').remove();showSubscribe('single')" style="margin-bottom:10px">🚀 Subscribe — £9.99/month</button>
     <button class="btn btn-secondary btn-full" onclick="document.getElementById('paywallOverlay').remove();showSubscribe('family')">👨‍👩‍👧‍👦 Family plan — £14.99/month</button>
     <p style="font-size:12px;color:var(--hint);margin-top:12px">Secure payment via Stripe. Cancel anytime.<br>Questions? <a href="mailto:hello@thebrightpath.uk" style="color:var(--muted)">hello@thebrightpath.uk</a></p>
