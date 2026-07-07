@@ -728,7 +728,7 @@ label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: 
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const APP_VERSION = 'v1.9.5';
+const APP_VERSION = 'v1.9.6';
 const TRIAL_DAYS = 14;
 const SB_URL = 'https://lagrgcbhkpihxqsjkmlv.supabase.co';
 const STRIPE_PK = 'pk_live_51TYVn5B0UeOnCbV7AKoknbKOzC7QJUGKTcAay8rESIVP3GLN4ZSWDv8phJSHgeta7pQ9z2oXqeJhsFqepewd6mRc00NlGeDR4k';
@@ -1914,7 +1914,7 @@ async function renderLessonBody(lesson, marking, subjectId, submission) {
     let inputHtml = '';
     if(atype === 'mcq' && Array.isArray(q.options) && q.options.length) {
       inputHtml = `<div class="mcq-options" id="mcq_${i}">
-        ${q.options.map((opt,oi)=>`<button class="mcq-btn" onclick="selectMcq(${i},${oi},this)" data-value="${opt.replace(/"/g,'&quot;')}">${opt}</button>`).join('')}
+        ${q.options.map((opt,oi)=>`<button class="mcq-btn" onclick="selectMcq(${i},${oi},this)" data-value="${escapeHtml(opt)}">${escapeHtml(opt)}</button>`).join('')}
       </div>
       <input type="hidden" id="ans_${i}" value="">`;
     } else if(atype === 'blank') {
@@ -1924,9 +1924,9 @@ async function renderLessonBody(lesson, marking, subjectId, submission) {
     }
     return `<div class="question-card">
       <div class="question-num">Question ${i+1}</div>
-      <div class="question-text">${q.q}</div>
+      <div class="question-text">${escapeHtml(q.q)}</div>
       <span class="marks-badge">${q.marks} mark${q.marks!==1?'s':''}</span>
-      ${q.hint?`<p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">💡 ${q.hint}</p>`:''}
+      ${q.hint?`<p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">💡 ${escapeHtml(q.hint)}</p>`:''}
       ${inputHtml}
     </div>`;
   }).join('');
@@ -2481,9 +2481,9 @@ function renderMarked(lesson, marking, qs, submission) {
         <div class="q-fb-mark ${f.score>0?'correct':'wrong'}">${f.score>0?'✓':'✗'}</div>
         Q${f.q||i+1}: ${f.score||0}/${f.max||q.marks||1} marks
       </div>
-      <div style="font-size:13px;color:var(--text);margin:4px 0 4px 30px;font-weight:600">${q.q||''}</div>
-      ${studentAnswer?`<div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px 10px;margin:0 0 6px 30px;font-size:13px;color:var(--muted);font-style:italic;border-left:2px solid var(--accent)">"${studentAnswer}"</div>`:''}
-      <div class="q-fb-comment">${f.comment||''}</div>
+      <div style="font-size:13px;color:var(--text);margin:4px 0 4px 30px;font-weight:600">${escapeHtml(q.q||'')}</div>
+      ${studentAnswer?`<div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px 10px;margin:0 0 6px 30px;font-size:13px;color:var(--muted);font-style:italic;border-left:2px solid var(--accent)">"${escapeHtml(studentAnswer)}"</div>`:''}
+      <div class="q-fb-comment">${escapeHtml(f.comment||'')}</div>
     </div>`;
   }).join('');
   return `<div class="marking-result">
@@ -2496,7 +2496,7 @@ function renderMarked(lesson, marking, qs, submission) {
     </div>
     <div class="q-feedback">
       ${fbItems}
-      ${result.overall?(()=>{const pct=score&&maxScore?Math.round(score/maxScore*100):50;const t=getHootTone(pct);return `<div class="hoot-feedback-wrap ${t.cls}"><strong style="color:var(--text)">🦉 Professor Hoot says:</strong><br>${result.overall}</div>`;})():''}
+      ${result.overall?(()=>{const pct=score&&maxScore?Math.round(score/maxScore*100):50;const t=getHootTone(pct);return `<div class="hoot-feedback-wrap ${t.cls}"><strong style="color:var(--text)">🦉 Professor Hoot says:</strong><br>${escapeHtml(result.overall)}</div>`;})():''}
     </div>
   </div>
   <div style="margin-top:16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
@@ -2537,19 +2537,19 @@ async function redoLesson(lessonId) {
     let inputHtml = '';
     if(atype === 'mcq' && Array.isArray(q.options) && q.options.length) {
       inputHtml = `<div class="mcq-options" id="mcq_${i}">
-        ${q.options.map((opt,oi) => `<button class="mcq-btn${opt===prev?' selected':''}" onclick="selectMcq(${i},${oi},this)" data-value="${opt.replace(/"/g,'&quot;')}">${opt}</button>`).join('')}
+        ${q.options.map((opt,oi) => `<button class="mcq-btn${opt===prev?' selected':''}" onclick="selectMcq(${i},${oi},this)" data-value="${escapeHtml(opt)}">${escapeHtml(opt)}</button>`).join('')}
       </div>
       <input type="hidden" id="ans_${i}" value="${prev.replace(/"/g,'&quot;')}">`;
     } else if(atype === 'blank') {
       inputHtml = `<input type="text" class="blank-input" placeholder="Your answer…" id="ans_${i}" value="${prev.replace(/"/g,'&quot;')}" autocomplete="off" style="margin-top:8px;width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:15px">`;
     } else {
-      inputHtml = `<textarea rows="3" placeholder="Edit your answer…" id="ans_${i}" style="margin-top:4px">${prev}</textarea>`;
+      inputHtml = `<textarea rows="3" placeholder="Edit your answer…" id="ans_${i}" style="margin-top:4px">${escapeHtml(prev)}</textarea>`;
     }
     return `<div class="question-card">
       <div class="question-num">Question ${i+1}</div>
-      <div class="question-text">${q.q}</div>
+      <div class="question-text">${escapeHtml(q.q)}</div>
       <span class="marks-badge">${q.marks} mark${q.marks!==1?'s':''}</span>
-      ${q.hint?`<p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">💡 ${q.hint}</p>`:''}
+      ${q.hint?`<p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-style:italic">💡 ${escapeHtml(q.hint)}</p>`:''}
       ${inputHtml}
     </div>`;
   }).join('');
@@ -2670,7 +2670,7 @@ function renderChallengeCard(body,ch) {
     <div class="challenge-xp">+50 XP</div>
   </div>
   <div class="card">
-    <div class="question-text" style="font-size:17px;margin-bottom:16px">${ch.question}</div>
+    <div class="question-text" style="font-size:17px;margin-bottom:16px">${escapeHtml(ch.question)}</div>
     ${done
       ?`<div style="background:rgba(105,240,174,0.1);border:1px solid rgba(105,240,174,0.3);border-radius:var(--radius-sm);padding:14px;font-size:14px;color:var(--success)">✓ Submitted: ${ch.submitted_answer}</div>
         <div style="background:rgba(124,106,247,0.1);border-radius:var(--radius-sm);padding:14px;margin-top:10px;font-size:14px;color:var(--muted)">Model answer: ${ch.correct_answer||'–'}</div>`
@@ -4245,9 +4245,20 @@ function parseQs(qs) {
   if(Array.isArray(qs)) return qs;
   try { return JSON.parse(qs); } catch(_) { return []; }
 }
+function escapeHtml(str) {
+  if(str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
 function markdownToHtml(md) {
   if(!md) return '';
-  return md
+  // Escape raw HTML first — md is AI-generated content and must never be trusted.
+  // Markdown syntax (**, *, -, #) survives escaping since it uses no HTML metacharacters.
+  return escapeHtml(md)
     .replace(/^### (.+)$/gm,'<h3>$1</h3>')
     .replace(/^## (.+)$/gm,'<h2>$1</h2>')
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
